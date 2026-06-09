@@ -61,6 +61,7 @@
                         <th class="whitespace-nowrap">Tgl Daftar</th>
                         <th class="whitespace-nowrap">Asuransi</th>
                         <th class="whitespace-nowrap">Pasien</th>
+                        <th class="whitespace-nowrap">No. IHS</th>
                         <th class="whitespace-nowrap">Tgl Lahir</th>
                         <th class="whitespace-nowrap">Nomer HP</th>
                         <th class="whitespace-nowrap">Dokter</th>
@@ -89,6 +90,25 @@
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $transaction->is_insurance ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">{{$transaction->is_insurance ? 'Ya' : 'Tidak'}}</span>
                             </td>
                             <td class="font-medium text-gray-900 whitespace-nowrap">{{ $transaction->patient_name ?? '-' }}</td>
+                            <td class="text-sm whitespace-nowrap">
+                                @if($transaction->patient?->patient?->OHPatient?->id_patient)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        {{ $transaction->patient->patient->OHPatient->id_patient }}
+                                    </span>
+                                @elseif($transaction->patient?->patient?->ihs_number)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        {{ $transaction->patient->patient->ihs_number }}
+                                    </span>
+                                @elseif($transaction->patient?->userDetail?->ihs_number)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        {{ $transaction->patient->userDetail->ihs_number }}
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                                        Belum Terhubung
+                                    </span>
+                                @endif
+                            </td>
                             <td class="text-sm whitespace-nowrap">
                                 {{ $transaction?->patient?->userDetail?->birth_date ? \Carbon\Carbon::parse($transaction->patient->userDetail->birth_date)->locale('id')->isoFormat('DD MMM YY') : '-' }}
                             </td>
@@ -188,7 +208,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="no-data">Tidak ada data
+                            <td colspan="12" class="no-data">Tidak ada data
                             </td>
                         </tr>
                     @endforelse

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Patient;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -19,16 +20,19 @@ class GetPatient extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
             //
             'company_id' => 'required|uuid',
-            'nik'        => 'required|numeric',
-            'name'       => 'required',
-            'user_id'    => 'nullable',
+            'nik' => 'nullable|numeric',
+            'name' => 'required',
+            'user_id' => 'nullable',
+            'gender' => 'nullable|string',
+            'birth_date' => 'nullable|date',
+            'identity_card_mother' => 'nullable',
         ];
     }
 
@@ -41,10 +45,9 @@ class GetPatient extends FormRequest
     {
         return [
             'company_id.required' => 'Id perusahaan wajib diisi.',
-            'company_id.uuid'     => 'Id perusahaan harus berupa UUID.',
-            'nik.required'        => 'Nomor NIK wajib diisi.',
-            'nik.numeric'         => 'Nomor NIK harus berupa angka.',
-            'name.required'       => 'Nama pasien wajib diisi.',
+            'company_id.uuid' => 'Id perusahaan harus berupa UUID.',
+            'nik.numeric' => 'Nomor NIK harus berupa angka.',
+            'name.required' => 'Nama pasien wajib diisi.',
             // 'user_id.required'    => 'Id pengguna wajib diisi.',
         ];
     }
@@ -55,7 +58,7 @@ class GetPatient extends FormRequest
         throw new HttpResponseException(response()->json([
             'success' => false,
             'message' => 'Input tidak sesuai dengan ketentuan.',
-            'errors'  => $validator->errors()
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

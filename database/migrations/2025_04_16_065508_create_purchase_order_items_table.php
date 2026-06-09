@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignUuid('product_unit_id');
             $table->foreignUuid('product_id');
             $table->string('product_name');
-            $table->bigInteger('quantity', 15, 2);
+            $table->bigInteger('quantity')->default(0);
             $table->bigInteger('product_unit_quantity')->default(0);
             $table->bigInteger('quantity_bonus')->default(0);
             $table->bigInteger('quantity_accepted')->default(0);

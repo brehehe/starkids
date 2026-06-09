@@ -3,26 +3,28 @@
 namespace App\Livewire\Admin\Pharmacy\TakeMedicine;
 
 use App\Helpers\AlertHelper;
-use App\Models\Product\Product;
-use App\Models\Product\ProductPrice;
 use App\Models\Transaction\Transaction;
 use App\Models\Transaction\TransactionDetail;
 use App\Models\Transaction\TransactionProduct;
 use App\Models\Transaction\TransactionRecipe;
-use App\Services\Product\ProductService;
+use App\Models\User;
+use App\Traits\Transaction\ReversesTransactionStock;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Session;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 
 class AdminPharmacyTakeMedicineIndex extends Component
 {
-    use WithPagination;
+    use ReversesTransactionStock, WithPagination;
+
     protected $paginationTheme = 'bootstrap';
+
     public $search = '';
+
     public $perPage = 5;
+
     protected $queryString = [
         'search' => ['except' => ''],
         'doctor_id' => ['except' => ''],
@@ -32,8 +34,11 @@ class AdminPharmacyTakeMedicineIndex extends Component
     ];
 
     public $doctor_id = '';
+
     public $searchPatient = '';
+
     public $start_date = '';
+
     public $end_date = '';
 
     public function mount()
@@ -93,56 +98,24 @@ class AdminPharmacyTakeMedicineIndex extends Component
 
             $transaction = Transaction::find($data[0]);
             if ($transaction) {
-                if ($transaction->status === 'completed') {
-                    $productWithStock = Product::where('is_non_stock', false)
-                        ->where('company_id', Auth::user()->company_id)
-                        ->pluck('id')
-                        ->toArray();
-                    $productService = new ProductService();
+                // Reverse stock for anything that was decremented
+                $this->reverseStockForTransaction($transaction);
 
-                    $transactionRecipes = TransactionRecipe::whereIn('product_id', $productWithStock)->where('transaction_id', $transaction->id)->whereNotNull('product_id')->get();
-                    foreach ($transactionRecipes as $recipe) {
-                        // Use stored HPP to preserve historical cost data
-                        $hppPrice = $recipe->price_hpp ?? 0;
-                        if ($hppPrice <= 0) {
-                            // Fallback to current HPP if not stored
-                            $productPrice = ProductPrice::where('product_id', $recipe->product_id)
-                                ->where('company_id', Auth::user()->company_id)
-                                ->first();
-                            $hppPrice = $productPrice?->hpp_average ?? 0;
-                        }
-                        $productService->createProductIncrement($recipe->product_id, $recipe->quantity, null, null, $hppPrice, null, null, null, null, null);
-                    }
-
-                    $transactionDetails = TransactionDetail::whereIn('product_id', $productWithStock)->where('transaction_id', $transaction->id)->whereNotNull('product_id')->get();
-                    foreach ($transactionDetails as $detail) {
-                        // Use stored HPP to preserve historical cost data
-                        $hppPrice = $detail->price_hpp ?? 0;
-                        if ($hppPrice <= 0) {
-                            // Fallback to current HPP if not stored
-                            $productPrice = ProductPrice::where('product_id', $detail->product_id)
-                                ->where('company_id', Auth::user()->company_id)
-                                ->first();
-                            $hppPrice = $productPrice?->hpp_average ?? 0;
-                        }
-                        $productService->createProductIncrement($detail->product_id, $detail->quantity, null, null, $hppPrice, null, null, null, null, null);
-                    }
-
-                    TransactionRecipe::where('transaction_id', $transaction->id)->delete();
-                    TransactionDetail::where('transaction_id', $transaction->id)->delete();
-                    TransactionProduct::where('transaction_id', $transaction->id)->delete();
-                }
-
+                // Clean up child tables
+                TransactionRecipe::where('transaction_id', $transaction->id)->delete();
+                TransactionDetail::where('transaction_id', $transaction->id)->delete();
+                TransactionProduct::where('transaction_id', $transaction->id)->delete();
 
                 $transaction->delete();
                 DB::commit();
+
                 return AlertHelper::success('Berhasil', 'Transaksi berhasil dihapus.');
             } else {
                 AlertHelper::error('Gagal', 'Transaksi tidak ditemukan.');
             }
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Gagal menghapus transaksi: ' . $e->getMessage(), [
+            Log::error('Gagal menghapus transaksi: '.$e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
@@ -150,12 +123,12 @@ class AdminPharmacyTakeMedicineIndex extends Component
         }
     }
 
-
     public function detail($id)
     {
         $transaction = Transaction::find($id[0]);
         if ($transaction) {
             Session::put('transaction_id', $transaction->id);
+
             return redirect()->route('user.pharmacy.take-medicine.detail');
         } else {
             AlertHelper::error('Error', 'Transaksi tidak ditemukan.');
@@ -164,7 +137,7 @@ class AdminPharmacyTakeMedicineIndex extends Component
 
     public function render()
     {
-        $doctors = \App\Models\User::companyRole('Dokter', auth()->user()->company_id)->get();
+        $doctors = User::companyRole('Dokter', auth()->user()->company_id)->get();
 
         $transactions = Transaction::search($this->search)
             // ->where('consultation', 'yes')
@@ -174,11 +147,11 @@ class AdminPharmacyTakeMedicineIndex extends Component
                 $query->where('doctor_id', $this->doctor_id);
             })
             ->when($this->searchPatient, function ($query) {
-                $query->where('patient_name', 'ilike', '%' . $this->searchPatient . '%');
+                $query->where('patient_name', 'ilike', '%'.$this->searchPatient.'%');
             })
             ->when($this->start_date && $this->end_date, function ($query) {
                 $query->whereDate('created_at', '>=', $this->start_date)
-                      ->whereDate('created_at', '<=', $this->end_date);
+                    ->whereDate('created_at', '<=', $this->end_date);
             })
             ->orderBy('created_at', 'desc')
             ->where('company_id', auth()->user()->company_id)
@@ -186,7 +159,7 @@ class AdminPharmacyTakeMedicineIndex extends Component
 
         return view('livewire.admin.pharmacy.take-medicine.admin-pharmacy-take-medicine-index', [
             'transactions' => $transactions,
-            'doctors' => $doctors
+            'doctors' => $doctors,
         ])
             ->extends('layout.app')
             ->section('content');

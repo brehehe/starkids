@@ -49,6 +49,7 @@
                         <th class="w-1 center">No</th>
                         <th>Nomer Rekam Medis</th>
                         <th>Identity Card</th>
+                        <th>No. IHS</th>
                         <th>Nama</th>
                         <th>Alamat</th>
                         {{-- <th>Role</th> --}}
@@ -66,6 +67,25 @@
                             <td>{{ $patient?->companyRoles()?->where('company_id', Auth::user()->company_id)?->first()?->medical_record_number ?? '-' }}
                             </td>
                             <td>{{ $patient->userDetail->identity_card_display ?? '-' }}</td>
+                            <td>
+                                @if($patient->patient?->OHPatient?->id_patient)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        {{ $patient->patient->OHPatient->id_patient }}
+                                    </span>
+                                @elseif($patient->patient?->ihs_number)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        {{ $patient->patient->ihs_number }}
+                                    </span>
+                                @elseif($patient->userDetail?->ihs_number)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        {{ $patient->userDetail->ihs_number }}
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                                        Belum Terhubung
+                                    </span>
+                                @endif
+                            </td>
                             <td>{{ $patient->name ?? '-' }}</td>
                             <td>{{ $patient->userDetail->address ?? '-' }}</td>
                             {{-- <td>
@@ -109,7 +129,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="no-data">Tidak ada data</td>
+                            <td colspan="9" class="no-data">Tidak ada data</td>
                         </tr>
                     @endforelse
                 </tbody>

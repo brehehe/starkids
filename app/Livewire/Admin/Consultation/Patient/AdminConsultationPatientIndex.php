@@ -36,6 +36,8 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -172,7 +174,7 @@ class AdminConsultationPatientIndex extends Component
 
     public function mount()
     {
-        \Illuminate\Support\Facades\Session::forget('patient_id');
+        Session::forget('patient_id');
 
         $this->maritalStatusDetails = MasterPatientMaritalStatus::select('code', 'display')->get()->map(function ($item) {
             return [
@@ -702,7 +704,7 @@ class AdminConsultationPatientIndex extends Component
 
             // $this->emit('patientSaved');
             Log::info('Patient successfully saved', ['user_id' => $user->id]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             DB::rollBack();
 
             // Cleanup user yang baru dibuat jika ada error validasi
@@ -876,7 +878,7 @@ class AdminConsultationPatientIndex extends Component
             }
 
             try {
-                $decryptedIdentityCard = \Illuminate\Support\Facades\Crypt::decryptString(
+                $decryptedIdentityCard = Crypt::decryptString(
                     $user->userDetail->identity_card
                 );
 
@@ -944,7 +946,7 @@ class AdminConsultationPatientIndex extends Component
         // 3. Cek NIK (identity_card dari UserDetail)
         if ($existingUser->userDetail && $existingUser->userDetail->identity_card && $this->identity_card) {
             try {
-                $existingIdentityCard = \Illuminate\Support\Facades\Crypt::decryptString($existingUser->userDetail->identity_card);
+                $existingIdentityCard = Crypt::decryptString($existingUser->userDetail->identity_card);
                 $identityCardMatch = $existingIdentityCard === $this->identity_card;
                 if (! $identityCardMatch) {
                     Log::info('NIK difference detected', [
@@ -1390,7 +1392,7 @@ class AdminConsultationPatientIndex extends Component
 
     public function confirmDetail($user_id)
     {
-        \Illuminate\Support\Facades\Session::put('patient_id', $user_id);
+        Session::put('patient_id', $user_id);
 
         return redirect()->route('user.consultation.patient.detail');
     }
@@ -1449,6 +1451,7 @@ class AdminConsultationPatientIndex extends Component
         $companyId = Auth::user()->company_id;
 
         $patients = User::query()
+            ->with(['userDetail', 'patient.OHPatient'])
             ->search($this->search)
             ->role('Pasien')
             ->CompanyChoice($companyId);
@@ -1460,6 +1463,7 @@ class AdminConsultationPatientIndex extends Component
         }
 
         $users = User::query()
+            ->with(['userDetail', 'patient.OHPatient'])
             ->where('id', '!=', $this->data_id)
             ->search($this->searchUser)
             ->role('Pasien')

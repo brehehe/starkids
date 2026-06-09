@@ -5,26 +5,38 @@ namespace App\Livewire\Admin\Consultation\History;
 use App\Helpers\AlertHelper;
 use App\Models\Location\Location;
 use App\Models\Transaction\Transaction;
+use App\Traits\Transaction\ReversesTransactionStock;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Session;
-use Illuminate\Support\Facades\Auth;
 
 class AdminConsultationHistoryIndex extends Component
 {
+    use ReversesTransactionStock;
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
+
     public $search = '';
+
     public $perPage = 5;
+
     protected $queryString = [
         'search' => ['except' => ''],
     ];
 
     public $start_date;
+
     public $end_date;
+
     public $start_time;
+
     public $end_time;
+
     public $location_id;
+
     public $locations = [];
 
     public function mount()
@@ -78,11 +90,13 @@ class AdminConsultationHistoryIndex extends Component
         $transaction = Transaction::find($id[0]);
 
         if ($transaction) {
+            $this->reverseStockForTransaction($transaction);
+
             $transaction->update([
                 'status' => 'canceled',
             ]);
 
-            return AlertHelper::success('Berhasil', 'Konsultasi pasien ' . $transaction->patient_name . ' berhasil dibatalkan.');
+            return AlertHelper::success('Berhasil', 'Konsultasi pasien '.$transaction->patient_name.' berhasil dibatalkan.');
         } else {
             return AlertHelper::alertError('error', 'Data tidak ditemukan');
         }
@@ -97,7 +111,7 @@ class AdminConsultationHistoryIndex extends Component
                 'status' => 'call_consultation',
             ]);
 
-            return AlertHelper::success('Berhasil', 'Pasien ' . $transaction->patient_name . ' berhasil dipanggil.');
+            return AlertHelper::success('Berhasil', 'Pasien '.$transaction->patient_name.' berhasil dipanggil.');
         } else {
             return AlertHelper::alertError('error', 'Data tidak ditemukan');
         }
@@ -131,6 +145,7 @@ class AdminConsultationHistoryIndex extends Component
             ]);
 
             Session::put('transaction_id', $transaction->id);
+
             return redirect()->route('user.consultation.consultation.detail');
         } else {
             return AlertHelper::alertError('error', 'Data tidak ditemukan');
@@ -143,6 +158,7 @@ class AdminConsultationHistoryIndex extends Component
 
         if ($transaction) {
             Session::put('transaction_id', $transaction->id);
+
             return redirect()->route('user.consultation.consultation.detail');
         } else {
             return AlertHelper::alertError('error', 'Data tidak ditemukan');
@@ -161,7 +177,7 @@ class AdminConsultationHistoryIndex extends Component
         if ($transaction) {
             $transaction->delete();
 
-            return AlertHelper::success('Berhasil', 'Konsultasi pasien ' . $transaction->patient_name . ' berhasil dihapus.');
+            return AlertHelper::success('Berhasil', 'Konsultasi pasien '.$transaction->patient_name.' berhasil dihapus.');
         } else {
             return AlertHelper::alertError('error', 'Data tidak ditemukan');
         }
@@ -170,6 +186,7 @@ class AdminConsultationHistoryIndex extends Component
     public function render()
     {
         $transactions = Transaction::search($this->search)
+            ->with(['patient.userDetail', 'patient.patient.OHPatient', 'doctor', 'controlDoctor'])
             ->where('consultation', 'yes')
             // ->whereNotIn('status', ['draft_consultation', 'call_consultation', 'confirmation_call', 'consultation'])
             ->orderBy('created_at', 'desc')
@@ -210,6 +227,7 @@ class AdminConsultationHistoryIndex extends Component
             ->extends('layout.app')
             ->section('content');
     }
+
     public function getPeakHours()
     {
         $query = Transaction::query()
@@ -243,7 +261,7 @@ class AdminConsultationHistoryIndex extends Component
         return $query->select('created_at')
             ->get()
             ->groupBy(function ($date) {
-                return \Carbon\Carbon::parse($date->created_at)->format('H:00');
+                return Carbon::parse($date->created_at)->format('H:00');
             })
             ->map(function ($item) {
                 return $item->count();

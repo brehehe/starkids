@@ -8,79 +8,106 @@ use App\Models\Master\CodeSystem\Patient\MasterPatientAdministrativeGender;
 use App\Models\Master\CodeSystem\Patient\MasterPatientMaritalStatus;
 use App\Models\Patient\OneHealth\OneHealthPatient;
 use App\Models\Patient\Patient;
-use App\Models\Poly\Poly;
 use App\Models\Role\RoleCompany;
 use App\Models\Spatie\Role;
-use App\Models\Transaction\Transaction;
 use App\Models\User;
-use App\Models\User\ControlDoctor;
 use App\Models\User\UserCompanyRole;
 use App\Models\User\UserDetail;
-use App\Models\User\UserPrice;
 use App\Models\User\UserType;
 use App\service\apiservice;
 use App\Traits\OneHealth\AuthenticateTrait;
 use App\Traits\Region\RegionTrait;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 use Livewire\WithPagination;
-use Carbon\Carbon;
 
 class AdminMasterPatientIndex extends Component
 {
-    use WithPagination, RegionTrait, AuthenticateTrait;
+    use AuthenticateTrait, RegionTrait, WithPagination;
+
     protected $paginationTheme = 'bootstrap';
+
     protected $queryString = [
         'search' => ['except' => ''],
         'searchUser' => ['except' => ''],
     ];
+
     public $search = '';
+
     public $searchUser = '';
+
     public $perPage = 5;
+
     public $perPagePatient = 5;
 
     // User
     public $data_id;
+
     public $name;
+
     public $username;
+
     public $email;
+
     public $phone;
+
     public $user_id;
+
     public $user_type_id;
+
     public $user_detail;
+
     public $identity_card_mother = false; // Untuk NIK Ibu, default tidak terpilih
 
     // User Detail
     public $address;
+
     public $ihs_number;
+
     public $identity_card;
+
     public $blood_group;
+
     public $administrative_gender;
+
     public $birth_date;
+
     public $marital_status;
+
     public $province_code;
+
     public $city_code;
+
     public $district_code;
+
     public $sub_district_code;
+
     public $rt_code;
+
     public $rw_code;
+
     public $postal_code;
 
     // Array
     public $maritalStatusDetails = [];
+
     public $administrativeGenderDetails = [];
+
     public $provinces = [];
+
     public $cities = [];
+
     public $districts = [];
+
     public $subDistricts = [];
+
     public $user_types = [];
 
     // public $getDays = [
@@ -130,6 +157,7 @@ class AdminMasterPatientIndex extends Component
     public function openModal()
     {
         $this->provinces = $this->getProvinceTrait();
+
         return $this->dispatch('open-modal', ['id' => 'modal']);
     }
 
@@ -165,6 +193,7 @@ class AdminMasterPatientIndex extends Component
             'identity_card_mother', // Reset NIK Ibu
         ]);
         $this->resetValidation();
+
         return $this->dispatch('close-modal', ['id' => 'modal']);
     }
 
@@ -181,7 +210,7 @@ class AdminMasterPatientIndex extends Component
         $this->data_id = $user->id;
         $this->name = $user->name;
         $this->user_id = $user->user_id;
-        $this->user_detail = $user->user ? $user?->user?->name . ' (' . ($user?->user?->userDetail ? $user?->user?->userDetail?->address : '-') . ')' : '-';
+        $this->user_detail = $user->user ? $user?->user?->name.' ('.($user?->user?->userDetail ? $user?->user?->userDetail?->address : '-').')' : '-';
         $this->user_type_id = $user->user_type_id;
         // $this->username = $user->username;
         $this->email = $user->email;
@@ -217,14 +246,14 @@ class AdminMasterPatientIndex extends Component
     {
         try {
             $currentCompanyId = Auth::user()->company_id;
-            Log::info("Rules method called", [
+            Log::info('Rules method called', [
                 'current_company_id' => $currentCompanyId,
                 'current_user_id' => Auth::user()->id ?? 'unknown',
-                'current_user_name' => Auth::user()->name ?? 'unknown'
+                'current_user_name' => Auth::user()->name ?? 'unknown',
             ]);
         } catch (\Exception $e) {
-            Log::error("Could not get current user in rules method", [
-                'error' => $e->getMessage()
+            Log::error('Could not get current user in rules method', [
+                'error' => $e->getMessage(),
             ]);
             $currentCompanyId = null;
         }
@@ -257,19 +286,19 @@ class AdminMasterPatientIndex extends Component
                     if ($currentCompanyId) {
                         $this->validateUniqueContactInfo('phone', $value, $currentCompanyId, $fail);
                     } else {
-                        Log::warning("Skipping phone validation - no current company ID");
+                        Log::warning('Skipping phone validation - no current company ID');
                     }
                 },
             ],
-            'user_type_id'          => 'required|exists:user_types,id',
-            'address'               => 'required|string|max:500',
-            'postal_code'           => 'nullable|string|max:20',
-            'blood_group'           => 'nullable|string|max:10',
+            'user_type_id' => 'required|exists:user_types,id',
+            'address' => 'required|string|max:500',
+            'postal_code' => 'nullable|string|max:20',
+            'blood_group' => 'nullable|string|max:10',
             'administrative_gender' => 'nullable|in:male,female',
-            'birth_date'            => 'required|date|before:today',
-            'marital_status'        => 'nullable',
-            'rt_code'               => 'nullable',
-            'rw_code'               => 'nullable',
+            'birth_date' => 'required|date|before:today',
+            'marital_status' => 'nullable',
+            'rt_code' => 'nullable',
+            'rw_code' => 'nullable',
         ];
     }
 
@@ -312,14 +341,14 @@ class AdminMasterPatientIndex extends Component
             'email' => $this->email,
             'phone' => $this->phone,
             'data_id' => $this->data_id,
-            'user_id' => auth()->id()
+            'user_id' => auth()->id(),
         ]);
 
         $currentCompanyId = auth()->user()->company_id;
-        \Log::info('Current company ID: ' . $currentCompanyId);
+        \Log::info('Current company ID: '.$currentCompanyId);
 
         // Cleanup orphaned users before attempting to create new one
-        if (!$this->data_id) { // Only for new patients, not updates
+        if (! $this->data_id) { // Only for new patients, not updates
             $this->cleanupOrphanedUsers(
                 $this->email,
                 $this->phone,
@@ -357,16 +386,17 @@ class AdminMasterPatientIndex extends Component
             // Handle user creation/update
             $userResult = $this->handlePatientIdentityResolution($currentCompanyId);
 
-            if (!$userResult['success']) {
+            if (! $userResult['success']) {
                 DB::rollBack();
-                \Log::error('Failed to handle patient identity: ' . $userResult['message']);
+                \Log::error('Failed to handle patient identity: '.$userResult['message']);
+
                 return AlertHelper::error('Gagal', $userResult['message']);
             }
 
             $user = $userResult['user'];
 
             // Simpan referensi user baru untuk cleanup jika diperlukan
-            if (!$userResult['is_update']) {
+            if (! $userResult['is_update']) {
                 $createdUser = $user;
             }
 
@@ -387,7 +417,7 @@ class AdminMasterPatientIndex extends Component
             AlertHelper::success('Berhasil', $userResult['is_update'] ? 'Patient berhasil diperbarui.' : 'Patient berhasil ditambahkan.');
 
             \Log::info('Patient successfully saved', ['user_id' => $user->id]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             DB::rollBack();
 
             // Cleanup user yang baru dibuat jika ada error validasi
@@ -401,7 +431,7 @@ class AdminMasterPatientIndex extends Component
             \Log::error('Validation error saving patient', [
                 'user_id' => auth()->id(),
                 'errors' => $e->errors(),
-                'data' => $this->getPatientData()
+                'data' => $this->getPatientData(),
             ]);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -411,13 +441,13 @@ class AdminMasterPatientIndex extends Component
                 $this->cleanupFailedUser($createdUser);
             }
 
-            AlertHelper::error('Gagal', 'Patient gagal disimpan: ' . $th->getMessage());
+            AlertHelper::error('Gagal', 'Patient gagal disimpan: '.$th->getMessage());
 
             \Log::error('Error saving patient', [
                 'user_id' => auth()->id(),
                 'error' => $th->getMessage(),
                 'trace' => $th->getTraceAsString(),
-                'data' => $this->getPatientData()
+                'data' => $this->getPatientData(),
             ]);
         }
     }
@@ -431,21 +461,21 @@ class AdminMasterPatientIndex extends Component
             $patient = Patient::where('user_id', $user->id)->first();
             $oneHealthPatient = OneHealthPatient::where('patient_id', $patient?->id)->first();
 
-            if (!$patient || !$oneHealthPatient || !$oneHealthPatient->id_patient) {
+            if (! $patient || ! $oneHealthPatient || ! $oneHealthPatient->id_patient) {
                 Log::info('Creating user via API service...');
                 app(apiservice::class)->createUser($user, $this->identity_card_mother);
             }
         } catch (\Exception $e) {
             Log::error('API integration failed', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             // Jangan throw error untuk API failure, cukup log
             // Karena user sudah berhasil dibuat secara lokal
             Log::warning('Patient created locally but API integration failed', [
                 'user_id' => $user->id,
-                'api_error' => $e->getMessage()
+                'api_error' => $e->getMessage(),
             ]);
         }
     }
@@ -473,7 +503,7 @@ class AdminMasterPatientIndex extends Component
         } catch (\Exception $e) {
             \Log::error('Error cleaning up failed user', [
                 'user_id' => $user->id,
-                'cleanup_error' => $e->getMessage()
+                'cleanup_error' => $e->getMessage(),
             ]);
         }
     }
@@ -489,9 +519,15 @@ class AdminMasterPatientIndex extends Component
             $cleanupCriteria = [];
 
             // Kumpulkan kriteria untuk pencarian
-            if ($email) $cleanupCriteria['email'] = $email;
-            if ($phone) $cleanupCriteria['phone'] = $phone;
-            if ($username) $cleanupCriteria['username'] = $username;
+            if ($email) {
+                $cleanupCriteria['email'] = $email;
+            }
+            if ($phone) {
+                $cleanupCriteria['phone'] = $phone;
+            }
+            if ($username) {
+                $cleanupCriteria['username'] = $username;
+            }
 
             if (empty($cleanupCriteria)) {
                 return;
@@ -515,7 +551,7 @@ class AdminMasterPatientIndex extends Component
                         'phone' => $user->phone,
                         'username' => $user->username,
                         'name' => $user->name,
-                        'created_at' => $user->created_at
+                        'created_at' => $user->created_at,
                     ]);
 
                     // Gunakan method cleanup yang sudah ada
@@ -525,7 +561,7 @@ class AdminMasterPatientIndex extends Component
         } catch (\Exception $e) {
             \Log::error('Error in cleanupOrphanedUsers', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
             // Don't throw exception, just log it
         }
@@ -542,12 +578,12 @@ class AdminMasterPatientIndex extends Component
             return;
         }
 
-        Log::info("Validating identity card uniqueness", [
+        Log::info('Validating identity card uniqueness', [
             'identity_card' => $identityCard,
             'company_id' => $companyId,
             'name' => $this->name,
             'identity_card_mother' => $this->identity_card_mother,
-            'exclude_user_id' => $this->data_id
+            'exclude_user_id' => $this->data_id,
         ]);
 
         // Cari semua user dengan NIK yang sama dalam company
@@ -566,7 +602,7 @@ class AdminMasterPatientIndex extends Component
         $users = $query->with(['userDetail', 'patient'])->get();
 
         foreach ($users as $user) {
-            if (!$user->userDetail || !$user->userDetail->identity_card) {
+            if (! $user->userDetail || ! $user->userDetail->identity_card) {
                 continue;
             }
 
@@ -584,22 +620,23 @@ class AdminMasterPatientIndex extends Component
                         $nikStatus = $this->identity_card_mother ? 'NIK Ibu' : 'NIK Sendiri';
                         $errorMessage = "Kombinasi NIK '{$identityCard}', nama '{$this->name}', dan status '{$nikStatus}' sudah digunakan oleh pasien lain";
 
-                        Log::warning("Identity card validation failed", [
+                        Log::warning('Identity card validation failed', [
                             'identity_card' => $identityCard,
                             'name' => $this->name,
                             'identity_card_mother' => $this->identity_card_mother,
                             'existing_user_id' => $user->id,
                             'existing_user_name' => $user->name,
                             'existing_identity_card_mother' => $existingIdentityCardMother,
-                            'conflict_type' => 'exact_duplicate'
+                            'conflict_type' => 'exact_duplicate',
                         ]);
 
                         $fail($errorMessage);
+
                         return;
                     }
 
                     // NIK sama tapi kombinasi nama/status berbeda = diizinkan
-                    Log::info("Same NIK with different combination allowed", [
+                    Log::info('Same NIK with different combination allowed', [
                         'identity_card' => $identityCard,
                         'current_name' => $this->name,
                         'current_identity_card_mother' => $this->identity_card_mother,
@@ -607,19 +644,20 @@ class AdminMasterPatientIndex extends Component
                         'existing_identity_card_mother' => $existingIdentityCardMother,
                         'name_match' => $nameMatch,
                         'status_match' => $identityCardMotherMatch,
-                        'context' => 'Different person/status using same NIK (allowed)'
+                        'context' => 'Different person/status using same NIK (allowed)',
                     ]);
                 }
             } catch (\Exception $e) {
-                Log::warning("Failed to decrypt identity card", [
+                Log::warning('Failed to decrypt identity card', [
                     'user_id' => $user->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
+
                 continue;
             }
         }
 
-        Log::info("Identity card validation passed");
+        Log::info('Identity card validation passed');
     }
 
     /**
@@ -634,14 +672,14 @@ class AdminMasterPatientIndex extends Component
             return;
         }
 
-        Log::info("Validating contact info uniqueness (skip soft deleted)", [
+        Log::info('Validating contact info uniqueness (skip soft deleted)', [
             'field' => $field,
             'value' => $value,
             'company_id' => $companyId,
             'name' => $this->name,
             'identity_card' => $this->identity_card,
             'identity_card_mother' => $this->identity_card_mother,
-            'exclude_user_id' => $this->data_id
+            'exclude_user_id' => $this->data_id,
         ]);
 
         $query = User::where($field, $value)
@@ -657,12 +695,13 @@ class AdminMasterPatientIndex extends Component
             $hasAnyDifference = $this->hasAnyDifferenceInCriteria($existingUser);
 
             if ($hasAnyDifference) {
-                Log::info("Contact info ALLOWED - ada perbedaan kriteria", [
+                Log::info('Contact info ALLOWED - ada perbedaan kriteria', [
                     'field' => $field,
                     'value' => $value,
                     'existing_user_id' => $existingUser->id,
-                    'different_criteria' => $this->findDifferentCriteria($existingUser)
+                    'different_criteria' => $this->findDifferentCriteria($existingUser),
                 ]);
+
                 continue;
             }
 
@@ -672,14 +711,15 @@ class AdminMasterPatientIndex extends Component
 
             $errorMessage = "{$fieldName} '{$value}' sudah digunakan oleh pasien lain dengan identitas yang sama persis: {$existingUser->name} {$existingIdentityInfo}";
 
-            Log::warning("Contact info validation FAILED - exact duplicate aktif", [
+            Log::warning('Contact info validation FAILED - exact duplicate aktif', [
                 'field' => $field,
                 'value' => $value,
                 'existing_user_id' => $existingUser->id,
-                'reason' => 'All criteria sama persis pada user aktif'
+                'reason' => 'All criteria sama persis pada user aktif',
             ]);
 
             $fail($errorMessage);
+
             return;
         }
 
@@ -696,7 +736,7 @@ class AdminMasterPatientIndex extends Component
         $nameMatch = strtolower(trim($this->name)) === strtolower(trim($existingUser->name));
 
         // Jika nama tidak sama, bukan orang yang sama
-        if (!$nameMatch) {
+        if (! $nameMatch) {
             return false;
         }
 
@@ -707,7 +747,7 @@ class AdminMasterPatientIndex extends Component
                 $identityCardMatch = $existingIdentityCard === $this->identity_card;
 
                 // Jika NIK tidak sama, bukan orang yang sama
-                if (!$identityCardMatch) {
+                if (! $identityCardMatch) {
                     return false;
                 }
 
@@ -719,10 +759,11 @@ class AdminMasterPatientIndex extends Component
                 // Orang yang sama jika: nama sama + NIK sama + status identity_card_mother sama
                 return $identityCardMotherMatch;
             } catch (\Exception $e) {
-                Log::warning("Failed to decrypt existing user identity card in isSamePersonAdvanced", [
+                Log::warning('Failed to decrypt existing user identity card in isSamePersonAdvanced', [
                     'user_id' => $existingUser->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
+
                 // Jika tidak bisa decrypt NIK, tidak bisa memastikan orang yang sama
                 return false;
             }
@@ -744,38 +785,40 @@ class AdminMasterPatientIndex extends Component
         try {
             $currentCompanyId = Auth::user()->company_id ?? auth()->user()->company_id ?? null;
         } catch (\Exception $e) {
-            Log::warning("Could not get current user company_id in hasAnyDifferenceInCriteria", [
-                'error' => $e->getMessage()
+            Log::warning('Could not get current user company_id in hasAnyDifferenceInCriteria', [
+                'error' => $e->getMessage(),
             ]);
         }
 
-        Log::info("Checking criteria differences", [
+        Log::info('Checking criteria differences', [
             'current_company_id' => $currentCompanyId,
             'existing_user_id' => $existingUser->id,
             'existing_user_company_id' => $existingUser->company_id,
             'current_name' => $this->name,
             'existing_name' => $existingUser->name,
             'current_identity_card_mother' => $this->identity_card_mother,
-            'existing_identity_card_mother' => $existingUser->patient ? $existingUser->patient->identity_card_mother : null
+            'existing_identity_card_mother' => $existingUser->patient ? $existingUser->patient->identity_card_mother : null,
         ]);
 
         // 1. Cek company_id
         $companyDifferent = false;
         if ($currentCompanyId && $existingUser->company_id !== $currentCompanyId) {
-            Log::info("Company difference detected", [
+            Log::info('Company difference detected', [
                 'current' => $currentCompanyId,
-                'existing' => $existingUser->company_id
+                'existing' => $existingUser->company_id,
             ]);
+
             return true; // Company berbeda = ada perbedaan = sharing diperbolehkan
         }
 
         // 2. Cek nama
         $nameMatch = strtolower(trim($this->name)) === strtolower(trim($existingUser->name));
-        if (!$nameMatch) {
-            Log::info("Name difference detected", [
+        if (! $nameMatch) {
+            Log::info('Name difference detected', [
                 'current' => $this->name,
-                'existing' => $existingUser->name
+                'existing' => $existingUser->name,
             ]);
+
             return true; // Nama berbeda = ada perbedaan = sharing diperbolehkan
         }
 
@@ -784,24 +827,27 @@ class AdminMasterPatientIndex extends Component
             try {
                 $existingIdentityCard = Crypt::decryptString($existingUser->userDetail->identity_card);
                 $identityCardMatch = $existingIdentityCard === $this->identity_card;
-                if (!$identityCardMatch) {
-                    Log::info("NIK difference detected", [
-                        'current_masked' => substr($this->identity_card, 0, 4) . '****' . substr($this->identity_card, -4),
-                        'existing_masked' => substr($existingIdentityCard, 0, 4) . '****' . substr($existingIdentityCard, -4)
+                if (! $identityCardMatch) {
+                    Log::info('NIK difference detected', [
+                        'current_masked' => substr($this->identity_card, 0, 4).'****'.substr($this->identity_card, -4),
+                        'existing_masked' => substr($existingIdentityCard, 0, 4).'****'.substr($existingIdentityCard, -4),
                     ]);
+
                     return true; // NIK berbeda = ada perbedaan = sharing diperbolehkan
                 }
             } catch (\Exception $e) {
-                Log::info("NIK comparison failed (treating as different)", [
-                    'error' => $e->getMessage()
+                Log::info('NIK comparison failed (treating as different)', [
+                    'error' => $e->getMessage(),
                 ]);
+
                 return true; // Tidak bisa decrypt = anggap berbeda = sharing diperbolehkan
             }
         } else {
-            Log::info("NIK not available for comparison (treating as different)", [
-                'current_has_nik' => !empty($this->identity_card),
-                'existing_has_nik' => $existingUser->userDetail && $existingUser->userDetail->identity_card
+            Log::info('NIK not available for comparison (treating as different)', [
+                'current_has_nik' => ! empty($this->identity_card),
+                'existing_has_nik' => $existingUser->userDetail && $existingUser->userDetail->identity_card,
             ]);
+
             return true; // NIK tidak tersedia = anggap berbeda = sharing diperbolehkan
         }
 
@@ -809,20 +855,21 @@ class AdminMasterPatientIndex extends Component
         $existingPatient = $existingUser->patient;
         $existingIdentityCardMother = $existingPatient ? $existingPatient->identity_card_mother : false;
         $identityCardMotherMatch = $existingIdentityCardMother === $this->identity_card_mother;
-        if (!$identityCardMotherMatch) {
-            Log::info("Identity card mother status difference detected", [
+        if (! $identityCardMotherMatch) {
+            Log::info('Identity card mother status difference detected', [
                 'current' => $this->identity_card_mother ? 'mother' : 'self',
-                'existing' => $existingIdentityCardMother ? 'mother' : 'self'
+                'existing' => $existingIdentityCardMother ? 'mother' : 'self',
             ]);
+
             return true; // Status berbeda = ada perbedaan = sharing diperbolehkan
         }
 
         // Jika sampai sini, berarti SEMUA kriteria sama = TIDAK ada perbedaan = sharing DITOLAK
-        Log::warning("All criteria are the same - sharing BLOCKED", [
+        Log::warning('All criteria are the same - sharing BLOCKED', [
             'company_match' => true,
             'name_match' => $nameMatch,
             'identity_card_match' => true,
-            'identity_card_mother_match' => $identityCardMotherMatch
+            'identity_card_mother_match' => $identityCardMotherMatch,
         ]);
 
         return false;
@@ -844,7 +891,7 @@ class AdminMasterPatientIndex extends Component
 
         // 2. Cek nama
         $nameMatch = strtolower(trim($this->name)) === strtolower(trim($existingUser->name));
-        if (!$nameMatch) {
+        if (! $nameMatch) {
             $differences[] = 'nama berbeda';
         }
 
@@ -853,7 +900,7 @@ class AdminMasterPatientIndex extends Component
             try {
                 $existingIdentityCard = Crypt::decryptString($existingUser->userDetail->identity_card);
                 $identityCardMatch = $existingIdentityCard === $this->identity_card;
-                if (!$identityCardMatch) {
+                if (! $identityCardMatch) {
                     $differences[] = 'NIK berbeda';
                 }
             } catch (\Exception $e) {
@@ -867,7 +914,7 @@ class AdminMasterPatientIndex extends Component
         $existingPatient = $existingUser->patient;
         $existingIdentityCardMother = $existingPatient ? $existingPatient->identity_card_mother : false;
         $identityCardMotherMatch = $existingIdentityCardMother === $this->identity_card_mother;
-        if (!$identityCardMotherMatch) {
+        if (! $identityCardMotherMatch) {
             $currentStatus = $this->identity_card_mother ? 'NIK Ibu' : 'NIK Sendiri';
             $existingStatus = $existingIdentityCardMother ? 'NIK Ibu' : 'NIK Sendiri';
             $differences[] = "status NIK berbeda (sekarang: {$currentStatus}, yang ada: {$existingStatus})";
@@ -886,10 +933,10 @@ class AdminMasterPatientIndex extends Component
         if ($existingUser->userDetail && $existingUser->userDetail->identity_card) {
             try {
                 $decryptedNik = Crypt::decryptString($existingUser->userDetail->identity_card);
-                $maskedNik = substr($decryptedNik, 0, 4) . str_repeat('*', 8) . substr($decryptedNik, -4);
+                $maskedNik = substr($decryptedNik, 0, 4).str_repeat('*', 8).substr($decryptedNik, -4);
                 $info[] = "NIK: {$maskedNik}";
             } catch (\Exception $e) {
-                $info[] = "NIK: [Terenkripsi]";
+                $info[] = 'NIK: [Terenkripsi]';
             }
         }
 
@@ -898,7 +945,7 @@ class AdminMasterPatientIndex extends Component
             $info[] = "Status: {$nikStatus}";
         }
 
-        return !empty($info) ? '(' . implode(', ', $info) . ')' : '';
+        return ! empty($info) ? '('.implode(', ', $info).')' : '';
     }
 
     /**
@@ -911,11 +958,11 @@ class AdminMasterPatientIndex extends Component
             return;
         }
 
-        Log::info("Validating patient uniqueness", [
+        Log::info('Validating patient uniqueness', [
             'field' => $field,
             'value' => $value,
             'company_id' => $companyId,
-            'exclude_user_id' => $this->data_id
+            'exclude_user_id' => $this->data_id,
         ]);
 
         // Cek duplikasi untuk patient dalam company yang sama
@@ -937,15 +984,16 @@ class AdminMasterPatientIndex extends Component
             // Langsung gagal, karena existing aktif
             $errorMessage = "{$fieldName} '{$value}' sudah digunakan oleh pasien lain: {$existingPatient->name}";
 
-            Log::warning("Patient validation failed", [
+            Log::warning('Patient validation failed', [
                 'field' => $field,
                 'value' => $value,
                 'existing_patient_id' => $existingPatient->id,
                 'existing_patient_name' => $existingPatient->name,
-                'is_soft_deleted' => !is_null($existingPatient->deleted_at)
+                'is_soft_deleted' => ! is_null($existingPatient->deleted_at),
             ]);
 
             $fail($errorMessage);
+
             return;
         }
 
@@ -983,14 +1031,14 @@ class AdminMasterPatientIndex extends Component
         } catch (\Exception $e) {
             Log::error('Error in handlePatientIdentityResolution', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return [
                 'success' => false,
                 'user' => null,
                 'message' => $e->getMessage(),
-                'is_update' => false
+                'is_update' => false,
             ];
         }
     }
@@ -1002,7 +1050,7 @@ class AdminMasterPatientIndex extends Component
     {
         $user = User::find($this->data_id);
 
-        if (!$user) {
+        if (! $user) {
             throw new \Exception('Patient tidak ditemukan');
         }
 
@@ -1024,7 +1072,7 @@ class AdminMasterPatientIndex extends Component
             'company_id' => $companyId,
             'user_type_id' => $this->user_type_id,
             'type_user' => 'patient',
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         Log::info('Patient updated successfully', ['user_id' => $user->id]);
@@ -1033,7 +1081,7 @@ class AdminMasterPatientIndex extends Component
             'success' => true,
             'user' => $user,
             'message' => 'Patient updated successfully',
-            'is_update' => true
+            'is_update' => true,
         ];
     }
 
@@ -1055,9 +1103,8 @@ class AdminMasterPatientIndex extends Component
             'profile' => null,
             'email_verified_at' => now(),
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ];
-
 
         $user = User::create($userData);
 
@@ -1067,7 +1114,7 @@ class AdminMasterPatientIndex extends Component
             'success' => true,
             'user' => $user,
             'message' => 'New patient created successfully',
-            'is_update' => false
+            'is_update' => false,
         ];
     }
 
@@ -1090,7 +1137,7 @@ class AdminMasterPatientIndex extends Component
             'rt' => $this->rt_code,
             'rw' => $this->rw_code,
             'postal_code' => $this->postal_code,
-            'updated_at' => now()
+            'updated_at' => now(),
         ];
 
         UserDetail::updateOrCreate(
@@ -1103,16 +1150,16 @@ class AdminMasterPatientIndex extends Component
         if ($existingPatient) {
             $existingPatient->update([
                 'identity_card_mother' => $this->identity_card_mother,
-                'updated_at' => now()
+                'updated_at' => now(),
             ]);
             Log::info('Patient identity_card_mother updated', [
                 'user_id' => $user->id,
                 'patient_id' => $existingPatient->id,
-                'identity_card_mother' => $this->identity_card_mother
+                'identity_card_mother' => $this->identity_card_mother,
             ]);
         } else {
             Log::info('Patient record not found, skipping identity_card_mother update', [
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
         }
 
@@ -1127,7 +1174,7 @@ class AdminMasterPatientIndex extends Component
         try {
             $role = Role::where('name', 'Pasien')->first();
 
-            if (!$role) {
+            if (! $role) {
                 throw new \Exception('Role Pasien tidak ditemukan');
             }
 
@@ -1135,7 +1182,7 @@ class AdminMasterPatientIndex extends Component
                 ->where('role_id', $role->uuid)
                 ->first();
 
-            if (!$roleCompany) {
+            if (! $roleCompany) {
                 throw new \Exception('Role Pasien tidak tersedia untuk company ini');
             }
 
@@ -1145,7 +1192,7 @@ class AdminMasterPatientIndex extends Component
                 ->where('role_id', $role->uuid)
                 ->first();
 
-            if (!$existingRole) {
+            if (! $existingRole) {
                 RoleHelper::assignRoleToUserInCompany(
                     $user,
                     $role->name,
@@ -1158,13 +1205,13 @@ class AdminMasterPatientIndex extends Component
                 Log::info('Patient role assigned', [
                     'user_id' => $user->id,
                     'role' => $role->name,
-                    'company_id' => $companyId
+                    'company_id' => $companyId,
                 ]);
             }
         } catch (\Exception $e) {
             Log::error('Error assigning patient role', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -1181,13 +1228,14 @@ class AdminMasterPatientIndex extends Component
             'email' => $this->email,
             'phone' => $this->phone,
             'type_user' => 'patient',
-            'company_id' => Auth::user()->company_id
+            'company_id' => Auth::user()->company_id,
         ];
     }
 
     public function confirmDetail($user_id)
     {
         Session::put('patient_id', $user_id);
+
         return redirect()->route('user.consultation.patient.detail');
     }
 
@@ -1203,7 +1251,7 @@ class AdminMasterPatientIndex extends Component
 
         Log::info('Patient validation debug', [
             'conflicts' => $conflicts,
-            'current_data' => $this->getPatientData()
+            'current_data' => $this->getPatientData(),
         ]);
 
         return $conflicts;
@@ -1234,7 +1282,7 @@ class AdminMasterPatientIndex extends Component
         $users = $query->with(['userDetail', 'patient'])->get();
 
         foreach ($users as $user) {
-            if (!$user->userDetail || !$user->userDetail->identity_card) {
+            if (! $user->userDetail || ! $user->userDetail->identity_card) {
                 continue;
             }
 
@@ -1267,7 +1315,7 @@ class AdminMasterPatientIndex extends Component
                         'identity_card_mother_match' => $identityCardMotherMatch,
                         'current_identity_card_mother' => $this->identity_card_mother,
                         'existing_identity_card_mother' => $existingIdentityCardMother,
-                        'is_soft_deleted' => !is_null($user->deleted_at)
+                        'is_soft_deleted' => ! is_null($user->deleted_at),
                     ];
                 }
             } catch (\Exception $e) {
@@ -1327,12 +1375,12 @@ class AdminMasterPatientIndex extends Component
                 'identity_info' => $identityInfo,
                 'identity_card_mother' => $patient->patient ? $patient->patient->identity_card_mother : false,
                 'current_identity_card_mother' => $this->identity_card_mother,
-                'is_soft_deleted' => !is_null($patient->deleted_at),
+                'is_soft_deleted' => ! is_null($patient->deleted_at),
                 'same_person_check' => [
                     'name_match' => strtolower(trim($this->name)) === strtolower(trim($patient->name)),
-                    'identity_card_available' => !empty($this->identity_card) && $patient->userDetail && $patient->userDetail->identity_card,
-                    'same_person_result' => $isSamePerson
-                ]
+                    'identity_card_available' => ! empty($this->identity_card) && $patient->userDetail && $patient->userDetail->identity_card,
+                    'same_person_result' => $isSamePerson,
+                ],
             ];
         }
 
@@ -1341,11 +1389,11 @@ class AdminMasterPatientIndex extends Component
 
     public function render()
     {
-        $patients = User::query()->search($this->search)->role('Pasien');
+        $patients = User::query()->with(['userDetail', 'patient.OHPatient'])->search($this->search)->role('Pasien');
 
         return view('livewire.admin.master.patient.admin-master-patient-index', [
             'patients' => $patients->paginate($this->perPage),
-            'users' => User::query()->where('id', '!=', $this->data_id)->search($this->searchUser)->role('Pasien')->paginate($this->perPagePatient, ['*'], 'pagePatient')
+            'users' => User::query()->with(['userDetail', 'patient.OHPatient'])->where('id', '!=', $this->data_id)->search($this->searchUser)->role('Pasien')->paginate($this->perPagePatient, ['*'], 'pagePatient'),
         ])
             ->extends('layout.app')
             ->section('content');
@@ -1367,7 +1415,7 @@ class AdminMasterPatientIndex extends Component
     {
         $user = User::findOrFail($id);
         $this->user_id = $user->id;
-        $this->user_detail = $user->name . ' (' . $user->userDetail->address . ')';
+        $this->user_detail = $user->name.' ('.$user->userDetail->address.')';
         $this->closeModalUser();
     }
 
@@ -1387,7 +1435,6 @@ class AdminMasterPatientIndex extends Component
             AlertHelper::error('Gagal', 'Gagal menghapus User');
         }
 
-        return;
         // return redirect()->route('admin.master.patient.index');
     }
 }

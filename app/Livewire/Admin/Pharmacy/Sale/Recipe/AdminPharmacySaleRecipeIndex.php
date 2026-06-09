@@ -3,46 +3,95 @@
 namespace App\Livewire\Admin\Pharmacy\Sale\Recipe;
 
 use App\Helpers\AlertHelper;
-use App\Models\PaymentMethod\PaymentMethod;
-use App\Models\Product\Product;
-use App\Models\Transaction\Transaction;
-use App\Models\Transaction\TransactionPayment;
-use Auth;
-use Livewire\Component;
-use Str;
 use App\Models\Branch\Branch;
 use App\Models\Company\Company;
 use App\Models\MedicineType\MedicineType;
+use App\Models\PaymentMethod\PaymentMethod;
+use App\Models\Product\Product;
 use App\Models\Product\ProductPrice;
 use App\Models\Product\ProductStock;
+use App\Models\Transaction\Transaction;
 use App\Models\Transaction\TransactionDetail;
+use App\Models\Transaction\TransactionPayment;
 use App\Models\Transaction\TransactionProduct;
 use App\Models\Transaction\TransactionRecipe;
-use App\Models\Transaction\TransactionRecipeReal;
-use App\Models\Transaction\TransactionRecipeRealDetail;
 use App\Models\User;
 use App\Traits\Product\ProductTrait;
+use App\Traits\Transaction\ReversesTransactionStock;
+use Auth;
 use DB;
 use Hash;
-use Session;
 use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 use Livewire\WithPagination;
+use Session;
+use Str;
 
 class AdminPharmacySaleRecipeIndex extends Component
 {
-    use ProductTrait, WithPagination;
+    use ProductTrait, ReversesTransactionStock, WithPagination;
+
     protected $queryString = [
         'pageProduct' => ['except' => 1], // Ini akan menghapus ?pageProduct=1 dari URL
         'searchProduct' => ['except' => ''],
     ];
+
     public $searchProduct = '';
+
     public $perPageProduct = 5;
-    public $transaction_id, $transaction;
+
+    public $transaction_id;
+
+    public $transaction;
+
     public $search_sku;
-    public $transaction_details = [], $discount, $discount_type, $medicine_types = [], $supporting_products = [];
-    public $payment_method_id, $payment_amount, $is_single_payment, $admin_fee, $description;
-    public $transaction_recipe_id, $is_narcotic = false, $user_asign_narcotic_id, $product_id, $product_name, $barcode, $username_or_email, $password, $is_outside_pharmacy = false, $actions = [], $medicines = [];
-    public $diagnosas, $immunization;
+
+    public $transaction_details = [];
+
+    public $discount;
+
+    public $discount_type;
+
+    public $medicine_types = [];
+
+    public $supporting_products = [];
+
+    public $payment_method_id;
+
+    public $payment_amount;
+
+    public $is_single_payment;
+
+    public $admin_fee;
+
+    public $description;
+
+    public $transaction_recipe_id;
+
+    public $is_narcotic = false;
+
+    public $user_asign_narcotic_id;
+
+    public $product_id;
+
+    public $product_name;
+
+    public $barcode;
+
+    public $username_or_email;
+
+    public $password;
+
+    public $is_outside_pharmacy = false;
+
+    public $actions = [];
+
+    public $medicines = [];
+
+    public $diagnosas;
+
+    public $immunization;
+
     private $validStatuses = [
         'draft_consultation',
         'call_consultation',
@@ -194,11 +243,12 @@ class AdminPharmacySaleRecipeIndex extends Component
         // Find product with related data in one query
         $product = Product::with(['productStock', 'productPrice'])
             ->where('sku_number', $this->search_sku)
-            ->whereHas('productType', fn($query) => $query->where('name', 'Obat'))
+            ->whereHas('productType', fn ($query) => $query->where('name', 'Obat'))
             ->first();
 
-        if (!$product) {
+        if (! $product) {
             $this->reset('search_sku');
+
             return AlertHelper::error('Gagal', 'Produk tidak ditemukan.');
         }
 
@@ -208,7 +258,7 @@ class AdminPharmacySaleRecipeIndex extends Component
             ->where('branch_id', $branchId)
             ->first();
 
-        if (!$productStock || $productStock->quantity <= 0) {
+        if (! $productStock || $productStock->quantity <= 0) {
             return AlertHelper::error('Gagal', 'Stok produk tidak ditemukan atau stok kosong.');
         }
 
@@ -219,17 +269,18 @@ class AdminPharmacySaleRecipeIndex extends Component
             // ->where('is_updated', true)
             ->first();
 
-        if (!$productPrice) {
+        if (! $productPrice) {
             return AlertHelper::error('Gagal', 'Harga produk tidak ditemukan.');
         }
 
         if ($product->is_narcotic) {
-            if (!$this->user_asign_narcotic_id) {
+            if (! $this->user_asign_narcotic_id) {
                 $this->is_narcotic = true;
                 $this->product_id = $product->id;
                 $this->product_name = $product->name;
 
                 $this->dispatch('close-modal', ['id' => 'modalProduct']);
+
                 return $this->dispatch('open-modal', ['id' => 'modalNarcotic']);
             }
         }
@@ -283,14 +334,14 @@ class AdminPharmacySaleRecipeIndex extends Component
 
         $company = Company::find(Auth::user()->company_id);
 
-        if (!$company) {
+        if (! $company) {
             return AlertHelper::error('Error', 'Perusahaan tidak ditemukan.');
         }
 
         // Find user with smart identity resolution
         $userResult = $this->findHeadUserWithIdentityResolution($company->id);
 
-        if (!$userResult['success']) {
+        if (! $userResult['success']) {
             return AlertHelper::error('Akses Ditolak', $userResult['message']);
         }
 
@@ -298,7 +349,7 @@ class AdminPharmacySaleRecipeIndex extends Component
         $loginMethod = $userResult['login_method'];
 
         // Check password
-        if (!Hash::check($this->password, $user->password)) {
+        if (! Hash::check($this->password, $user->password)) {
             return AlertHelper::error('Akses Ditolak', 'Password salah. Silakan periksa kembali atau hubungi administrator perusahaan.');
         }
 
@@ -309,7 +360,7 @@ class AdminPharmacySaleRecipeIndex extends Component
             ->where('is_active', true)
             ->exists();
 
-        if (!$isHead) {
+        if (! $isHead) {
             return AlertHelper::error('Akses Ditolak', 'Anda bukan supervisor di perusahaan ini.');
         }
 
@@ -339,7 +390,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                 'success' => true,
                 'user' => $mainUser['user'],
                 'login_method' => $mainUser['method'],
-                'message' => 'Found via main fields'
+                'message' => 'Found via main fields',
             ];
         }
 
@@ -350,7 +401,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                 'success' => true,
                 'user' => $altUser['user'],
                 'login_method' => $altUser['method'],
-                'message' => 'Found via alternative contacts'
+                'message' => 'Found via alternative contacts',
             ];
         }
 
@@ -361,7 +412,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                 'success' => true,
                 'user' => $conflictUser['user'],
                 'login_method' => $conflictUser['method'],
-                'message' => 'Resolved identity conflict'
+                'message' => 'Resolved identity conflict',
             ];
         }
 
@@ -369,7 +420,7 @@ class AdminPharmacySaleRecipeIndex extends Component
             'success' => false,
             'user' => null,
             'login_method' => null,
-            'message' => 'Username atau email tidak ditemukan, atau Anda bukan supervisor di perusahaan ini.'
+            'message' => 'Username atau email tidak ditemukan, atau Anda bukan supervisor di perusahaan ini.',
         ];
     }
 
@@ -400,7 +451,7 @@ class AdminPharmacySaleRecipeIndex extends Component
 
                 return [
                     'user' => $user,
-                    'method' => $method
+                    'method' => $method,
                 ];
             }
         }
@@ -416,7 +467,7 @@ class AdminPharmacySaleRecipeIndex extends Component
         // Cari di alternative contacts dengan context company ini (hanya employee)
         $users = User::where('type_user', 'employee')
             ->whereJsonContains('alternative_contacts', function ($contact) use ($identifier, $companyId) {
-                return ($contact['value'] === $identifier && $contact['context'] == $companyId);
+                return $contact['value'] === $identifier && $contact['context'] == $companyId;
             })->get();
 
         foreach ($users as $user) {
@@ -440,7 +491,7 @@ class AdminPharmacySaleRecipeIndex extends Component
 
                 return [
                     'user' => $user,
-                    'method' => 'alternative_' . $contactType
+                    'method' => 'alternative_'.$contactType,
                 ];
             }
         }
@@ -454,7 +505,7 @@ class AdminPharmacySaleRecipeIndex extends Component
     protected function handleHeadEmailPhoneConflict($identifier, $companyId)
     {
         // Check if identifier is email
-        if (!filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
             return null;
         }
 
@@ -474,7 +525,7 @@ class AdminPharmacySaleRecipeIndex extends Component
 
                 return [
                     'user' => $user,
-                    'method' => 'email'
+                    'method' => 'email',
                 ];
             }
         }
@@ -495,7 +546,7 @@ class AdminPharmacySaleRecipeIndex extends Component
             'identifier_used' => $this->username_or_email,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
-            'timestamp' => now()
+            'timestamp' => now(),
         ]);
     }
 
@@ -549,8 +600,9 @@ class AdminPharmacySaleRecipeIndex extends Component
         foreach ($this->transaction_details as $key => $value) {
             $transactionRecipe = TransactionRecipe::find($value['id']);
 
-            if (!$transactionRecipe) {
+            if (! $transactionRecipe) {
                 AlertHelper::error('Gagal', 'Resep tidak ditemukan.');
+
                 continue;
             }
 
@@ -558,7 +610,7 @@ class AdminPharmacySaleRecipeIndex extends Component
             $transactionRecipe->medicine_type_id = $value['medicine_type_id'] ?? null;
             $transactionRecipe->price_service_one = $value['price_service_one'] ? Str::replace('.', '', $value['price_service_one']) : 0;
             $transactionRecipe->price_service_other = $value['price_service_other'] ? Str::replace('.', '', $value['price_service_other']) : 0;
-            $transactionRecipe->product_id = !empty($value['product_id']) ? $value['product_id'] : null;
+            $transactionRecipe->product_id = ! empty($value['product_id']) ? $value['product_id'] : null;
             $transactionRecipe->numero_recipe = intval(Str::replace('.', '', $value['numero_recipe']));
             $transactionRecipe->quantity = intval(Str::replace('.', '', $value['quantity']));
             $transactionRecipe->price = intval(Str::replace('.', '', $value['price']));
@@ -566,16 +618,18 @@ class AdminPharmacySaleRecipeIndex extends Component
             $transactionRecipe->description = $value['description'] ?? null;
             $transactionRecipe->save(); // Observer akan handle
 
-            if (!empty($value['details'])) {
+            if (! empty($value['details'])) {
                 foreach ($value['details'] as $detail) {
                     $transactionDetail = TransactionDetail::find($detail['id']);
 
-                    if (!$transactionDetail || empty($detail['product_id'])) {
+                    if (! $transactionDetail || empty($detail['product_id'])) {
                         continue;
                     }
 
                     $productRecipe = Product::find($detail['product_id']);
-                    if (!$productRecipe) continue;
+                    if (! $productRecipe) {
+                        continue;
+                    }
 
                     $transactionDetail->product_id = $detail['product_id'];
                     $transactionDetail->type = $detail['type'] ?? 'single';
@@ -612,8 +666,9 @@ class AdminPharmacySaleRecipeIndex extends Component
                 $medicineType = MedicineType::find($transactionRecipe->medicine_type_id);
                 $numeroRecipe = intval(Str::replace('.', '', $transactionRecipe->numero_recipe ?? 0));
 
-                if (!$medicineType) {
-                    AlertHelper::error('Gagal', "Tipe Resep Pada /R" . ($key + 1) . " tidak ditemukan.");
+                if (! $medicineType) {
+                    AlertHelper::error('Gagal', 'Tipe Resep Pada /R'.($key + 1).' tidak ditemukan.');
+
                     continue;
                 }
 
@@ -622,7 +677,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                 $productStock = $product ? ProductStock::where([
                     'product_id' => $product->id,
                     'company_id' => $companyId,
-                    'branch_id' => $branchId
+                    'branch_id' => $branchId,
                 ])->first() : null;
 
                 $quantity = 0;
@@ -634,12 +689,12 @@ class AdminPharmacySaleRecipeIndex extends Component
                     } else {
                         if ($product && $product->is_non_stock) {
                             $quantity = $numeroRecipe;
-                        } elseif (!$productStock || !$product) {
+                        } elseif (! $productStock || ! $product) {
                             $quantity = 1;
-                            AlertHelper::error('Gagal', "Stok produk '" . ($product?->name ?? 'Unknown') . "' tidak ditemukan.");
+                            AlertHelper::error('Gagal', "Stok produk '".($product?->name ?? 'Unknown')."' tidak ditemukan.");
                         } else {
                             $totalLocked = TransactionRecipe::where('product_id', $product->id)
-                                ->whereHas('transaction', fn($q) => $q->whereIn('status', $this->validStatuses))
+                                ->whereHas('transaction', fn ($q) => $q->whereIn('status', $this->validStatuses))
                                 ->where('id', '!=', $transactionRecipe->id)
                                 ->sum('quantity');
 
@@ -649,7 +704,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                                 $quantity = max(1, $availableStock);
                                 AlertHelper::error(
                                     'Gagal',
-                                    "Stok produk '" . ($product?->name ?? 'Unknown') . "' tidak mencukupi. Tersedia: {$availableStock}, Diminta: {$numeroRecipe}."
+                                    "Stok produk '".($product?->name ?? 'Unknown')."' tidak mencukupi. Tersedia: {$availableStock}, Diminta: {$numeroRecipe}."
                                 );
                             } else {
                                 $quantity = $numeroRecipe;
@@ -666,7 +721,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                                 'product_id' => $product->id,
                                 'company_id' => $companyId,
                                 'branch_id' => $branchId,
-                                'is_updated' => true
+                                'is_updated' => true,
                             ])->first();
                             $price = $productPrice?->price ?? 0;
                         }
@@ -687,15 +742,16 @@ class AdminPharmacySaleRecipeIndex extends Component
                     foreach ($transactionRecipe->transactionDetail as $detail) {
                         $productRecipe = Product::find($detail->product_id);
 
-                        if (!$productRecipe) {
+                        if (! $productRecipe) {
                             AlertHelper::error('Gagal', "Produk dengan ID {$detail->product_id} tidak ditemukan.");
+
                             continue;
                         }
 
                         $productStockRecipe = ProductStock::where([
                             'product_id' => $productRecipe->id,
                             'company_id' => $companyId,
-                            'branch_id' => $branchId
+                            'branch_id' => $branchId,
                         ])->first();
 
                         // Use existing price if available, otherwise fetch from database
@@ -709,7 +765,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                                 'product_id' => $productRecipe->id,
                                 'company_id' => $companyId,
                                 'branch_id' => $branchId,
-                                'is_updated' => true
+                                'is_updated' => true,
                             ])->first();
                             $priceRecipe = $productPriceRecipe?->price ?? 0;
                         }
@@ -718,12 +774,12 @@ class AdminPharmacySaleRecipeIndex extends Component
                             // === SINGLE ===
                             if ($productRecipe->is_non_stock) {
                                 $quantityRecipe = $numeroRecipe;
-                            } elseif (!$productStockRecipe) {
+                            } elseif (! $productStockRecipe) {
                                 $quantityRecipe = 1;
                                 AlertHelper::error('Gagal', "Stok produk '{$productRecipe->name}' tidak ditemukan.");
                             } else {
                                 $totalLockedDetail = TransactionDetail::where('product_id', $productRecipe->id)
-                                    ->whereHas('transaction', fn($q) => $q->whereIn('status', $this->validStatuses))
+                                    ->whereHas('transaction', fn ($q) => $q->whereIn('status', $this->validStatuses))
                                     ->where('id', '!=', $detail->id)
                                     ->sum('quantity');
 
@@ -772,13 +828,13 @@ class AdminPharmacySaleRecipeIndex extends Component
 
                             $detail->quantity = $numeroRecipe ? ceil($detail->quantity_real) : 0;
 
-                            if (!$productRecipe->is_non_stock) {
-                                if (!$productStockRecipe) {
+                            if (! $productRecipe->is_non_stock) {
+                                if (! $productStockRecipe) {
                                     $detail->quantity = 1;
                                     AlertHelper::error('Gagal', "Stok produk '{$productRecipe->name}' tidak ditemukan.");
                                 } else {
                                     $totalLockedDetail = TransactionDetail::where('product_id', $productRecipe->id)
-                                        ->whereHas('transaction', fn($q) => $q->whereIn('status', $this->validStatuses))
+                                        ->whereHas('transaction', fn ($q) => $q->whereIn('status', $this->validStatuses))
                                         ->where('id', '!=', $detail->id)
                                         ->sum('quantity');
 
@@ -799,7 +855,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                             $detail->fill([
                                 'type' => $detail->type ?? 'single',
                                 'price' => $priceRecipe,
-                                'sub_total_price' => $priceRecipe * $detail->quantity
+                                'sub_total_price' => $priceRecipe * $detail->quantity,
                             ])->save();
                         }
                     }
@@ -809,8 +865,8 @@ class AdminPharmacySaleRecipeIndex extends Component
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            AlertHelper::error('Gagal', 'Terjadi kesalahan saat memperbarui resep: ' . $e->getMessage());
-            Log::error('Error updating transaction recipe: ' . $e->getMessage());
+            AlertHelper::error('Gagal', 'Terjadi kesalahan saat memperbarui resep: '.$e->getMessage());
+            Log::error('Error updating transaction recipe: '.$e->getMessage());
         }
     }
 
@@ -818,7 +874,7 @@ class AdminPharmacySaleRecipeIndex extends Component
     {
         $transactionDetail = TransactionDetail::find($transactionDetailId);
 
-        if (!$transactionDetail) {
+        if (! $transactionDetail) {
             return AlertHelper::error('Gagal', 'Detail transaksi tidak ditemukan.');
         }
 
@@ -829,7 +885,7 @@ class AdminPharmacySaleRecipeIndex extends Component
 
         if ($quantity === 'decrement') {
 
-            if (!$productStock || $productStock->quantity <= 0) {
+            if (! $productStock || $productStock->quantity <= 0) {
                 $transactionDetail->quantity = 1;
                 $transactionDetail->save();
 
@@ -845,7 +901,6 @@ class AdminPharmacySaleRecipeIndex extends Component
 
             $transactionDetail->decrement('quantity');
         }
-
 
         if ($quantity === 'increment') {
             if ($productStock->quantity <= $transactionDetail->quantity) {
@@ -866,7 +921,7 @@ class AdminPharmacySaleRecipeIndex extends Component
     {
         $saveFunction = $type == 'draft' ? 'saveDraft' : ($type == 'process' ? 'saveTransaction' : 'saveSuccessTransaction');
 
-        return AlertHelper::confirmSave($saveFunction, "Apakah Anda yakin ingin menyimpan transaksi " . Str::title($type) . " ini?");
+        return AlertHelper::confirmSave($saveFunction, 'Apakah Anda yakin ingin menyimpan transaksi '.Str::title($type).' ini?');
     }
 
     public function saveDraft()
@@ -880,9 +935,11 @@ class AdminPharmacySaleRecipeIndex extends Component
             $transaction->save();
 
             AlertHelper::success('Berhasil', 'Transaksi berhasil disimpan sebagai draft.');
+
             return redirect()->route('user.sale.pos');
         } else {
             AlertHelper::error('Gagal', 'Transaksi tidak ditemukan.');
+
             return redirect()->route('user.sale.pos');
         }
     }
@@ -892,18 +949,18 @@ class AdminPharmacySaleRecipeIndex extends Component
         $transaction = Transaction::find($this->transaction_id);
         $branchId = Branch::where('company_id', Auth::user()->company_id)->first()?->id;
 
-        if (!$transaction) {
+        if (! $transaction) {
             return AlertHelper::error('Gagal', 'Transaksi tidak ditemukan.');
         }
 
         // Validasi Transaction Details
         foreach ($transaction->transactionDetails as $detail) {
-            if (!$detail->product_id) {
+            if (! $detail->product_id) {
                 continue;
             }
 
             $product = Product::find($detail->product_id);
-            if (!$product || $product->is_non_stock) {
+            if (! $product || $product->is_non_stock) {
                 continue;
             }
 
@@ -912,7 +969,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                 ->where('branch_id', $branchId)
                 ->first();
 
-            if (!$productStock) {
+            if (! $productStock) {
                 return AlertHelper::error('Gagal', "Stok tidak ditemukan untuk produk '{$product->name}' pada detail transaksi.");
             }
 
@@ -923,12 +980,12 @@ class AdminPharmacySaleRecipeIndex extends Component
 
         // Validasi Transaction Recipes
         foreach ($transaction->transactionRecipes as $recipe) {
-            if (!$recipe->product_id) {
+            if (! $recipe->product_id) {
                 continue;
             }
 
             $product = Product::find($recipe->product_id);
-            if (!$product || $product->is_non_stock) {
+            if (! $product || $product->is_non_stock) {
                 continue;
             }
 
@@ -937,7 +994,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                 ->where('branch_id', $branchId)
                 ->first();
 
-            if (!$productStock) {
+            if (! $productStock) {
                 return AlertHelper::error('Gagal', "Stok tidak ditemukan untuk produk '{$product->name}' pada resep transaksi.");
             }
 
@@ -964,6 +1021,7 @@ class AdminPharmacySaleRecipeIndex extends Component
 
             $transaction = Transaction::find($id[0]);
             if ($transaction) {
+                $this->reverseStockForTransaction($transaction);
                 $transaction->status = 'canceled';
                 $transaction->save();
                 DB::commit();
@@ -973,7 +1031,7 @@ class AdminPharmacySaleRecipeIndex extends Component
             }
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Gagal menghapus transaksi: ' . $e->getMessage(), [
+            Log::error('Gagal menghapus transaksi: '.$e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
@@ -988,7 +1046,7 @@ class AdminPharmacySaleRecipeIndex extends Component
         $transaction = Transaction::with(['transactionDetails', 'transactionRecipes.transactionDetail'])->find($this->transaction_id);
         $branchId = Branch::where('company_id', Auth::user()->company_id)->first()?->id;
 
-        if (!$transaction) {
+        if (! $transaction) {
             return AlertHelper::error('Gagal', 'Transaksi tidak ditemukan.');
         }
 
@@ -996,18 +1054,18 @@ class AdminPharmacySaleRecipeIndex extends Component
             return AlertHelper::error('Gagal', 'Transaksi tidak dapat disimpan, karena tidak ada item resep yang ditambahkan.');
         }
 
-        if ((float)$transaction->remaining_bill > 0) {
+        if ((float) $transaction->remaining_bill > 0) {
             return AlertHelper::error('Gagal', 'Transaksi tidak dapat disimpan, karena masih ada sisa tagihan.');
         }
 
         // Validasi stok pada TransactionDetails
         foreach ($transaction->transactionDetails as $detail) {
-            if (!$detail->product_id) {
+            if (! $detail->product_id) {
                 continue;
             }
 
             $product = Product::find($detail->product_id);
-            if (!$product || $product->is_non_stock) {
+            if (! $product || $product->is_non_stock) {
                 continue;
             }
 
@@ -1016,7 +1074,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                 ->where('branch_id', $branchId)
                 ->first();
 
-            if (!$productStock) {
+            if (! $productStock) {
                 return AlertHelper::error('Gagal', "Stok tidak ditemukan untuk produk '{$product->name}' pada transaksi.");
             }
 
@@ -1029,7 +1087,7 @@ class AdminPharmacySaleRecipeIndex extends Component
         foreach ($transaction->transactionRecipes as $key => $recipe) {
             $no = $key + 1;
 
-            if (!$recipe->medicine_type_id || $recipe->medicine_type_id == 0) {
+            if (! $recipe->medicine_type_id || $recipe->medicine_type_id == 0) {
                 return AlertHelper::error('Gagal', "Tipe resep pada /R{$no} belum dipilih.");
             }
 
@@ -1039,7 +1097,7 @@ class AdminPharmacySaleRecipeIndex extends Component
 
             $medicineType = MedicineType::find($recipe->medicine_type_id);
 
-            if (!$medicineType->is_single && !$recipe->product_id) {
+            if (! $medicineType->is_single && ! $recipe->product_id) {
                 return AlertHelper::error('Gagal', "Produk pendukung pada /R{$no} belum dipilih.");
             }
 
@@ -1048,11 +1106,11 @@ class AdminPharmacySaleRecipeIndex extends Component
             }
 
             foreach ($recipe->transactionDetail as $detail) {
-                if (!$detail->product_id) {
+                if (! $detail->product_id) {
                     return AlertHelper::error('Gagal', "Produk pada /R{$no} belum dipilih.");
                 }
 
-                if (!$medicineType->is_single && ($detail->type != null || $detail->type == 'single') && ($detail->dosage_doctor <= 0 || $detail->dosage_drug <= 0)) {
+                if (! $medicineType->is_single && ($detail->type != null || $detail->type == 'single') && ($detail->dosage_doctor <= 0 || $detail->dosage_drug <= 0)) {
                     return AlertHelper::error('Gagal', "Dosis dokter atau obat pada /R{$no} belum diisi.");
                 }
 
@@ -1062,7 +1120,7 @@ class AdminPharmacySaleRecipeIndex extends Component
 
                 // Validasi stok resep detail
                 $product = Product::find($detail->product_id);
-                if (!$product || $product->is_non_stock) {
+                if (! $product || $product->is_non_stock) {
                     continue;
                 }
 
@@ -1071,7 +1129,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                     ->where('branch_id', $branchId)
                     ->first();
 
-                if (!$productStock) {
+                if (! $productStock) {
                     return AlertHelper::error('Gagal', "Stok tidak ditemukan untuk produk '{$product->name}' pada /R{$no}.");
                 }
 
@@ -1103,7 +1161,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                         'practitioner_id' => $doctor?->id,
                         'type' => 'outpatient',
                         'status' => 'finished',
-                        'class_code' => 'AMB'
+                        'class_code' => 'AMB',
                     ];
 
                     app(apiservice::class)->createTransaction($data);
@@ -1139,7 +1197,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                             'practitioner_id' => $doctor?->id,
                             'type' => 'outpatient',
                             'status' => 'finished',
-                            'class_code' => 'AMB'
+                            'class_code' => 'AMB',
                         ];
 
                         app(apiservice::class)->createTransaction($data);
@@ -1150,7 +1208,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                     $transaction->update(array_merge([
                         'status' => 'take_medicine',
                         'is_take_medicine' => true,
-                        'date_prepare' => now()->format('Y-m-d')
+                        'date_prepare' => now()->format('Y-m-d'),
                     ], $statusData));
                 }
             }
@@ -1165,13 +1223,14 @@ class AdminPharmacySaleRecipeIndex extends Component
             return redirect()->route('user.sale.pos');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return $this->handleError($e);
         }
     }
 
     private function processTransactionDetails($transaction)
     {
-        $productService = new ProductService();
+        $productService = new ProductService;
         $companyId = Auth::user()->company_id;
         $branch = Branch::where('company_id', $companyId)->firstOrFail();
 
@@ -1197,7 +1256,7 @@ class AdminPharmacySaleRecipeIndex extends Component
         $data['sub_total_price'] = intval(Str::replace('.', '', $data['sub_total_price']));
         $transactionRecipe->update([
             'price_hpp' => $hppPrice,
-            'sub_total_price_hpp' => $hppPrice * $quantity
+            'sub_total_price_hpp' => $hppPrice * $quantity,
         ]);
 
         $this->createTransactionProduct($transaction, $data, $product, $hppPrice, $quantity, $sellingPrice);
@@ -1206,7 +1265,7 @@ class AdminPharmacySaleRecipeIndex extends Component
 
     private function processDetailLevel($transaction, $data, $productService, $companyId, $branchId)
     {
-        if (!isset($data['details']) || !is_array($data['details'])) {
+        if (! isset($data['details']) || ! is_array($data['details'])) {
             return;
         }
 
@@ -1226,7 +1285,7 @@ class AdminPharmacySaleRecipeIndex extends Component
 
             $transactionDetail->update([
                 'price_hpp' => $hppPrice,
-                'sub_total_price_hpp' => $hppPrice * $quantity
+                'sub_total_price_hpp' => $hppPrice * $quantity,
             ]);
 
             $this->createTransactionProduct($transaction, $detailData, $productRecipe, $hppPrice, $quantity, $sellingPrice);
@@ -1248,7 +1307,6 @@ class AdminPharmacySaleRecipeIndex extends Component
         // Batasi margin ke rentang -100 s/d 100, lalu bulatkan
         $margin = max(min($margin, 100), -100);
         $margin = round($margin);
-
 
         TransactionProduct::create([
             'transaction_id' => $transaction->id,
@@ -1289,16 +1347,15 @@ class AdminPharmacySaleRecipeIndex extends Component
 
     private function handleError(\Exception $e)
     {
-        Log::error('Error dalam saveSuccessTransaction: ' . $e->getMessage(), [
+        Log::error('Error dalam saveSuccessTransaction: '.$e->getMessage(), [
             'transaction_id' => $this->transaction_id,
             'user_id' => Auth::id(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $e->getTraceAsString(),
         ]);
 
-        AlertHelper::error('Gagal', 'Terjadi kesalahan saat menyimpan transaksi: ' . $e->getMessage());
+        AlertHelper::error('Gagal', 'Terjadi kesalahan saat menyimpan transaksi: '.$e->getMessage());
         // return redirect()->route('user.sale.pos');
 
-        return;
     }
 
     public function updateTotal()
@@ -1570,6 +1627,7 @@ class AdminPharmacySaleRecipeIndex extends Component
 
         $this->closeModalPayment();
         $this->updateTotal();
+
         return AlertHelper::success('Berhasil', 'Pembayaran berhasil ditambahkan.');
     }
 

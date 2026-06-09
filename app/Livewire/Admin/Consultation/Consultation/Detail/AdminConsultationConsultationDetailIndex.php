@@ -41,7 +41,6 @@ use App\Models\Transaction\TransactionPrimary;
 use App\Models\Transaction\TransactionProduct;
 use App\Models\Transaction\TransactionProofOfAction;
 use App\Models\Transaction\TransactionRecipe;
-use App\Models\Transaction\TransactionAction;
 use App\Models\Transaction\TransactionRecipeReal;
 use App\Models\Transaction\TransactionRecipeRealDetail;
 use App\Models\Transaction\TransactionReference;
@@ -50,8 +49,8 @@ use App\Models\User;
 use App\Models\User\AllergyMedicine;
 use App\Models\User\UserControlSchedule;
 use App\service\apiservice;
-use App\Services\Product\ProductService;
 use App\Services\Promotion\PromotionSimplifiedService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -772,55 +771,55 @@ class AdminConsultationConsultationDetailIndex extends Component
                     $discountAmount = $this->parseFloatValue($this->discount ?? '0');
                     // Pastikan diskon tidak melebihi total setelah rounding
                     $totalManualDiscount = min($discountAmount, $roundedTotal);
-                $transaction->discount = $totalManualDiscount;
+                    $transaction->discount = $totalManualDiscount;
+                }
+
+                // transaction->discount_value is the total sum of all discounts (global + items)
+                $itemDiscounts = TransactionDetail::where('transaction_id', $this->transaction_id)->sum('discount_value');
+                $transaction->discount_value = $totalManualDiscount + $itemDiscounts;
+                $transaction->discount_type = $this->discount_type ?? 'rupiah';
+            } else {
+                $transaction->discount = 0;
+                $transaction->discount_type = 'rupiah';
+                $itemDiscounts = TransactionDetail::where('transaction_id', $this->transaction_id)->sum('discount_value');
+                $transaction->discount_value = $itemDiscounts;
+                $totalManualDiscount = 0;
             }
 
-            // transaction->discount_value is the total sum of all discounts (global + items)
-            $itemDiscounts = TransactionDetail::where('transaction_id', $this->transaction_id)->sum('discount_value');
-            $transaction->discount_value = $totalManualDiscount + $itemDiscounts;
-            $transaction->discount_type = $this->discount_type ?? 'rupiah';
-        } else {
-            $transaction->discount = 0;
-            $transaction->discount_type = 'rupiah';
-            $itemDiscounts = TransactionDetail::where('transaction_id', $this->transaction_id)->sum('discount_value');
-            $transaction->discount_value = $itemDiscounts;
-            $totalManualDiscount = 0;
-        }
+            // Update format display discount
+            $this->discount = ($this->discount_type ?? 'rupiah') == 'rupiah'
+                ? number_format($transaction->discount, 0, ',', '.')
+                : number_format($transaction->discount, 2, ',', '.');
 
-        // Update format display discount
-        $this->discount = ($this->discount_type ?? 'rupiah') == 'rupiah'
-            ? number_format($transaction->discount, 0, ',', '.')
-            : number_format($transaction->discount, 2, ',', '.');
+            // 7. Grand total is rounded total MINUS the global/manual discount
+            // roundedTotal already includes item prices AFTER their own discounts
+            $grandTotal = $roundedTotal - $totalManualDiscount;
 
-        // 7. Grand total is rounded total MINUS the global/manual discount
-        // roundedTotal already includes item prices AFTER their own discounts
-        $grandTotal = $roundedTotal - $totalManualDiscount;
+            // Pastikan grand total tidak negatif
+            if ($grandTotal < 0) {
+                $grandTotal = 0;
+                // Adjust manual discount jika menyebabkan total negatif
+                $totalManualDiscount = $roundedTotal;
+                $transaction->discount = $totalManualDiscount;
+                $transaction->discount_value = $totalManualDiscount + TransactionDetail::where('transaction_id', $this->transaction_id)->sum('discount_value');
+            }
 
-        // Pastikan grand total tidak negatif
-        if ($grandTotal < 0) {
-            $grandTotal = 0;
-            // Adjust manual discount jika menyebabkan total negatif
-            $totalManualDiscount = $roundedTotal;
-            $transaction->discount = $totalManualDiscount;
-            $transaction->discount_value = $totalManualDiscount + TransactionDetail::where('transaction_id', $this->transaction_id)->sum('discount_value');
-        }
+            $transaction->sub_total_price = $roundedTotal;
 
-        $transaction->sub_total_price = $roundedTotal;
+            // 8. Set nilai final ke transaksi
+            $transaction->rounding = $rounding;
+            $transaction->grand_total_price = $grandTotal;
+            $transaction->rounding_remainder = $remainder;
 
-        // 8. Set nilai final ke transaksi
-        $transaction->rounding = $rounding;
-        $transaction->grand_total_price = $grandTotal;
-        $transaction->rounding_remainder = $remainder;
+            // 9. Hitung pembayaran dan kembalian
+            $transaction->payment_amount = $transaction->transactionPayments()->sum('payment_amount');
+            $transaction->payment_change = $transaction->payment_amount < $transaction->grand_total_price ? 0 : $transaction->payment_amount - $transaction->grand_total_price;
+            $transaction->remaining_bill = $transaction->grand_total_price - $transaction->payment_amount;
+            $transaction->remaining_bill = $transaction->remaining_bill < 0 ? 0 : $transaction->remaining_bill;
+            $transaction->grand_total_price_admin_fee = $transaction->grand_total_price + ($transaction->single_payment_admin_fee ?? 0);
 
-        // 9. Hitung pembayaran dan kembalian
-        $transaction->payment_amount = $transaction->transactionPayments()->sum('payment_amount');
-        $transaction->payment_change = $transaction->payment_amount < $transaction->grand_total_price ? 0 : $transaction->payment_amount - $transaction->grand_total_price;
-        $transaction->remaining_bill = $transaction->grand_total_price - $transaction->payment_amount;
-        $transaction->remaining_bill = $transaction->remaining_bill < 0 ? 0 : $transaction->remaining_bill;
-        $transaction->grand_total_price_admin_fee = $transaction->grand_total_price + ($transaction->single_payment_admin_fee ?? 0);
-
-        // 10. Simpan transaksi dan refresh data
-        $transaction->save();
+            // 10. Simpan transaksi dan refresh data
+            $transaction->save();
             $this->reset('transaction');
             $this->transaction = $transaction;
         }
@@ -1507,7 +1506,7 @@ class AdminConsultationConsultationDetailIndex extends Component
                 $this->patient_proof_of_actions[] = [
                     'id' => $value->id,
                     'transaction_code' => $value->transaction?->code ?? '-',
-                    'transaction_date' => $value->transaction?->date ? \Carbon\Carbon::parse($value->transaction->date)->locale('id')->isoFormat('D MMMM Y') : '-',
+                    'transaction_date' => $value->transaction?->date ? Carbon::parse($value->transaction->date)->locale('id')->isoFormat('D MMMM Y') : '-',
                     'description' => $value->description,
                     'before_photo' => $value->before_photo,
                     'after_photo' => $value->after_photo,
@@ -1541,25 +1540,26 @@ class AdminConsultationConsultationDetailIndex extends Component
 
             $product = Product::find($action['product_id']);
 
-            if ($product && !$product->is_non_stock) {
+            if ($product && ! $product->is_non_stock) {
 
                 $productStock = ProductStock::where('product_id', $product->id)
                     ->where('company_id', Auth::user()->company_id)
                     ->where('branch_id', $branchId)
                     ->first();
 
-                if (!$productStock) {
+                if (! $productStock) {
                     AlertHelper::error('Gagal', "Stok produk '{$product->name}' tidak ditemukan.");
+
                     return true;
                 }
 
                 $lockedStock = TransactionDetail::where('product_id', $product->id)
-                    ->whereHas('transaction', fn($q) => $q->whereIn('status', $this->validStatuses))
-                    ->when($transactionAction, fn($q) => $q->where('id', '!=', $transactionAction->id))
+                    ->whereHas('transaction', fn ($q) => $q->whereIn('status', $this->validStatuses))
+                    ->when($transactionAction, fn ($q) => $q->where('id', '!=', $transactionAction->id))
                     ->sum('quantity');
 
                 $lockedStockRecipe = TransactionRecipe::where('product_id', $product->id)
-                    ->whereHas('transaction', fn($q) => $q->whereIn('status', $this->validStatuses))
+                    ->whereHas('transaction', fn ($q) => $q->whereIn('status', $this->validStatuses))
                     ->sum('quantity');
 
                 $available = $productStock->quantity - $lockedStock - $lockedStockRecipe;
@@ -1569,6 +1569,7 @@ class AdminConsultationConsultationDetailIndex extends Component
                         'Gagal',
                         "Stok produk '{$product->name}' tidak mencukupi. Tersedia: {$available}, Dibutuhkan: {$quantity}."
                     );
+
                     return true;
                 }
             }
@@ -1583,8 +1584,8 @@ class AdminConsultationConsultationDetailIndex extends Component
                     'sub_total_price' => $subTotalPrice,
                     'name' => $action['description'] ?? $product?->name ?? $transactionAction->name,
                     'description' => $action['description'] ?? '',
-                    'nurse_id' => !empty($action['nurse_id']) ? $action['nurse_id'] : null,
-                    'doctor_id' => !empty($action['doctor_id']) ? $action['doctor_id'] : null,
+                    'nurse_id' => ! empty($action['nurse_id']) ? $action['nurse_id'] : null,
+                    'doctor_id' => ! empty($action['doctor_id']) ? $action['doctor_id'] : null,
                 ]);
             }
 
@@ -2635,7 +2636,6 @@ class AdminConsultationConsultationDetailIndex extends Component
 
     private function saveTransaction()
     {
-        $productService = new ProductService;
         $companyId = Auth::user()->company_id;
         $branch = Branch::where('company_id', $companyId)->first();
         $company = Company::find($companyId);
@@ -2741,15 +2741,6 @@ class AdminConsultationConsultationDetailIndex extends Component
 
                 // app(apiservice::class)->createConditionPrimary($data);
                 app(apiservice::class)->createCondition($dataPrimary);
-            }
-
-            // Process transaction actions
-            $transactionActions = TransactionDetail::where('transaction_id', $this->transaction_id)
-                ->where('type_transaction', 'action')
-                ->get();
-
-            foreach ($transactionActions as $action) {
-                $this->processDetailLevel($transaction, $action, $productService, $companyId, $branch->id);
             }
 
             // Process transaction recipes

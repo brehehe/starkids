@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('user_incentives', function (Blueprint $table) {
             // Add transaction_detail_id for product-based incentives
-            if (!Schema::hasColumn('user_incentives', 'transaction_detail_id')) {
+            if (! Schema::hasColumn('user_incentives', 'transaction_detail_id')) {
                 $table->foreignUuid('transaction_detail_id')->nullable()->after('transaction_id')
                     ->comment('ID detail transaksi untuk insentif berbasis produk');
             }
@@ -21,8 +21,10 @@ return new class extends Migration
 
         // Update the status enum to include new product-based incentive statuses
         // PostgreSQL requires dropping and recreating the constraint
-        \DB::statement("ALTER TABLE user_incentives DROP CONSTRAINT IF EXISTS user_incentives_status_check");
-        \DB::statement("ALTER TABLE user_incentives ADD CONSTRAINT user_incentives_status_check CHECK (status IN ('dokter', 'perawat', 'apoteker', 'kasir', 'perawat_produk', 'dokter_produk'))");
+        if (\Schema::connection(null)->getConnection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE user_incentives DROP CONSTRAINT IF EXISTS user_incentives_status_check');
+            DB::statement("ALTER TABLE user_incentives ADD CONSTRAINT user_incentives_status_check CHECK (status IN ('dokter', 'perawat', 'apoteker', 'kasir', 'perawat_produk', 'dokter_produk'))");
+        }
     }
 
     /**
@@ -37,8 +39,10 @@ return new class extends Migration
             }
 
             // Revert status enum to original values
-            \DB::statement("ALTER TABLE user_incentives DROP CONSTRAINT IF EXISTS user_incentives_status_check");
-            \DB::statement("ALTER TABLE user_incentives ADD CONSTRAINT user_incentives_status_check CHECK (status IN ('dokter', 'perawat', 'apoteker', 'kasir'))");
+            if (\Schema::connection(null)->getConnection()->getDriverName() !== 'sqlite') {
+                DB::statement('ALTER TABLE user_incentives DROP CONSTRAINT IF EXISTS user_incentives_status_check');
+                DB::statement("ALTER TABLE user_incentives ADD CONSTRAINT user_incentives_status_check CHECK (status IN ('dokter', 'perawat', 'apoteker', 'kasir'))");
+            }
         });
     }
 };

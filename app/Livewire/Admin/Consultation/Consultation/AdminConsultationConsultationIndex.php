@@ -11,38 +11,55 @@ use App\Models\Transaction\Transaction;
 use App\Models\Transaction\TransactionPhysicalExamination;
 use App\service\apiservice;
 use App\Services\PhysicalExamService;
+use App\Traits\Transaction\ReversesTransactionStock;
+use Auth;
 use DB;
-use Illuminate\Console\View\Components\Alert;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Auth;
-
-use Illuminate\Support\Facades\Log;
 
 class AdminConsultationConsultationIndex extends Component
 {
+    use ReversesTransactionStock;
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
+
     public $search = '';
+
     public $perPage = 5;
+
     protected $queryString = [
         'search' => ['except' => ''],
     ];
 
-    public $date, $location_id;
+    public $date;
+
+    public $location_id;
+
     public $locations = [];
 
     public $data_id;
+
     public $patient_name;
+
     public $doctor_name;
+
     public $heart_rate;
+
     public $breathing;
+
     public $blood_pressure_sistole;
+
     public $blood_pressure_diastole;
+
     public $body_temperature;
+
     public $height;
+
     public $weight;
+
     public $head_circumference;
 
     public function mount()
@@ -110,16 +127,18 @@ class AdminConsultationConsultationIndex extends Component
                 'practitioner_id' => $doctor->id ?? null,
                 'type' => 'outpatient',
                 'status' => 'cancelled',
-                'class_code' => 'AMB'
+                'class_code' => 'AMB',
             ];
 
             app(apiservice::class)->createTransaction($data);
+
+            $this->reverseStockForTransaction($transaction);
 
             $transaction->update([
                 'status' => 'canceled',
             ]);
 
-            return AlertHelper::success('Berhasil', 'Konsultasi pasien ' . $transaction->patient_name . ' berhasil dibatalkan.');
+            return AlertHelper::success('Berhasil', 'Konsultasi pasien '.$transaction->patient_name.' berhasil dibatalkan.');
         } else {
             return AlertHelper::error('error', 'Data tidak ditemukan');
         }
@@ -134,7 +153,7 @@ class AdminConsultationConsultationIndex extends Component
                 'status' => 'call_consultation',
             ]);
 
-            return AlertHelper::success('Berhasil', 'Pasien ' . $transaction->patient_name . ' berhasil dipanggil.');
+            return AlertHelper::success('Berhasil', 'Pasien '.$transaction->patient_name.' berhasil dipanggil.');
         } else {
             return AlertHelper::error('error', 'Data tidak ditemukan');
         }
@@ -178,7 +197,7 @@ class AdminConsultationConsultationIndex extends Component
                 'practitioner_id' => $doctor->id ?? null,
                 'type' => 'outpatient',
                 'status' => 'in-progress',
-                'class_code' => 'AMB'
+                'class_code' => 'AMB',
             ];
 
             app(apiservice::class)->createTransaction($data);
@@ -188,6 +207,7 @@ class AdminConsultationConsultationIndex extends Component
             ]);
 
             Session::put('transaction_id', $transaction->id);
+
             return redirect()->route('user.consultation.consultation.detail');
         } else {
             return AlertHelper::error('error', 'Data tidak ditemukan');
@@ -200,6 +220,7 @@ class AdminConsultationConsultationIndex extends Component
 
         if ($transaction) {
             Session::put('transaction_id', $transaction->id);
+
             return redirect()->route('user.consultation.consultation.detail');
         } else {
             return AlertHelper::error('error', 'Data tidak ditemukan');
@@ -235,7 +256,7 @@ class AdminConsultationConsultationIndex extends Component
 
     public function confirmSubmitPhysicalExam()
     {
-        return AlertHelper::confirmSave('submitPhysicalExam', 'Apakah Anda yakin ingin menyimpan pemeriksaan fisik untuk pasien ' . $this->patient_name . '?', $this->data_id);
+        return AlertHelper::confirmSave('submitPhysicalExam', 'Apakah Anda yakin ingin menyimpan pemeriksaan fisik untuk pasien '.$this->patient_name.'?', $this->data_id);
     }
 
     public function submitPhysicalExam()
@@ -253,11 +274,12 @@ class AdminConsultationConsultationIndex extends Component
 
         $transaction = Transaction::find($this->data_id);
 
-        if (!$transaction) {
+        if (! $transaction) {
             AlertHelper::error('Gagal', 'Data transaksi tidak ditemukan.');
             Log::error('Transaction not found', [
                 'transaction_id' => $this->data_id,
             ]);
+
             return;
         }
 
@@ -311,10 +333,10 @@ class AdminConsultationConsultationIndex extends Component
 
             DB::commit();
             $this->closeModalPhysicalExam();
-            AlertHelper::success('Berhasil', 'Pemeriksaan fisik untuk pasien ' . $transaction->patient_name . ' berhasil disimpan.');
+            AlertHelper::success('Berhasil', 'Pemeriksaan fisik untuk pasien '.$transaction->patient_name.' berhasil disimpan.');
         } catch (\Exception $e) {
             DB::rollBack();
-            AlertHelper::error('error', 'Gagal menyimpan pemeriksaan fisik: ' . $e->getMessage());
+            AlertHelper::error('error', 'Gagal menyimpan pemeriksaan fisik: '.$e->getMessage());
             Log::error('Error saving physical examination', [
                 'transaction_id' => $this->data_id,
                 'error' => $e->getMessage(),
@@ -323,13 +345,12 @@ class AdminConsultationConsultationIndex extends Component
             $this->closeModalPhysicalExam();
         }
 
-        return;
     }
-
 
     public function render()
     {
         $transactions = Transaction::search($this->search)
+            ->with(['patient.userDetail', 'patient.patient.OHPatient', 'doctor', 'controlDoctor'])
             ->where('consultation', 'yes')
             ->whereIn('status', [
                 'draft_consultation',
@@ -342,7 +363,7 @@ class AdminConsultationConsultationIndex extends Component
                 'process',
                 'take_medicine',
                 'completed',
-                'canceled'
+                'canceled',
             ])
             ->orderBy('created_at', 'desc')
             ->where('company_id', auth()->user()->company_id);

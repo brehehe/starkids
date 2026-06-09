@@ -4,42 +4,61 @@ namespace App\Livewire\Admin\Consultation\Queue;
 
 use App\Helpers\AlertHelper;
 use App\Models\Encounter\Encounter;
+use App\Models\Location\Location;
 use App\Models\Patient\Patient;
 use App\Models\Practitiont\Practitioner;
 use App\Models\Transaction\Transaction;
 use App\Models\Transaction\TransactionPhysicalExamination;
 use App\service\apiservice;
 use App\Services\PhysicalExamService;
+use App\Traits\Transaction\ReversesTransactionStock;
 use DB;
-use Illuminate\Console\View\Components\Alert;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Location\Location;
-use Illuminate\Support\Facades\Log;
 
 class AdminConsultationQueueIndex extends Component
 {
+    use ReversesTransactionStock;
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
+
     public $search = '';
+
     public $perPage = 5;
+
     protected $queryString = [
         'search' => ['except' => ''],
     ];
 
     public $data_id;
+
     public $patient_name;
+
     public $doctor_name;
+
     public $heart_rate;
+
     public $breathing;
+
     public $blood_pressure_sistole;
+
     public $blood_pressure_diastole;
+
     public $body_temperature;
+
     public $height;
+
     public $weight;
+
     public $head_circumference;
-    public $date, $location_id;
+
+    public $date;
+
+    public $location_id;
+
     public $locations = [];
 
     public function mount()
@@ -111,16 +130,18 @@ class AdminConsultationQueueIndex extends Component
                 'practitioner_id' => $doctor->id ?? null,
                 'type' => 'outpatient',
                 'status' => 'cancelled',
-                'class_code' => 'AMB'
+                'class_code' => 'AMB',
             ];
 
             app(apiservice::class)->createTransaction($data);
+
+            $this->reverseStockForTransaction($transaction);
 
             $transaction->update([
                 'status' => 'canceled',
             ]);
 
-            return AlertHelper::success('Berhasil', 'Konsultasi pasien ' . $transaction->patient_name . ' berhasil dibatalkan.');
+            return AlertHelper::success('Berhasil', 'Konsultasi pasien '.$transaction->patient_name.' berhasil dibatalkan.');
         } else {
             return AlertHelper::error('error', 'Data tidak ditemukan');
         }
@@ -146,7 +167,7 @@ class AdminConsultationQueueIndex extends Component
                 'practitioner_id' => $doctor->id ?? null,
                 'type' => 'outpatient',
                 'status' => 'Arrived',
-                'class_code' => 'AMB'
+                'class_code' => 'AMB',
             ];
 
             app(apiservice::class)->createTransaction($data);
@@ -155,7 +176,7 @@ class AdminConsultationQueueIndex extends Component
                 'status' => 'draft_consultation',
             ]);
 
-            return AlertHelper::success('Berhasil', 'Pasien ' . $transaction->patient_name . ' berhasil dikonfirmasi kedatangan.');
+            return AlertHelper::success('Berhasil', 'Pasien '.$transaction->patient_name.' berhasil dikonfirmasi kedatangan.');
         } else {
             return AlertHelper::error('error', 'Data tidak ditemukan');
         }
@@ -170,7 +191,7 @@ class AdminConsultationQueueIndex extends Component
                 'status' => 'call_consultation',
             ]);
 
-            return AlertHelper::success('Berhasil', 'Pasien ' . $transaction->patient_name . ' berhasil dipanggil.');
+            return AlertHelper::success('Berhasil', 'Pasien '.$transaction->patient_name.' berhasil dipanggil.');
         } else {
             return AlertHelper::error('error', 'Data tidak ditemukan');
         }
@@ -185,10 +206,10 @@ class AdminConsultationQueueIndex extends Component
                 'status' => 'confirmation_call',
             ]);
 
-            $text = 'Pasien atas nama ' . $transaction->patient_name . ', silahkan masuk ke ' . $transaction->location_name . ' bertemu ' . $transaction?->doctor?->name . '.';
+            $text = 'Pasien atas nama '.$transaction->patient_name.', silahkan masuk ke '.$transaction->location_name.' bertemu '.$transaction?->doctor?->name.'.';
 
             // $this->dispatch('callPasienAlert', $text);
-            return AlertHelper::success('Berhasil', 'Pasien ' . $transaction->patient_name . ' berhasil dipanggil.');
+            return AlertHelper::success('Berhasil', 'Pasien '.$transaction->patient_name.' berhasil dipanggil.');
         } else {
             return AlertHelper::error('error', 'Data tidak ditemukan');
         }
@@ -215,7 +236,7 @@ class AdminConsultationQueueIndex extends Component
                 'practitioner_id' => $doctor->id ?? null,
                 'type' => 'outpatient',
                 'status' => 'in-progress',
-                'class_code' => 'AMB'
+                'class_code' => 'AMB',
             ];
 
             app(apiservice::class)->createTransaction($data);
@@ -225,6 +246,7 @@ class AdminConsultationQueueIndex extends Component
             ]);
 
             Session::put('transaction_id', $transaction->id);
+
             return redirect()->route('user.consultation.consultation.detail');
         } else {
             return AlertHelper::error('error', 'Data tidak ditemukan');
@@ -237,6 +259,7 @@ class AdminConsultationQueueIndex extends Component
 
         if ($transaction) {
             Session::put('transaction_id', $transaction->id);
+
             return redirect()->route('user.consultation.consultation.detail');
         } else {
             return AlertHelper::error('error', 'Data tidak ditemukan');
@@ -272,7 +295,7 @@ class AdminConsultationQueueIndex extends Component
 
     public function confirmSubmitPhysicalExam()
     {
-        return AlertHelper::confirmSave('submitPhysicalExam', 'Apakah Anda yakin ingin menyimpan pemeriksaan fisik untuk pasien ' . $this->patient_name . '?', $this->data_id);
+        return AlertHelper::confirmSave('submitPhysicalExam', 'Apakah Anda yakin ingin menyimpan pemeriksaan fisik untuk pasien '.$this->patient_name.'?', $this->data_id);
     }
 
     public function submitPhysicalExam()
@@ -290,12 +313,13 @@ class AdminConsultationQueueIndex extends Component
 
         $transaction = Transaction::find($this->data_id);
 
-        if (!$transaction) {
+        if (! $transaction) {
             // dd('test');
             AlertHelper::error('Gagal', 'Data transaksi tidak ditemukan.');
             Log::error('Transaction not found', [
                 'transaction_id' => $this->data_id,
             ]);
+
             return;
         }
 
@@ -349,10 +373,10 @@ class AdminConsultationQueueIndex extends Component
 
             DB::commit();
             $this->closeModalPhysicalExam();
-            AlertHelper::success('Berhasil', 'Pemeriksaan fisik untuk pasien ' . $transaction->patient_name . ' berhasil disimpan.');
+            AlertHelper::success('Berhasil', 'Pemeriksaan fisik untuk pasien '.$transaction->patient_name.' berhasil disimpan.');
         } catch (\Exception $e) {
             DB::rollBack();
-            AlertHelper::error('error', 'Gagal menyimpan pemeriksaan fisik: ' . $e->getMessage());
+            AlertHelper::error('error', 'Gagal menyimpan pemeriksaan fisik: '.$e->getMessage());
             Log::error('Error saving physical examination', [
                 'transaction_id' => $this->data_id,
                 'error' => $e->getMessage(),
@@ -361,7 +385,6 @@ class AdminConsultationQueueIndex extends Component
             $this->closeModalPhysicalExam();
         }
 
-        return;
     }
 
     public function render()

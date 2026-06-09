@@ -2,24 +2,22 @@
 
 namespace App\Livewire\Admin\Sale\Pos\Recipe;
 
+use App\Helpers\AlertHelper;
+use App\Models\Branch\Branch;
 use App\Models\Company\Company;
 use App\Models\Deposit\Deposit;
-use App\Models\PaymentMethod\PaymentMethod;
-use App\Models\Product\Product;
-use App\Models\Transaction\TransactionPayment;
-use Illuminate\Support\Facades\Auth;
-use Livewire\Component;
-use App\Models\Branch\Branch;
-use App\Models\Product\ProductPrice;
-use App\Models\Product\ProductStock;
-use App\Models\Transaction\Transaction;
-use App\Models\Transaction\TransactionDetail;
-use App\Helpers\AlertHelper;
 use App\Models\Encounter\Encounter;
 use App\Models\MedicineType\MedicineType;
 use App\Models\Patient\Patient;
+use App\Models\PaymentMethod\PaymentMethod;
 use App\Models\Practitiont\Practitioner;
+use App\Models\Product\Product;
+use App\Models\Product\ProductPrice;
+use App\Models\Product\ProductStock;
 use App\Models\Promotion\PromotionSimplified;
+use App\Models\Transaction\Transaction;
+use App\Models\Transaction\TransactionDetail;
+use App\Models\Transaction\TransactionPayment;
 use App\Models\Transaction\TransactionProduct;
 use App\Models\Transaction\TransactionRecipe;
 use App\Models\User;
@@ -28,33 +26,91 @@ use App\Services\Product\ProductService;
 use App\Services\Promotion\BuyXGetYService;
 use App\Services\Promotion\PromotionSimplifiedService;
 use App\Traits\Product\ProductTrait;
-use Illuminate\Console\View\Components\Alert;
+use App\Traits\Transaction\ReversesTransactionStock;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 class AdminSalePosRecipeIndex extends Component
 {
-    use ProductTrait, WithPagination;
+    use ProductTrait, ReversesTransactionStock, WithPagination;
+
     protected $queryString = [
         'pageProduct' => ['except' => 1], // Ini akan menghapus ?pageProduct=1 dari URL
         'searchProduct' => ['except' => ''],
     ];
+
     public $searchProduct = '';
+
     public $perPageProduct = 5;
+
     public $perPage = 5;
-    public $transaction_id, $transaction;
+
+    public $transaction_id;
+
+    public $transaction;
+
     public $search_sku;
-    public $transaction_details = [], $discount, $discount_type, $medicine_types = [], $supporting_products = [];
-    public $payment_method_id, $payment_amount, $is_single_payment, $admin_fee, $description;
-    public $transaction_recipe_id, $is_narcotic = false, $user_asign_narcotic_id, $product_id, $product_name, $barcode, $username_or_email, $password, $is_outside_pharmacy = false, $actions = [], $medicines = [];
+
+    public $transaction_details = [];
+
+    public $discount;
+
+    public $discount_type;
+
+    public $medicine_types = [];
+
+    public $supporting_products = [];
+
+    public $payment_method_id;
+
+    public $payment_amount;
+
+    public $is_single_payment;
+
+    public $admin_fee;
+
+    public $description;
+
+    public $transaction_recipe_id;
+
+    public $is_narcotic = false;
+
+    public $user_asign_narcotic_id;
+
+    public $product_id;
+
+    public $product_name;
+
+    public $barcode;
+
+    public $username_or_email;
+
+    public $password;
+
+    public $is_outside_pharmacy = false;
+
+    public $actions = [];
+
+    public $medicines = [];
+
     public $is_pending_payment = false;
-    public $diagnosas, $immunization;
+
+    public $diagnosas;
+
+    public $immunization;
+
     public $promotion_simplified_id;
-    public $has_deposit = false, $deposit_discount_amount = 0;
+
+    public $has_deposit = false;
+
+    public $deposit_discount_amount = 0;
+
     private $validStatuses = [
         'draft_consultation',
         'call_consultation',
@@ -67,8 +123,11 @@ class AdminSalePosRecipeIndex extends Component
         'process',
         'take_medicine',
     ];
+
     public $is_insurance_claim = false;
+
     public $is_insurance = false;
+
     public $insurance_number = '';
 
     public function mount()
@@ -159,7 +218,7 @@ class AdminSalePosRecipeIndex extends Component
                 Log::info('Deposit discount applied', [
                     'transaction_id' => $this->transaction_id,
                     'deposit_id' => $this->transaction->deposit_id,
-                    'deposit_amount' => $this->deposit_discount_amount
+                    'deposit_amount' => $this->deposit_discount_amount,
                 ]);
             }
         }
@@ -170,6 +229,7 @@ class AdminSalePosRecipeIndex extends Component
         // Prevent changing discount type when deposit is present
         if ($this->has_deposit) {
             $this->discount_type = 'rupiah';
+
             return;
         }
 
@@ -182,6 +242,7 @@ class AdminSalePosRecipeIndex extends Component
         // Prevent manual discount changes when deposit is present
         if ($this->has_deposit) {
             $this->discount = number_format($this->deposit_discount_amount, 0, ',', '.');
+
             return;
         }
 
@@ -192,7 +253,6 @@ class AdminSalePosRecipeIndex extends Component
         } else {
             $this->discount = intval(str_replace('.', '', $this->discount));
         }
-
 
         $this->updateTotal();
     }
@@ -285,6 +345,7 @@ class AdminSalePosRecipeIndex extends Component
         if (preg_match('/\(GRATIS - (.+)\)/', $itemName, $matches)) {
             return $matches[1];
         }
+
         return 'Promosi Buy X Get Y';
     }
 
@@ -319,19 +380,20 @@ class AdminSalePosRecipeIndex extends Component
 
         $product = $getProduct->first();
 
-        if (!$product) {
+        if (! $product) {
             $this->reset('search_sku');
+
             return AlertHelper::error('Gagal', 'Produk tidak ditemukan.');
         }
 
-        if (!$product->is_non_stock) {
+        if (! $product->is_non_stock) {
             // Check stock
             $productStock = $product->productStock()
                 ->where('company_id', $companyId)
                 ->where('branch_id', $branchId)
                 ->first();
 
-            if (!$productStock || $productStock->quantity <= 0) {
+            if (! $productStock || $productStock->quantity <= 0) {
                 return AlertHelper::error('Gagal', 'Stok produk tidak ditemukan atau stok kosong.');
             }
         }
@@ -343,7 +405,7 @@ class AdminSalePosRecipeIndex extends Component
             // ->where('is_updated', true)
             ->first();
 
-        if (!$productPrice) {
+        if (! $productPrice) {
             return AlertHelper::error('Gagal', 'Harga produk tidak ditemukan.');
         }
 
@@ -352,12 +414,13 @@ class AdminSalePosRecipeIndex extends Component
         }
 
         if ($product->is_narcotic) {
-            if (!$this->user_asign_narcotic_id) {
+            if (! $this->user_asign_narcotic_id) {
                 $this->is_narcotic = true;
                 $this->product_id = $product->id;
                 $this->product_name = $product->name;
 
                 $this->dispatch('close-modal', ['id' => 'modalProduct']);
+
                 return $this->dispatch('open-modal', ['id' => 'modalNarcotic']);
             }
         }
@@ -411,14 +474,14 @@ class AdminSalePosRecipeIndex extends Component
 
         $company = Company::find(Auth::user()->company_id);
 
-        if (!$company) {
+        if (! $company) {
             return AlertHelper::error('Error', 'Perusahaan tidak ditemukan.');
         }
 
         // Find user with smart identity resolution
         $userResult = $this->findHeadUserWithIdentityResolution($company->id);
 
-        if (!$userResult['success']) {
+        if (! $userResult['success']) {
             return AlertHelper::error('Akses Ditolak', $userResult['message']);
         }
 
@@ -426,7 +489,7 @@ class AdminSalePosRecipeIndex extends Component
         $loginMethod = $userResult['login_method'];
 
         // Check password
-        if (!Hash::check($this->password, $user->password)) {
+        if (! Hash::check($this->password, $user->password)) {
             return AlertHelper::error('Akses Ditolak', 'Password salah. Silakan periksa kembali atau hubungi administrator perusahaan.');
         }
 
@@ -437,7 +500,7 @@ class AdminSalePosRecipeIndex extends Component
             ->where('is_active', true)
             ->exists();
 
-        if (!$isHead) {
+        if (! $isHead) {
             return AlertHelper::error('Akses Ditolak', 'Anda bukan supervisor di perusahaan ini.');
         }
 
@@ -467,7 +530,7 @@ class AdminSalePosRecipeIndex extends Component
                 'success' => true,
                 'user' => $mainUser['user'],
                 'login_method' => $mainUser['method'],
-                'message' => 'Found via main fields'
+                'message' => 'Found via main fields',
             ];
         }
 
@@ -478,7 +541,7 @@ class AdminSalePosRecipeIndex extends Component
                 'success' => true,
                 'user' => $altUser['user'],
                 'login_method' => $altUser['method'],
-                'message' => 'Found via alternative contacts'
+                'message' => 'Found via alternative contacts',
             ];
         }
 
@@ -489,7 +552,7 @@ class AdminSalePosRecipeIndex extends Component
                 'success' => true,
                 'user' => $conflictUser['user'],
                 'login_method' => $conflictUser['method'],
-                'message' => 'Resolved identity conflict'
+                'message' => 'Resolved identity conflict',
             ];
         }
 
@@ -497,7 +560,7 @@ class AdminSalePosRecipeIndex extends Component
             'success' => false,
             'user' => null,
             'login_method' => null,
-            'message' => 'Username atau email tidak ditemukan, atau Anda bukan supervisor di perusahaan ini.'
+            'message' => 'Username atau email tidak ditemukan, atau Anda bukan supervisor di perusahaan ini.',
         ];
     }
 
@@ -528,7 +591,7 @@ class AdminSalePosRecipeIndex extends Component
 
                 return [
                     'user' => $user,
-                    'method' => $method
+                    'method' => $method,
                 ];
             }
         }
@@ -544,7 +607,7 @@ class AdminSalePosRecipeIndex extends Component
         // Cari di alternative contacts dengan context company ini (hanya employee)
         $users = User::where('type_user', 'employee')
             ->whereJsonContains('alternative_contacts', function ($contact) use ($identifier, $companyId) {
-                return ($contact['value'] === $identifier && $contact['context'] == $companyId);
+                return $contact['value'] === $identifier && $contact['context'] == $companyId;
             })->get();
 
         foreach ($users as $user) {
@@ -568,7 +631,7 @@ class AdminSalePosRecipeIndex extends Component
 
                 return [
                     'user' => $user,
-                    'method' => 'alternative_' . $contactType
+                    'method' => 'alternative_'.$contactType,
                 ];
             }
         }
@@ -582,7 +645,7 @@ class AdminSalePosRecipeIndex extends Component
     protected function handleHeadEmailPhoneConflict($identifier, $companyId)
     {
         // Check if identifier is email
-        if (!filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
             return null;
         }
 
@@ -602,7 +665,7 @@ class AdminSalePosRecipeIndex extends Component
 
                 return [
                     'user' => $user,
-                    'method' => 'email'
+                    'method' => 'email',
                 ];
             }
         }
@@ -623,7 +686,7 @@ class AdminSalePosRecipeIndex extends Component
             'identifier_used' => $this->username_or_email,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
-            'timestamp' => now()
+            'timestamp' => now(),
         ]);
     }
 
@@ -677,13 +740,14 @@ class AdminSalePosRecipeIndex extends Component
         foreach ($this->transaction_details as $key => $value) {
             $transactionRecipe = TransactionRecipe::find($value['id']);
 
-            if (!$transactionRecipe) {
+            if (! $transactionRecipe) {
                 AlertHelper::error('Gagal', 'Resep tidak ditemukan.');
+
                 continue;
             }
 
             // Check if product_id is changing (before we save)
-            $newProductId = !empty($value['product_id']) ? $value['product_id'] : null;
+            $newProductId = ! empty($value['product_id']) ? $value['product_id'] : null;
             $productIdChanged = $transactionRecipe->product_id != $newProductId;
 
             // If product changed, fetch new price
@@ -694,8 +758,8 @@ class AdminSalePosRecipeIndex extends Component
                     $productPrice = ProductPrice::where([
                         'product_id' => $product->id,
                         'company_id' => $companyId,
-                        'branch_id'  => $branchId,
-                        'is_updated' => true
+                        'branch_id' => $branchId,
+                        'is_updated' => true,
                     ])->first();
                     $price = $productPrice?->price ?? $price;
                 }
@@ -714,11 +778,11 @@ class AdminSalePosRecipeIndex extends Component
             $transactionRecipe->notes = $value['notes'] ?? null;
             $transactionRecipe->save(); // Observer akan handle
 
-            if (!empty($value['details'])) {
+            if (! empty($value['details'])) {
                 foreach ($value['details'] as $detail) {
                     $transactionDetail = TransactionDetail::find($detail['id']);
 
-                    if (!$transactionDetail || empty($detail['product_id'])) {
+                    if (! $transactionDetail || empty($detail['product_id'])) {
                         continue;
                     }
 
@@ -734,8 +798,8 @@ class AdminSalePosRecipeIndex extends Component
                             $productPriceRecipe = ProductPrice::where([
                                 'product_id' => $productRecipe->id,
                                 'company_id' => $companyId,
-                                'branch_id'  => $branchId,
-                                'is_updated' => true
+                                'branch_id' => $branchId,
+                                'is_updated' => true,
                             ])->first();
                             $detailPrice = $productPriceRecipe?->price ?? $detailPrice;
                         }
@@ -763,7 +827,7 @@ class AdminSalePosRecipeIndex extends Component
             DB::beginTransaction();
 
             $companyId = auth()->user()->company_id;
-            $branchId  = Branch::where('company_id', $companyId)->first()?->id;
+            $branchId = Branch::where('company_id', $companyId)->first()?->id;
 
             $transactionRecipes = TransactionRecipe::where('transaction_id', $this->transaction_id)
                 ->orderBy('order', 'asc')
@@ -773,16 +837,17 @@ class AdminSalePosRecipeIndex extends Component
                 $medicineType = MedicineType::find($transactionRecipe->medicine_type_id);
                 $numeroRecipe = intval(Str::replace('.', '', $transactionRecipe->numero_recipe ?? 0));
 
-                if (!$medicineType) {
-                    AlertHelper::error('Gagal', "Tipe Resep pada /R" . ($key + 1) . " tidak ditemukan.");
+                if (! $medicineType) {
+                    AlertHelper::error('Gagal', 'Tipe Resep pada /R'.($key + 1).' tidak ditemukan.');
+
                     continue;
                 }
 
-                $product      = $transactionRecipe->product_id ? Product::find($transactionRecipe->product_id) : null;
+                $product = $transactionRecipe->product_id ? Product::find($transactionRecipe->product_id) : null;
                 $productStock = $product ? ProductStock::where([
                     'product_id' => $product->id,
                     'company_id' => $companyId,
-                    'branch_id'  => $branchId,
+                    'branch_id' => $branchId,
                 ])->first() : null;
 
                 // Use existing price if available, otherwise fetch from database
@@ -795,7 +860,7 @@ class AdminSalePosRecipeIndex extends Component
                     $productPrice = $product ? ProductPrice::where([
                         'product_id' => $product->id,
                         'company_id' => $companyId,
-                        'branch_id'  => $branchId,
+                        'branch_id' => $branchId,
                         'is_updated' => true,
                     ])->first() : null;
                     $price = $productPrice?->price ?? 0;
@@ -809,9 +874,9 @@ class AdminSalePosRecipeIndex extends Component
                     } else {
                         if ($product && $product->is_non_stock) {
                             $quantity = $numeroRecipe;
-                        } elseif (!$product || !$productStock) {
+                        } elseif (! $product || ! $productStock) {
                             $quantity = 1;
-                            AlertHelper::error('Gagal', "Stok produk '" . ($product?->name ?? 'Unknown') . "' tidak ditemukan.");
+                            AlertHelper::error('Gagal', "Stok produk '".($product?->name ?? 'Unknown')."' tidak ditemukan.");
                         } else {
                             // Simplified stock check - just check available stock
                             if ($numeroRecipe > $productStock->quantity) {
@@ -831,29 +896,30 @@ class AdminSalePosRecipeIndex extends Component
                     }
 
                     $transactionRecipe->fill([
-                        'medicine_type_id'    => $transactionRecipe->medicine_type_id,
-                        'price_service_one'   => $medicineType->service_price ?? 0,
+                        'medicine_type_id' => $transactionRecipe->medicine_type_id,
+                        'price_service_one' => $medicineType->service_price ?? 0,
                         'price_service_other' => $medicineType->price_other ?? 0,
-                        'numero_recipe'       => $numeroRecipe,
-                        'quantity'            => $quantity,
-                        'price'               => $price,
-                        'sub_total_price'     => $price * $quantity,
-                        'description'         => $transactionRecipe->description ?? null,
+                        'numero_recipe' => $numeroRecipe,
+                        'quantity' => $quantity,
+                        'price' => $price,
+                        'sub_total_price' => $price * $quantity,
+                        'description' => $transactionRecipe->description ?? null,
                     ])->save();
 
                     // === UPDATE RECIPE DETAILS ===
                     foreach ($transactionRecipe->transactionDetail as $detail) {
                         $productRecipe = Product::find($detail->product_id);
 
-                        if (!$productRecipe) {
+                        if (! $productRecipe) {
                             AlertHelper::error('Gagal', "Produk dengan ID {$detail->product_id} tidak ditemukan.");
+
                             continue;
                         }
 
                         $productStockRecipe = ProductStock::where([
                             'product_id' => $productRecipe->id,
                             'company_id' => $companyId,
-                            'branch_id'  => $branchId,
+                            'branch_id' => $branchId,
                         ])->first();
 
                         // Use existing price if available, otherwise fetch from database
@@ -866,7 +932,7 @@ class AdminSalePosRecipeIndex extends Component
                             $productPriceRecipe = ProductPrice::where([
                                 'product_id' => $productRecipe->id,
                                 'company_id' => $companyId,
-                                'branch_id'  => $branchId,
+                                'branch_id' => $branchId,
                                 'is_updated' => true,
                             ])->first();
                             $priceRecipe = $productPriceRecipe?->price ?? 0;
@@ -874,6 +940,7 @@ class AdminSalePosRecipeIndex extends Component
 
                         if ($priceRecipe == 0) {
                             AlertHelper::error('Gagal', 'Harga produk tidak boleh 0.');
+
                             return;
                         }
 
@@ -881,7 +948,7 @@ class AdminSalePosRecipeIndex extends Component
                             // === SINGLE ===
                             if ($productRecipe->is_non_stock) {
                                 $quantityRecipe = $numeroRecipe;
-                            } elseif (!$productStockRecipe) {
+                            } elseif (! $productStockRecipe) {
                                 $quantityRecipe = 1;
                                 AlertHelper::error('Gagal', "Stok produk '{$productRecipe->name}' tidak ditemukan.");
                             } else {
@@ -890,45 +957,45 @@ class AdminSalePosRecipeIndex extends Component
                             }
 
                             $detail->fill([
-                                'type'           => 'single',
-                                'dosage_doctor'  => 0,
-                                'dosage_drug'    => 0,
-                                'quantity_real'  => $quantityRecipe,
-                                'quantity'       => $quantityRecipe,
-                                'price'          => $priceRecipe,
+                                'type' => 'single',
+                                'dosage_doctor' => 0,
+                                'dosage_drug' => 0,
+                                'quantity_real' => $quantityRecipe,
+                                'quantity' => $quantityRecipe,
+                                'price' => $priceRecipe,
                                 'sub_total_price' => $priceRecipe * $quantityRecipe,
                             ])->save();
                         } else {
                             $detail->quantity = ceil($detail->quantity_real) ?? 1;
-                            if (!$productRecipe->is_non_stock) {
+                            if (! $productRecipe->is_non_stock) {
                                 // Simplified stock check
                                 if ($detail->quantity > $productStockRecipe->quantity) {
                                     $detail->quantity_real = $productStockRecipe->quantity;
                                     $detail->quantity = $productStockRecipe->quantity;
                                     AlertHelper::error(
                                         'Gagal',
-                                        "Stok produk '" . ($productRecipe?->name ?? 'Unknown') .
+                                        "Stok produk '".($productRecipe?->name ?? 'Unknown').
                                             "' tidak mencukupi. Tersedia: {$productStockRecipe->quantity}, Diminta: {$detail->quantity}."
                                     );
                                 }
 
                                 $detail->fill([
-                                    'type'           => $detail->type ?? 'single',
-                                    'dosage_doctor'  => 0,
-                                    'dosage_drug'    => 0,
-                                    'quantity_real'  => $detail->quantity_real,
-                                    'quantity'       => intval($detail->quantity_real),
-                                    'price'          => $priceRecipe,
+                                    'type' => $detail->type ?? 'single',
+                                    'dosage_doctor' => 0,
+                                    'dosage_drug' => 0,
+                                    'quantity_real' => $detail->quantity_real,
+                                    'quantity' => intval($detail->quantity_real),
+                                    'price' => $priceRecipe,
                                     'sub_total_price' => $priceRecipe * $detail->quantity,
                                 ])->save();
                             } else {
                                 $detail->fill([
-                                    'type'           => $detail->type ?? 'single',
-                                    'dosage_doctor'  => 0,
-                                    'dosage_drug'    => 0,
-                                    'quantity_real'  => $detail->quantity_real,
-                                    'quantity'       => intval($detail->quantity_real),
-                                    'price'          => $priceRecipe,
+                                    'type' => $detail->type ?? 'single',
+                                    'dosage_doctor' => 0,
+                                    'dosage_drug' => 0,
+                                    'quantity_real' => $detail->quantity_real,
+                                    'quantity' => intval($detail->quantity_real),
+                                    'price' => $priceRecipe,
                                     'sub_total_price' => $priceRecipe * $detail->quantity,
                                 ])->save();
                             }
@@ -940,8 +1007,8 @@ class AdminSalePosRecipeIndex extends Component
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            AlertHelper::error('Gagal', 'Terjadi kesalahan saat memperbarui resep: ' . $e->getMessage());
-            Log::error('Error updating transaction recipe: ' . $e->getMessage());
+            AlertHelper::error('Gagal', 'Terjadi kesalahan saat memperbarui resep: '.$e->getMessage());
+            Log::error('Error updating transaction recipe: '.$e->getMessage());
         }
     }
 
@@ -949,7 +1016,7 @@ class AdminSalePosRecipeIndex extends Component
     {
         $transactionDetail = TransactionDetail::find($transactionDetailId);
 
-        if (!$transactionDetail) {
+        if (! $transactionDetail) {
             return AlertHelper::error('Gagal', 'Detail transaksi tidak ditemukan.');
         }
 
@@ -960,7 +1027,7 @@ class AdminSalePosRecipeIndex extends Component
 
         if ($quantity === 'decrement') {
 
-            if (!$productStock || $productStock->quantity <= 0) {
+            if (! $productStock || $productStock->quantity <= 0) {
                 $transactionDetail->quantity = 1;
                 $transactionDetail->save();
 
@@ -976,7 +1043,6 @@ class AdminSalePosRecipeIndex extends Component
 
             $transactionDetail->decrement('quantity');
         }
-
 
         if ($quantity === 'increment') {
             if ($productStock->quantity <= $transactionDetail->quantity) {
@@ -997,7 +1063,7 @@ class AdminSalePosRecipeIndex extends Component
     {
         $saveFunction = $type == 'draft' ? 'saveDraft' : ($type == 'process' ? 'saveTransaction' : 'saveSuccessTransaction');
 
-        return AlertHelper::confirmSave($saveFunction, "Apakah Anda yakin ingin menyimpan transaksi " . Str::title($type) . " ini?");
+        return AlertHelper::confirmSave($saveFunction, 'Apakah Anda yakin ingin menyimpan transaksi '.Str::title($type).' ini?');
     }
 
     public function saveDraft()
@@ -1018,9 +1084,11 @@ class AdminSalePosRecipeIndex extends Component
             $transaction->save();
 
             AlertHelper::success('Berhasil', 'Transaksi berhasil disimpan sebagai draft.');
+
             return redirect()->route('user.sale.pos');
         } else {
             AlertHelper::error('Gagal', 'Transaksi tidak ditemukan.');
+
             return redirect()->route('user.sale.pos');
         }
     }
@@ -1030,7 +1098,7 @@ class AdminSalePosRecipeIndex extends Component
         $transaction = Transaction::find($this->transaction_id);
         $branchId = Branch::where('company_id', Auth::user()->company_id)->first()?->id;
 
-        if (!$transaction) {
+        if (! $transaction) {
             return AlertHelper::error('Gagal', 'Transaksi tidak ditemukan.');
         }
 
@@ -1038,7 +1106,7 @@ class AdminSalePosRecipeIndex extends Component
         foreach ($transaction->transactionRecipes as $key => $recipe) {
             $no = $key + 1;
 
-            if (!$recipe->medicine_type_id || $recipe->medicine_type_id == 0) {
+            if (! $recipe->medicine_type_id || $recipe->medicine_type_id == 0) {
                 return AlertHelper::error('Gagal', "Tipe resep pada /R{$no} belum dipilih.");
             }
 
@@ -1048,12 +1116,12 @@ class AdminSalePosRecipeIndex extends Component
 
             $medicineType = MedicineType::find($recipe->medicine_type_id);
 
-            if (!$medicineType->is_single && !$recipe->product_id) {
+            if (! $medicineType->is_single && ! $recipe->product_id) {
                 return AlertHelper::error('Gagal', "Produk pendukung pada /R{$no} belum dipilih.");
             }
 
             $recipeProduct = Product::find($recipe->product_id);
-            if (!$recipeProduct) {
+            if (! $recipeProduct) {
                 continue;
             }
 
@@ -1066,12 +1134,12 @@ class AdminSalePosRecipeIndex extends Component
 
         // Validasi data dasar TransactionDetails (tanpa kunci stok)
         foreach ($transactionDetails as $transactionDetail) {
-            if (!$transactionDetail->product_id) {
+            if (! $transactionDetail->product_id) {
                 continue;
             }
 
             $product = Product::find($transactionDetail->product_id);
-            if (!$product) {
+            if (! $product) {
                 continue;
             }
         }
@@ -1089,12 +1157,11 @@ class AdminSalePosRecipeIndex extends Component
 
         session()->flash('saved', [
             'title' => 'Berhasil!',
-            'text'  => 'Transaksi berhasil diproses!',
+            'text' => 'Transaksi berhasil diproses!',
         ]);
 
         return redirect()->route('user.sale.pos');
     }
-
 
     public function confirmDeleteTransaction()
     {
@@ -1108,6 +1175,7 @@ class AdminSalePosRecipeIndex extends Component
 
             $transaction = Transaction::find($id[0]);
             if ($transaction) {
+                $this->reverseStockForTransaction($transaction);
                 $transaction->status = 'canceled';
                 $transaction->save();
                 DB::commit();
@@ -1117,7 +1185,7 @@ class AdminSalePosRecipeIndex extends Component
             }
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Gagal menghapus transaksi: ' . $e->getMessage(), [
+            Log::error('Gagal menghapus transaksi: '.$e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
@@ -1134,7 +1202,7 @@ class AdminSalePosRecipeIndex extends Component
 
         $branchId = Branch::where('company_id', Auth::user()->company_id)->first()?->id;
 
-        if (!$transaction) {
+        if (! $transaction) {
             return AlertHelper::error('Gagal', 'Transaksi tidak ditemukan.');
         }
 
@@ -1150,7 +1218,7 @@ class AdminSalePosRecipeIndex extends Component
         foreach ($transaction->transactionRecipes as $key => $recipe) {
             $no = $key + 1;
 
-            if (!$recipe->medicine_type_id || $recipe->medicine_type_id == 0) {
+            if (! $recipe->medicine_type_id || $recipe->medicine_type_id == 0) {
                 return AlertHelper::error('Gagal', "Tipe resep pada /R{$no} belum dipilih.");
             }
 
@@ -1160,12 +1228,12 @@ class AdminSalePosRecipeIndex extends Component
 
             $medicineType = MedicineType::find($recipe->medicine_type_id);
 
-            if (!$medicineType->is_single && !$recipe->product_id) {
+            if (! $medicineType->is_single && ! $recipe->product_id) {
                 return AlertHelper::error('Gagal', "Produk pendukung pada /R{$no} belum dipilih.");
             }
 
             $recipeProduct = Product::find($recipe->product_id);
-            if (!$recipeProduct) {
+            if (! $recipeProduct) {
                 continue;
             }
 
@@ -1178,12 +1246,12 @@ class AdminSalePosRecipeIndex extends Component
 
         // Validasi dasar TransactionDetails (tanpa kunci stok)
         foreach ($transactionDetails as $transactionDetail) {
-            if (!$transactionDetail->product_id) {
+            if (! $transactionDetail->product_id) {
                 continue;
             }
 
             $product = Product::find($transactionDetail->product_id);
-            if (!$product) {
+            if (! $product) {
                 continue;
             }
         }
@@ -1192,6 +1260,41 @@ class AdminSalePosRecipeIndex extends Component
             DB::beginTransaction();
 
             $this->processTransactionPayments($transaction);
+
+            // Always process action products stock decrement at POS (regardless of recipe status/presence)
+            $productService = new ProductService;
+            $actionDetails = $transaction->transactionDetails()
+                ->whereIn('type_transaction', ['action', 'other', 'odontogram_action'])
+                ->whereNotNull('product_id')
+                ->get();
+
+            foreach ($actionDetails as $detail) {
+                $product = Product::find($detail->product_id);
+                if ($product) {
+                    $productPrice = ProductPrice::where('product_id', $product->id)
+                        ->where('company_id', $transaction->company_id)
+                        ->where('branch_id', $branchId)
+                        ->first();
+
+                    $hppPrice = $productPrice ? intval(Str::replace('.', '', number_format($productPrice->hpp_average, 0, ',', '.'))) : 0;
+                    $quantity = $detail->quantity;
+                    $sellingPrice = $detail->price;
+
+                    // Update Detail with HPP
+                    $detail->update([
+                        'price_hpp' => $hppPrice,
+                        'sub_total_price_hpp' => $hppPrice * $quantity,
+                    ]);
+
+                    // Create Transaction Product
+                    $this->createTransactionProduct($transaction, $detail, $product, $hppPrice, $quantity, $sellingPrice);
+
+                    // Decrement Stock if NOT non-stock
+                    if (! $product->is_non_stock) {
+                        $productService->createProductDecrement($product->id, $quantity, null, null, $sellingPrice, null, null, null, null, null);
+                    }
+                }
+            }
 
             if ($this->is_outside_pharmacy) {
                 if ($transaction->consultation === 'yes') {
@@ -1210,7 +1313,7 @@ class AdminSalePosRecipeIndex extends Component
                         'practitioner_id' => $doctor?->id,
                         'type' => 'outpatient',
                         'status' => 'finished',
-                        'class_code' => 'AMB'
+                        'class_code' => 'AMB',
                     ];
 
                     app(apiservice::class)->createTransaction($data);
@@ -1219,7 +1322,7 @@ class AdminSalePosRecipeIndex extends Component
                 $updateData = [
                     'insurance_number' => $this->insurance_number,
                     'is_insurance' => $this->is_insurance ? true : false,
-                    'status' => 'completed'
+                    'status' => 'completed',
                 ];
 
                 if ($this->is_pending_payment) {
@@ -1241,39 +1344,6 @@ class AdminSalePosRecipeIndex extends Component
                 ];
 
                 if ($transactionDetailsCount <= 0) {
-                    // Start: Process products for Actions/Odontogram even if skipping Pharmacy
-                    $productService = new ProductService();
-                    $actionDetails = $transaction->transactionDetails()
-                        ->whereIn('type_transaction', ['action', 'other', 'odontogram_action']) // Include relevant types
-                        ->whereNotNull('product_id')
-                        ->get();
-
-                    foreach ($actionDetails as $detail) {
-                        $product = Product::find($detail->product_id);
-                        if ($product) {
-                            $productPrice = ProductPrice::where('product_id', $product->id)
-                                ->where('company_id', $transaction->company_id)
-                                ->where('branch_id', $branchId)
-                                ->first();
-
-                            $hppPrice = $productPrice ? intval(Str::replace('.', '', number_format($productPrice->hpp_average, 0, ',', '.'))) : 0;
-                            $quantity = $detail->quantity;
-                            $sellingPrice = $detail->price; // Assuming price is already clean or needs cleaning? Typically clean in DB.
-                             
-                            // Update Detail with HPP
-                            $detail->update([
-                                'price_hpp' => $hppPrice,
-                                'sub_total_price_hpp' => $hppPrice * $quantity
-                            ]);
-
-                            // Create Transaction Product
-                            $this->createTransactionProduct($transaction, $detail, $product, $hppPrice, $quantity, $sellingPrice);
-
-                            // Decrement Stock
-                            $productService->createProductDecrement($product->id, $quantity, null, null, $sellingPrice, null, null, null, null, null);
-                        }
-                    }
-                    // End: Process products
 
                     if ($transaction->consultation === 'yes') {
                         $encounter = Encounter::firstOrNew(['transaction_id' => $transaction->id]);
@@ -1291,7 +1361,7 @@ class AdminSalePosRecipeIndex extends Component
                             'practitioner_id' => $doctor?->id,
                             'type' => 'outpatient',
                             'status' => 'finished',
-                            'class_code' => 'AMB'
+                            'class_code' => 'AMB',
                         ];
 
                         app(apiservice::class)->createTransaction($data);
@@ -1311,7 +1381,7 @@ class AdminSalePosRecipeIndex extends Component
                         'is_insurance' => $this->is_insurance ? true : false,
                         'status' => $status,
                         'is_take_medicine' => true,
-                        'date_prepare' => now()->format('Y-m-d')
+                        'date_prepare' => now()->format('Y-m-d'),
                     ], $statusData);
 
                     if ($this->is_pending_payment) {
@@ -1333,14 +1403,14 @@ class AdminSalePosRecipeIndex extends Component
             return redirect()->route('user.sale.pos');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return $this->handleError($e);
         }
     }
 
-
     private function processTransactionDetails($transaction)
     {
-        $productService = new ProductService();
+        $productService = new ProductService;
         $companyId = Auth::user()->company_id;
         $branch = Branch::where('company_id', $companyId)->firstOrFail();
 
@@ -1373,7 +1443,7 @@ class AdminSalePosRecipeIndex extends Component
         $data['sub_total_price'] = intval(Str::replace('.', '', $data['sub_total_price']));
         $transactionRecipe->update([
             'price_hpp' => $hppPrice,
-            'sub_total_price_hpp' => $hppPrice * $quantity
+            'sub_total_price_hpp' => $hppPrice * $quantity,
         ]);
 
         $this->createTransactionProduct($transaction, $data, $product, $hppPrice, $quantity, $sellingPrice);
@@ -1382,7 +1452,7 @@ class AdminSalePosRecipeIndex extends Component
 
     private function processDetailLevel($transaction, $data, $productService, $companyId, $branchId)
     {
-        if (!isset($data['details']) || !is_array($data['details'])) {
+        if (! isset($data['details']) || ! is_array($data['details'])) {
             return;
         }
 
@@ -1409,7 +1479,7 @@ class AdminSalePosRecipeIndex extends Component
 
             $transactionDetail->update([
                 'price_hpp' => $hppPrice,
-                'sub_total_price_hpp' => $hppPrice * $quantity
+                'sub_total_price_hpp' => $hppPrice * $quantity,
             ]);
 
             $this->createTransactionProduct($transaction, $detailData, $productRecipe, $hppPrice, $quantity, $sellingPrice);
@@ -1431,7 +1501,6 @@ class AdminSalePosRecipeIndex extends Component
         // Batasi margin ke rentang -100 s/d 100, lalu bulatkan
         $margin = max(min($margin, 100), -100);
         $margin = round($margin);
-
 
         TransactionProduct::create([
             'transaction_id' => $transaction->id,
@@ -1472,16 +1541,15 @@ class AdminSalePosRecipeIndex extends Component
 
     private function handleError(\Exception $e)
     {
-        Log::error('Error dalam saveSuccessTransaction: ' . $e->getMessage(), [
+        Log::error('Error dalam saveSuccessTransaction: '.$e->getMessage(), [
             'transaction_id' => $this->transaction_id,
             'user_id' => Auth::id(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $e->getTraceAsString(),
         ]);
 
-        AlertHelper::error('Gagal', 'Terjadi kesalahan saat menyimpan transaksi: ' . $e->getMessage());
+        AlertHelper::error('Gagal', 'Terjadi kesalahan saat menyimpan transaksi: '.$e->getMessage());
         // return redirect()->route('user.sale.pos');
 
-        return;
     }
 
     public function updateTotal()
@@ -1506,12 +1574,11 @@ class AdminSalePosRecipeIndex extends Component
             $transaction->product_price = $product_price;
             $transaction->embalage = $transaction->second_service_price + $first_service_price + $price_product_price + $service_other_price;
 
-
             // 2. Hitung subtotal awal sebelum promosi dan diskon
             $subtotal = $transaction->embalage + $product_price;
 
             // Gunakan sub_total_price_before_rounding jika tersedia, jika tidak gunakan subtotal yang dihitung
-            if (!empty($transaction->sub_total_price_before_rounding) && $transaction->sub_total_price_before_rounding > 0) {
+            if (! empty($transaction->sub_total_price_before_rounding) && $transaction->sub_total_price_before_rounding > 0) {
                 // dd($transaction->sub_total_price_before_rounding);
                 $subtotal = $subtotal;
             }
@@ -1519,11 +1586,11 @@ class AdminSalePosRecipeIndex extends Component
 
             // 3. Validasi dan terapkan promotion simplified
             if ($this->promotion_simplified_id) {
-                $promotionService = new PromotionSimplifiedService();
+                $promotionService = new PromotionSimplifiedService;
                 $promotionResult = $promotionService->calculatePromotionDiscount($this->promotion_simplified_id, $subtotal);
 
                 // Jika promotion tidak eligible, hapus promotion
-                if (!$promotionResult['eligible']) {
+                if (! $promotionResult['eligible']) {
                     $promotionName = '';
                     try {
                         $promotion = PromotionSimplified::find($this->promotion_simplified_id);
@@ -1735,7 +1802,7 @@ class AdminSalePosRecipeIndex extends Component
     {
         $product = Product::find($product_id);
         $this->product_id = $product->id;
-        $this->search_sku = $product->sku_number . ' ' . $product->name;
+        $this->search_sku = $product->sku_number.' '.$product->name;
         $this->barcode = true;
         $this->choiceProductChange();
     }
@@ -1805,6 +1872,7 @@ class AdminSalePosRecipeIndex extends Component
 
         $this->closeModalPayment();
         $this->updateTotal();
+
         return AlertHelper::success('Berhasil', 'Pembayaran berhasil ditambahkan.');
     }
 
@@ -1903,7 +1971,8 @@ class AdminSalePosRecipeIndex extends Component
      */
     public function getAvailablePromotions()
     {
-        $promotionService = new PromotionSimplifiedService();
+        $promotionService = new PromotionSimplifiedService;
+
         return $promotionService->getAvailableDiscountPromotions(
             Auth::user()->company_id,
             $this->transaction->user_type_id,
@@ -1915,11 +1984,12 @@ class AdminSalePosRecipeIndex extends Component
      */
     public function getPromotionSummary()
     {
-        if (!$this->promotion_simplified_id || !$this->transaction) {
+        if (! $this->promotion_simplified_id || ! $this->transaction) {
             return null;
         }
 
-        $promotionService = new PromotionSimplifiedService();
+        $promotionService = new PromotionSimplifiedService;
+
         return $promotionService->getPromotionSummary(
             $this->promotion_simplified_id,
             $this->transaction->sub_total_price,
@@ -1931,39 +2001,41 @@ class AdminSalePosRecipeIndex extends Component
     public function applyBuyXGetYPromotions()
     {
         try {
-            $buyXGetYService = new BuyXGetYService();
+            $buyXGetYService = new BuyXGetYService;
             $result = $buyXGetYService->applyBuyXGetYPromotions($this->transaction_id, Auth::user()->company_id);
 
-            if ($result['success'] && !empty($result['applied_promotions'])) {
+            if ($result['success'] && ! empty($result['applied_promotions'])) {
                 $promotionMessages = [];
                 foreach ($result['applied_promotions'] as $promotion) {
                     $promotionMessages[] = $promotion['message'];
                 }
 
-                if (!empty($promotionMessages)) {
+                if (! empty($promotionMessages)) {
                     AlertHelper::success('Promosi Diterapkan!', implode('. ', $promotionMessages));
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error applying Buy X Get Y promotions: ' . $e->getMessage(), [
+            Log::error('Error applying Buy X Get Y promotions: '.$e->getMessage(), [
                 'transaction_id' => $this->transaction_id,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }
+
     public function updatedPromotionSimplifiedId()
     {
         // Prevent promotion changes when deposit is present
         if ($this->has_deposit) {
             $this->promotion_simplified_id = null;
             AlertHelper::warning('Peringatan', 'Promosi tidak dapat digunakan bersamaan dengan deposit. Diskon deposit sudah diterapkan otomatis.');
+
             return;
         }
 
         // Apply promotion to transaction
         $transaction = Transaction::find($this->transaction_id);
         if ($transaction) {
-            $promotionService = new PromotionSimplifiedService();
+            $promotionService = new PromotionSimplifiedService;
             $promotionService->applyPromotionToTransaction($transaction, $this->promotion_simplified_id);
         }
         $this->updateTotal();
@@ -1995,7 +2067,7 @@ class AdminSalePosRecipeIndex extends Component
         // ✅ pastikan konversi ke float dulu
         $numericValue = floatval($value);
 
-        return $isFloat ? $numericValue : (int)ceil($numericValue);
+        return $isFloat ? $numericValue : (int) ceil($numericValue);
     }
 
     /**
