@@ -1,0 +1,6 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#fef3c7"/>
+  <text x="200" y="130" font-family="Arial, sans-serif" font-size="20" fill="#92400e" text-anchor="middle">🏥 Klinik Utara</text>
+  <text x="200" y="160" font-family="Arial, sans-serif" font-size="14" fill="#d97706" text-anchor="middle">Jakarta Utara</text>
+  <text x="200" y="180" font-family="Arial, sans-serif" font-size="12" fill="#f59e0b" text-anchor="middle">Family Health Services</text>
+</svg>
