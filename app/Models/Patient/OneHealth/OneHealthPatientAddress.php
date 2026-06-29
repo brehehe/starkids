@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Models\Patient\OneHealth;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class OneHealthPatientAddress extends Model
+{
+    //
+    use HasUuids, SoftDeletes;
+
+    protected $guarded = ['id'];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($modelCreate) {
+            $lastOrder = static::max('order');
+            $modelCreate->order = $lastOrder ? $lastOrder + 1 : 1;
+        });
+    }
+
+    /**
+     * Get the OHPatient that owns the OneHealthPatientAddress
+     */
+    public function OHPatient(): BelongsTo
+    {
+        return $this->belongsTo(OneHealthPatient::class, 'one_health_patient_id', 'id');
+    }
+
+    /**
+     * Get all of the extensions for the OneHealthPatientAddress
+     */
+    public function extensions(): HasMany
+    {
+        return $this->hasMany(OneHealthPatientAddressExtension::class, 'one_health_patient_address_id', 'id');
+    }
+}

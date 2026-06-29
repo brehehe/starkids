@@ -1,0 +1,9 @@
+{
+  "appId": "com.mediction.mobile",
+  "appName": "Starkids Medical Center",
+  "webDir": "dist",
+  "server": {
+    "url": "https://mediction.id/mobile",
+    "cleartext": false
+  }
+}

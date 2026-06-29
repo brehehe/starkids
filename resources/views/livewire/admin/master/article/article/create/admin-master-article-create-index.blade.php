@@ -1,0 +1,111 @@
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+<style>
+    .note-editor .note-dropzone { opacity: 0 !important; } /* Fix generic summernote css issue if any */
+</style>
+@endpush
+
+<div>
+    <div class="mb-4">
+        <h1 class="text-2xl font-bold text-[#1E3A8A]">
+            {{ $article_id ? 'Edit Artikel' : 'Tambah Artikel Baru' }}
+        </h1>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+        <form wire:submit.prevent="save">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Title -->
+                <div class="md:col-span-2">
+                    <label for="title" class="block text-sm font-medium text-gray-700">Judul Artikel <span class="text-red-500">*</span></label>
+                    <input type="text" id="title" wire:model="title" class="mt-1 form-control" placeholder="Masukkan judul artikel">
+                    @error('title') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700">Kategori <span class="text-red-500">*</span></label>
+                    <select id="category" wire:model="article_category_id" class="mt-1 form-control">
+                        <option value="">Pilih Kategori</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('article_category_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700">Status Publikasi</label>
+                    <div class="mt-2 flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" wire:model="is_published" class="form-checkbox text-blue-600 h-5 w-5">
+                            <span class="ml-2 text-gray-700">Publish Sekarang</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Banner Image -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Banner Artikel</label>
+                    
+                    @if($new_banner)
+                        <img src="{{ $new_banner->temporaryUrl() }}" class="mt-2 h-48 w-full object-cover rounded-lg">
+                    @elseif($banner)
+                        <img src="{{ asset('storage/' . $banner) }}" class="mt-2 h-48 w-full object-cover rounded-lg">
+                    @endif
+
+                    <input type="file" wire:model="new_banner" class="mt-2 block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100
+                    "/>
+                    <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 2MB</p>
+                    @error('new_banner') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Content (CKEditor) -->
+                <div class="md:col-span-2" wire:ignore>
+                    <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Konten Artikel <span class="text-red-500">*</span></label>
+                    <textarea id="content" wire:model.defer="content">{{ $content }}</textarea>
+                </div>
+                 @error('content') <span class="text-red-500 text-sm md:col-span-2">{{ $message }}</span> @enderror
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <a href="{{ route('user.master.article.index') }}" class="btn btn-secondary">Batal</a>
+                <button type="submit" class="btn btn-primary">Simpan Artikel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+<script>
+    document.addEventListener('livewire:initialized', () => {
+        $('#content').summernote({
+            placeholder: 'Tulis konten artikel di sini...',
+            tabsize: 2,
+            height: 400,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'clear', 'strikethrough', 'superscript', 'subscript']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph', 'height']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture', 'video', 'hr']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ],
+            callbacks: {
+                onChange: function(contents, $editable) {
+                    @this.set('content', contents);
+                }
+            }
+        });
+    });
+</script>
+@endpush

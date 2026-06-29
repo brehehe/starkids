@@ -1,0 +1,3059 @@
+<div>
+    <?php
+        $status = $transaction->status;
+    ?>
+    <?php echo $__env->make('livewire.admin.consultation.consultation.detail.admin-consultation-consultation-detail-modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <div class="mb-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-[#1E3A8A]">Konsultasi Detail</h1>
+            </div>
+                <div>
+                    <a target="_blank" href="/user/consultation/patient/detail/<?php echo e($transaction->patient_id); ?>"
+                        class="btn btn-success">History Pasien</a>
+                    <button wire:click="openModalAlergi()" class="btn btn-warning">
+                        Buka Alergi Obat
+                    </button>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($transaction->status != 'canceled'): ?>
+    <button wire:click="confirmSave()" class="btn btn-primary">
+                        Simpan
+                    </button>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+        </div>
+    </div>
+
+    <div class="p-6 bg-white shadow rounded-lg mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nama Dokter</label>
+                <p class="mt-1 text-gray-900 font-semibold">
+                    <?php echo e($transaction?->doctor?->name ?? $transaction->doctor_name); ?>
+
+                </p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Spesialisasi</label>
+                <p class="mt-1 text-gray-900"><?php echo e($transaction->doctor->userDetail->specialization ?? '-'); ?></p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Jam Praktik</label>
+                <p class="mt-1 text-gray-900">
+                    <?php echo e($transaction?->controlDoctor?->start_time_get); ?> -
+                    <?php echo e($transaction?->controlDoctor?->end_time_get); ?>
+
+                    WIB
+                </p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nomor Antrian Saat Ini</label>
+                <p class="mt-1 text-2xl font-bold text-blue-600"><?php echo e($transaction->code_consultation); ?></p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nama Pasien</label>
+                <p class="mt-1 text-gray-900"><?php echo e($transaction->patient_name); ?></p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Poli</label>
+                <p class="mt-1 text-orange-600 font-medium"><?php echo e($transaction->location->name ?? '-'); ?></p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Tanggal Lahir</label>
+                <p class="mt-1 text-gray-600 font-medium"><?php echo e($transaction?->patient?->userDetail?->birth_date ? Carbon\Carbon::parse($transaction->patient->userDetail->birth_date)->format('d F Y') : '-'); ?></p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Umur</label>
+                <p class="mt-1 text-gray-900">
+                    <?php
+                        use Carbon\Carbon;
+
+                        $birthDate = Carbon::parse($transaction->patient->userDetail->birth_date);
+                        $now = Carbon::now();
+
+                        $years = $birthDate->diff($now)->y;
+                        $months = $birthDate->diff($now)->m;
+                        $days = $birthDate->diff($now)->d;
+                    ?>
+
+                    <?php echo e($years); ?> tahun <?php echo e($months); ?> bulan <?php echo e($days); ?> hari
+                </p>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700">Alamat</label>
+                <p class="mt-1 text-gray-900"><?php echo e($transaction->patient->userDetail->address ?? '-'); ?></p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nomor Telepon</label>
+                <p class="mt-1 text-gray-900"><?php echo e($transaction->patient->phone ?? '-'); ?></p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Asuransi</label>
+                <span class="font-xl <?php echo e($transaction->is_insurance ? 'text-green-600' : 'text-red-600'); ?>"><?php echo e($transaction->is_insurance ? 'Ya' : 'Tidak'); ?></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <div class="overflow-x-auto  w-full">
+            <nav class="flex w-full gap-2 px-2" aria-label="Tabs">
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $get_tabs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $get_tab): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                    <button
+                        onclick="
+                            // Cancel any ongoing chart generation
+                            if (typeof window.cancelChartGeneration === 'function') {
+                                window.cancelChartGeneration();
+                            }
+                            // Blur any active input to trigger pending Livewire updates
+                            if(document.activeElement && document.activeElement.tagName !== 'BUTTON') {
+                                document.activeElement.blur();
+                            }
+                            // Small delay to let Livewire process the blur event
+                            setTimeout(() => {
+                                window.Livewire.find('<?php echo e($_instance->getId()); ?>').call('changeTab', '<?php echo e($get_tab); ?>');
+                            }, 50);
+                        "
+                        wire:loading.attr="disabled"
+                        wire:target="changeTab"
+                        class="text-center px-4 py-2 text-sm font-medium transition-all duration-300 cursor-pointer rounded-2xl
+                               <?php echo e($tab === $get_tab ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-black'); ?>">
+                        <?php echo e(Str::title(Str::replace('-', ' ', $get_tab))); ?>
+
+                    </button>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+            </nav>
+        </div>
+    </div>
+
+
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($tab == 'odontogram'): ?>
+        <div class="space-y-6 mb-6">
+            <div class="p-6 bg-white shadow rounded-lg">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Odontogram</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- SVG Odontogram -->
+                        <div id="odontogram" class="overflow-x-auto">
+                                        <div id="svgselect" class="min-w-[800px]">
+                                            <svg version="1.1" height="250px" width="100%">
+                                                <g transform="scale(1.5)" id="gmain">
+                                                    <g id="P18" transform="translate(0,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['18C'] ?? ($odontogram === '18C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '18C' ? '' : '18C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['18T'] ?? ($odontogram === '18T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '18T' ? '' : '18T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['18B'] ?? ($odontogram === '18B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '18B' ? '' : '18B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['18R'] ?? ($odontogram === '18R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '18R' ? '' : '18R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['18L'] ?? ($odontogram === '18L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '18L' ? '' : '18L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">18</text>
+                                                    </g>
+                                                    <g id="P17" transform="translate(25,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['17C'] ?? ($odontogram === '17C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '17C' ? '' : '17C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['17T'] ?? ($odontogram === '17T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '17T' ? '' : '17T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['17B'] ?? ($odontogram === '17B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '17B' ? '' : '17B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['17R'] ?? ($odontogram === '17R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '17R' ? '' : '17R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['17L'] ?? ($odontogram === '17L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '17L' ? '' : '17L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">17</text>
+                                                    </g>
+                                                    <g id="P16" transform="translate(50,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['16C'] ?? ($odontogram === '16C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '16C' ? '' : '16C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['16T'] ?? ($odontogram === '16T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '16T' ? '' : '16T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['16B'] ?? ($odontogram === '16B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '16B' ? '' : '16B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['16R'] ?? ($odontogram === '16R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '16R' ? '' : '16R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['16L'] ?? ($odontogram === '16L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '16L' ? '' : '16L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">16</text>
+                                                    </g>
+                                                    <g id="P15" transform="translate(75,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['15C'] ?? ($odontogram === '15C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '15C' ? '' : '15C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['15T'] ?? ($odontogram === '15T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '15T' ? '' : '15T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['15B'] ?? ($odontogram === '15B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '15B' ? '' : '15B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['15R'] ?? ($odontogram === '15R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '15R' ? '' : '15R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['15L'] ?? ($odontogram === '15L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '15L' ? '' : '15L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">15</text>
+                                                    </g>
+                                                    <g id="P14" transform="translate(100,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['14C'] ?? ($odontogram === '14C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '14C' ? '' : '14C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['14T'] ?? ($odontogram === '14T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '14T' ? '' : '14T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['14B'] ?? ($odontogram === '14B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '14B' ? '' : '14B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['14R'] ?? ($odontogram === '14R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '14R' ? '' : '14R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['14L'] ?? ($odontogram === '14L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '14L' ? '' : '14L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">14</text>
+                                                    </g>
+                                                    <g id="P13" transform="translate(125,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['13C'] ?? ($odontogram === '13C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '13C' ? '' : '13C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['13T'] ?? ($odontogram === '13T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '13T' ? '' : '13T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['13B'] ?? ($odontogram === '13B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '13B' ? '' : '13B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['13R'] ?? ($odontogram === '13R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '13R' ? '' : '13R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['13L'] ?? ($odontogram === '13L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '13L' ? '' : '13L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">13</text>
+                                                    </g>
+                                                    <g id="P12" transform="translate(150,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['12C'] ?? ($odontogram === '12C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '12C' ? '' : '12C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['12T'] ?? ($odontogram === '12T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '12T' ? '' : '12T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['12B'] ?? ($odontogram === '12B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '12B' ? '' : '12B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['12R'] ?? ($odontogram === '12R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '12R' ? '' : '12R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['12L'] ?? ($odontogram === '12L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '12L' ? '' : '12L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">12</text>
+                                                    </g>
+                                                    <g id="P11" transform="translate(175,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['11C'] ?? ($odontogram === '11C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '11C' ? '' : '11C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['11T'] ?? ($odontogram === '11T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '11T' ? '' : '11T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['11B'] ?? ($odontogram === '11B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '11B' ? '' : '11B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['11R'] ?? ($odontogram === '11R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '11R' ? '' : '11R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['11L'] ?? ($odontogram === '11L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '11L' ? '' : '11L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">11</text>
+                                                    </g>
+                                                     <g id="P55" transform="translate(75,40)" class="disabled">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['55C'] ?? ($odontogram === '55C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '55C' ? '' : '55C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['55T'] ?? ($odontogram === '55T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '55T' ? '' : '55T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['55B'] ?? ($odontogram === '55B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '55B' ? '' : '55B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['55R'] ?? ($odontogram === '55R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '55R' ? '' : '55R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['55L'] ?? ($odontogram === '55L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '55L' ? '' : '55L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">55</text>
+                                                    </g>
+                                                    <g id="P54" transform="translate(100,40)" class="disabled">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['54C'] ?? ($odontogram === '54C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '54C' ? '' : '54C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['54T'] ?? ($odontogram === '54T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '54T' ? '' : '54T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['54B'] ?? ($odontogram === '54B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '54B' ? '' : '54B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['54R'] ?? ($odontogram === '54R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '54R' ? '' : '54R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['54L'] ?? ($odontogram === '54L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '54L' ? '' : '54L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">54</text>
+                                                    </g>
+                                                    <g id="P53" transform="translate(125,40)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['53C'] ?? ($odontogram === '53C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '53C' ? '' : '53C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['53T'] ?? ($odontogram === '53T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '53T' ? '' : '53T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['53B'] ?? ($odontogram === '53B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '53B' ? '' : '53B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['53R'] ?? ($odontogram === '53R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '53R' ? '' : '53R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['53L'] ?? ($odontogram === '53L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '53L' ? '' : '53L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">53</text>
+                                                    </g>
+                                                    <g id="P52" transform="translate(150,40)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['52C'] ?? ($odontogram === '52C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '52C' ? '' : '52C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['52T'] ?? ($odontogram === '52T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '52T' ? '' : '52T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['52B'] ?? ($odontogram === '52B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '52B' ? '' : '52B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['52R'] ?? ($odontogram === '52R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '52R' ? '' : '52R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['52L'] ?? ($odontogram === '52L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '52L' ? '' : '52L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">52</text>
+                                                    </g>
+                                                    <g id="P51" transform="translate(175,40)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['51C'] ?? ($odontogram === '51C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '51C' ? '' : '51C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['51T'] ?? ($odontogram === '51T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '51T' ? '' : '51T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['51B'] ?? ($odontogram === '51B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '51B' ? '' : '51B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['51R'] ?? ($odontogram === '51R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '51R' ? '' : '51R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['51L'] ?? ($odontogram === '51L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '51L' ? '' : '51L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">51</text>
+                                                    </g>
+                                                    <g id="P85" transform="translate(75,80)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['85C'] ?? ($odontogram === '85C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '85C' ? '' : '85C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['85T'] ?? ($odontogram === '85T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '85T' ? '' : '85T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['85B'] ?? ($odontogram === '85B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '85B' ? '' : '85B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['85R'] ?? ($odontogram === '85R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '85R' ? '' : '85R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['85L'] ?? ($odontogram === '85L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '85L' ? '' : '85L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">85</text>
+                                                    </g>
+                                                    <g id="P84" transform="translate(100,80)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['84C'] ?? ($odontogram === '84C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '84C' ? '' : '84C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['84T'] ?? ($odontogram === '84T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '84T' ? '' : '84T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['84B'] ?? ($odontogram === '84B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '84B' ? '' : '84B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['84R'] ?? ($odontogram === '84R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '84R' ? '' : '84R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['84L'] ?? ($odontogram === '84L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '84L' ? '' : '84L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">84</text>
+                                                    </g>
+                                                    <g id="P83" transform="translate(125,80)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['83C'] ?? ($odontogram === '83C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '83C' ? '' : '83C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['83T'] ?? ($odontogram === '83T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '83T' ? '' : '83T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['83B'] ?? ($odontogram === '83B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '83B' ? '' : '83B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['83R'] ?? ($odontogram === '83R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '83R' ? '' : '83R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['83L'] ?? ($odontogram === '83L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '83L' ? '' : '83L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">83</text>
+                                                    </g>
+                                                    <g id="P82" transform="translate(150,80)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['82C'] ?? ($odontogram === '82C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '82C' ? '' : '82C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['82T'] ?? ($odontogram === '82T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '82T' ? '' : '82T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['82B'] ?? ($odontogram === '82B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '82B' ? '' : '82B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['82R'] ?? ($odontogram === '82R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '82R' ? '' : '82R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['82L'] ?? ($odontogram === '82L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '82L' ? '' : '82L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">82</text>
+                                                    </g>
+                                                    <g id="P81" transform="translate(175,80)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['81C'] ?? ($odontogram === '81C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '81C' ? '' : '81C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['81T'] ?? ($odontogram === '81T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '81T' ? '' : '81T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['81B'] ?? ($odontogram === '81B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '81B' ? '' : '81B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['81R'] ?? ($odontogram === '81R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '81R' ? '' : '81R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['81L'] ?? ($odontogram === '81L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '81L' ? '' : '81L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">81</text>
+                                                    </g>
+                                                    <g id="P48" transform="translate(0,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['48C'] ?? ($odontogram === '48C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '48C' ? '' : '48C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['48T'] ?? ($odontogram === '48T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '48T' ? '' : '48T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['48B'] ?? ($odontogram === '48B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '48B' ? '' : '48B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['48R'] ?? ($odontogram === '48R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '48R' ? '' : '48R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['48L'] ?? ($odontogram === '48L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '48L' ? '' : '48L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">48</text>
+                                                    </g>
+                                                    <g id="P47" transform="translate(25,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['47C'] ?? ($odontogram === '47C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '47C' ? '' : '47C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['47T'] ?? ($odontogram === '47T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '47T' ? '' : '47T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['47B'] ?? ($odontogram === '47B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '47B' ? '' : '47B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['47R'] ?? ($odontogram === '47R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '47R' ? '' : '47R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['47L'] ?? ($odontogram === '47L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '47L' ? '' : '47L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">47</text>
+                                                    </g>
+                                                    <g id="P46" transform="translate(50,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['46C'] ?? ($odontogram === '46C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '46C' ? '' : '46C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['46T'] ?? ($odontogram === '46T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '46T' ? '' : '46T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['46B'] ?? ($odontogram === '46B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '46B' ? '' : '46B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['46R'] ?? ($odontogram === '46R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '46R' ? '' : '46R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['46L'] ?? ($odontogram === '46L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '46L' ? '' : '46L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">46</text>
+                                                    </g>
+                                                    <g id="P45" transform="translate(75,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['45C'] ?? ($odontogram === '45C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '45C' ? '' : '45C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['45T'] ?? ($odontogram === '45T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '45T' ? '' : '45T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['45B'] ?? ($odontogram === '45B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '45B' ? '' : '45B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['45R'] ?? ($odontogram === '45R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '45R' ? '' : '45R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['45L'] ?? ($odontogram === '45L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '45L' ? '' : '45L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">45</text>
+                                                    </g>
+                                                    <g id="P44" transform="translate(100,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['44C'] ?? ($odontogram === '44C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '44C' ? '' : '44C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['44T'] ?? ($odontogram === '44T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '44T' ? '' : '44T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['44B'] ?? ($odontogram === '44B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '44B' ? '' : '44B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['44R'] ?? ($odontogram === '44R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '44R' ? '' : '44R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['44L'] ?? ($odontogram === '44L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '44L' ? '' : '44L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">44</text>
+                                                    </g>
+                                                    <g id="P43" transform="translate(125,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['43C'] ?? ($odontogram === '43C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '43C' ? '' : '43C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['43T'] ?? ($odontogram === '43T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '43T' ? '' : '43T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['43B'] ?? ($odontogram === '43B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '43B' ? '' : '43B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['43R'] ?? ($odontogram === '43R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '43R' ? '' : '43R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['43L'] ?? ($odontogram === '43L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '43L' ? '' : '43L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">43</text>
+                                                    </g>
+                                                    <g id="P42" transform="translate(150,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['42C'] ?? ($odontogram === '42C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '42C' ? '' : '42C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['42T'] ?? ($odontogram === '42T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '42T' ? '' : '42T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['42B'] ?? ($odontogram === '42B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '42B' ? '' : '42B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['42R'] ?? ($odontogram === '42R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '42R' ? '' : '42R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['42L'] ?? ($odontogram === '42L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '42L' ? '' : '42L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">42</text>
+                                                    </g>
+                                                    <g id="P41" transform="translate(175,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['41C'] ?? ($odontogram === '41C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '41C' ? '' : '41C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['41T'] ?? ($odontogram === '41T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '41T' ? '' : '41T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['41B'] ?? ($odontogram === '41B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '41B' ? '' : '41B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['41R'] ?? ($odontogram === '41R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '41R' ? '' : '41R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['41L'] ?? ($odontogram === '41L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '41L' ? '' : '41L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">41</text>
+                                                    </g>
+                                                    <g id="P21" transform="translate(210,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['21C'] ?? ($odontogram === '21C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '21C' ? '' : '21C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['21T'] ?? ($odontogram === '21T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '21T' ? '' : '21T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['21B'] ?? ($odontogram === '21B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '21B' ? '' : '21B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['21R'] ?? ($odontogram === '21R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '21R' ? '' : '21R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['21L'] ?? ($odontogram === '21L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '21L' ? '' : '21L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">21</text>
+                                                    </g>
+                                                    <g id="P22" transform="translate(235,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['22C'] ?? ($odontogram === '22C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '22C' ? '' : '22C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['22T'] ?? ($odontogram === '22T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '22T' ? '' : '22T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['22B'] ?? ($odontogram === '22B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '22B' ? '' : '22B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['22R'] ?? ($odontogram === '22R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '22R' ? '' : '22R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['22L'] ?? ($odontogram === '22L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '22L' ? '' : '22L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">22</text>
+                                                    </g>
+                                                    <g id="P23" transform="translate(260,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['23C'] ?? ($odontogram === '23C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '23C' ? '' : '23C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['23T'] ?? ($odontogram === '23T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '23T' ? '' : '23T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['23B'] ?? ($odontogram === '23B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '23B' ? '' : '23B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['23R'] ?? ($odontogram === '23R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '23R' ? '' : '23R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['23L'] ?? ($odontogram === '23L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '23L' ? '' : '23L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">23</text>
+                                                    </g>
+                                                    <g id="P24" transform="translate(285,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['24C'] ?? ($odontogram === '24C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '24C' ? '' : '24C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['24T'] ?? ($odontogram === '24T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '24T' ? '' : '24T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['24B'] ?? ($odontogram === '24B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '24B' ? '' : '24B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['24R'] ?? ($odontogram === '24R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '24R' ? '' : '24R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['24L'] ?? ($odontogram === '24L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '24L' ? '' : '24L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">24</text>
+                                                    </g>
+                                                    <g id="P25" transform="translate(310,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['25C'] ?? ($odontogram === '25C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '25C' ? '' : '25C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['25T'] ?? ($odontogram === '25T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '25T' ? '' : '25T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['25B'] ?? ($odontogram === '25B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '25B' ? '' : '25B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['25R'] ?? ($odontogram === '25R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '25R' ? '' : '25R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['25L'] ?? ($odontogram === '25L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '25L' ? '' : '25L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">25</text>
+                                                    </g>
+                                                    <g id="P26" transform="translate(335,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['26C'] ?? ($odontogram === '26C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '26C' ? '' : '26C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['26T'] ?? ($odontogram === '26T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '26T' ? '' : '26T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['26B'] ?? ($odontogram === '26B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '26B' ? '' : '26B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['26R'] ?? ($odontogram === '26R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '26R' ? '' : '26R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['26L'] ?? ($odontogram === '26L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '26L' ? '' : '26L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">26</text>
+                                                    </g>
+                                                    <g id="P27" transform="translate(360,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['27C'] ?? ($odontogram === '27C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '27C' ? '' : '27C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['27T'] ?? ($odontogram === '27T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '27T' ? '' : '27T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['27B'] ?? ($odontogram === '27B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '27B' ? '' : '27B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['27R'] ?? ($odontogram === '27R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '27R' ? '' : '27R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['27L'] ?? ($odontogram === '27L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '27L' ? '' : '27L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">27</text>
+                                                    </g>
+                                                    <g id="P28" transform="translate(385,0)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['28C'] ?? ($odontogram === '28C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '28C' ? '' : '28C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['28T'] ?? ($odontogram === '28T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '28T' ? '' : '28T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['28B'] ?? ($odontogram === '28B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '28B' ? '' : '28B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['28R'] ?? ($odontogram === '28R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '28R' ? '' : '28R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['28L'] ?? ($odontogram === '28L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '28L' ? '' : '28L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">28</text>
+                                                    </g>
+                                                    <g id="P61" transform="translate(210,40)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['61C'] ?? ($odontogram === '61C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '61C' ? '' : '61C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['61T'] ?? ($odontogram === '61T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '61T' ? '' : '61T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['61B'] ?? ($odontogram === '61B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '61B' ? '' : '61B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['61R'] ?? ($odontogram === '61R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '61R' ? '' : '61R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['61L'] ?? ($odontogram === '61L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '61L' ? '' : '61L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">61</text>
+                                                    </g>
+                                                    <g id="P62" transform="translate(235,40)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['62C'] ?? ($odontogram === '62C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '62C' ? '' : '62C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['62T'] ?? ($odontogram === '62T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '62T' ? '' : '62T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['62B'] ?? ($odontogram === '62B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '62B' ? '' : '62B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['62R'] ?? ($odontogram === '62R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '62R' ? '' : '62R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['62L'] ?? ($odontogram === '62L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '62L' ? '' : '62L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">62</text>
+                                                    </g>
+                                                    <g id="P63" transform="translate(260,40)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['63C'] ?? ($odontogram === '63C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '63C' ? '' : '63C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['63T'] ?? ($odontogram === '63T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '63T' ? '' : '63T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['63B'] ?? ($odontogram === '63B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '63B' ? '' : '63B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['63R'] ?? ($odontogram === '63R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '63R' ? '' : '63R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['63L'] ?? ($odontogram === '63L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '63L' ? '' : '63L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">63</text>
+                                                    </g>
+                                                    <g id="P64" transform="translate(285,40)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['64C'] ?? ($odontogram === '64C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '64C' ? '' : '64C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['64T'] ?? ($odontogram === '64T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '64T' ? '' : '64T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['64B'] ?? ($odontogram === '64B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '64B' ? '' : '64B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['64R'] ?? ($odontogram === '64R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '64R' ? '' : '64R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['64L'] ?? ($odontogram === '64L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '64L' ? '' : '64L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">64</text>
+                                                    </g>
+                                                    <g id="P65" transform="translate(310,40)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['65C'] ?? ($odontogram === '65C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '65C' ? '' : '65C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['65T'] ?? ($odontogram === '65T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '65T' ? '' : '65T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['65B'] ?? ($odontogram === '65B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '65B' ? '' : '65B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['65R'] ?? ($odontogram === '65R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '65R' ? '' : '65R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['65L'] ?? ($odontogram === '65L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '65L' ? '' : '65L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">65</text>
+                                                    </g>
+                                                    <g id="P71" transform="translate(210,80)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['71C'] ?? ($odontogram === '71C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '71C' ? '' : '71C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['71T'] ?? ($odontogram === '71T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '71T' ? '' : '71T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['71B'] ?? ($odontogram === '71B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '71B' ? '' : '71B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['71R'] ?? ($odontogram === '71R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '71R' ? '' : '71R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['71L'] ?? ($odontogram === '71L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '71L' ? '' : '71L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">71</text>
+                                                    </g>
+                                                    <g id="P72" transform="translate(235,80)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['72C'] ?? ($odontogram === '72C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '72C' ? '' : '72C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['72T'] ?? ($odontogram === '72T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '72T' ? '' : '72T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['72B'] ?? ($odontogram === '72B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '72B' ? '' : '72B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['72R'] ?? ($odontogram === '72R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '72R' ? '' : '72R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['72L'] ?? ($odontogram === '72L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '72L' ? '' : '72L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">72</text>
+                                                    </g>
+                                                    <g id="P73" transform="translate(260,80)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['73C'] ?? ($odontogram === '73C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '73C' ? '' : '73C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['73T'] ?? ($odontogram === '73T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '73T' ? '' : '73T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['73B'] ?? ($odontogram === '73B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '73B' ? '' : '73B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['73R'] ?? ($odontogram === '73R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '73R' ? '' : '73R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['73L'] ?? ($odontogram === '73L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '73L' ? '' : '73L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">73</text>
+                                                    </g>
+                                                    <g id="P74" transform="translate(285,80)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['74C'] ?? ($odontogram === '74C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '74C' ? '' : '74C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['74T'] ?? ($odontogram === '74T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '74T' ? '' : '74T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['74B'] ?? ($odontogram === '74B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '74B' ? '' : '74B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['74R'] ?? ($odontogram === '74R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '74R' ? '' : '74R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['74L'] ?? ($odontogram === '74L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '74L' ? '' : '74L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">74</text>
+                                                    </g>
+                                                    <g id="P75" transform="translate(310,80)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['75C'] ?? ($odontogram === '75C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '75C' ? '' : '75C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['75T'] ?? ($odontogram === '75T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '75T' ? '' : '75T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['75B'] ?? ($odontogram === '75B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '75B' ? '' : '75B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['75R'] ?? ($odontogram === '75R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '75R' ? '' : '75R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['75L'] ?? ($odontogram === '75L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '75L' ? '' : '75L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">75</text>
+                                                    </g>
+                                                    <g id="P31" transform="translate(210,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['31C'] ?? ($odontogram === '31C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '31C' ? '' : '31C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['31T'] ?? ($odontogram === '31T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '31T' ? '' : '31T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['31B'] ?? ($odontogram === '31B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '31B' ? '' : '31B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['31R'] ?? ($odontogram === '31R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '31R' ? '' : '31R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['31L'] ?? ($odontogram === '31L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '31L' ? '' : '31L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">31</text>
+                                                    </g>
+                                                    <g id="P32" transform="translate(235,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['32C'] ?? ($odontogram === '32C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '32C' ? '' : '32C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['32T'] ?? ($odontogram === '32T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '32T' ? '' : '32T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['32B'] ?? ($odontogram === '32B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '32B' ? '' : '32B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['32R'] ?? ($odontogram === '32R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '32R' ? '' : '32R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['32L'] ?? ($odontogram === '32L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '32L' ? '' : '32L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">32</text>
+                                                    </g>
+                                                    <g id="P33" transform="translate(260,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['33C'] ?? ($odontogram === '33C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '33C' ? '' : '33C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['33T'] ?? ($odontogram === '33T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '33T' ? '' : '33T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['33B'] ?? ($odontogram === '33B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '33B' ? '' : '33B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['33R'] ?? ($odontogram === '33R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '33R' ? '' : '33R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['33L'] ?? ($odontogram === '33L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '33L' ? '' : '33L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">33</text>
+                                                    </g>
+                                                    <g id="P34" transform="translate(285,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['34C'] ?? ($odontogram === '34C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '34C' ? '' : '34C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['34T'] ?? ($odontogram === '34T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '34T' ? '' : '34T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['34B'] ?? ($odontogram === '34B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '34B' ? '' : '34B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['34R'] ?? ($odontogram === '34R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '34R' ? '' : '34R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['34L'] ?? ($odontogram === '34L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '34L' ? '' : '34L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">34</text>
+                                                    </g>
+                                                    <g id="P35" transform="translate(310,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['35C'] ?? ($odontogram === '35C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '35C' ? '' : '35C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['35T'] ?? ($odontogram === '35T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '35T' ? '' : '35T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['35B'] ?? ($odontogram === '35B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '35B' ? '' : '35B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['35R'] ?? ($odontogram === '35R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '35R' ? '' : '35R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['35L'] ?? ($odontogram === '35L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '35L' ? '' : '35L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">35</text>
+                                                    </g>
+                                                    <g id="P36" transform="translate(335,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['36C'] ?? ($odontogram === '36C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '36C' ? '' : '36C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['36T'] ?? ($odontogram === '36T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '36T' ? '' : '36T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['36B'] ?? ($odontogram === '36B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '36B' ? '' : '36B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['36R'] ?? ($odontogram === '36R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '36R' ? '' : '36R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['36L'] ?? ($odontogram === '36L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '36L' ? '' : '36L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">36</text>
+                                                    </g>
+                                                    <g id="P37" transform="translate(360,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['37C'] ?? ($odontogram === '37C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '37C' ? '' : '37C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['37T'] ?? ($odontogram === '37T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '37T' ? '' : '37T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['37B'] ?? ($odontogram === '37B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '37B' ? '' : '37B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['37R'] ?? ($odontogram === '37R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '37R' ? '' : '37R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['37L'] ?? ($odontogram === '37L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '37L' ? '' : '37L'); ?>')">
+                                                        </polygon>
+
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">37</text>
+                                                    </g>
+                                                    <g id="P38" transform="translate(385,120)">
+                                                        <polygon class="cursor-pointer" points="5,5 15,5 15,15 5,15" fill="<?php echo e($odontogram_map['38C'] ?? ($odontogram === '38C' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="C" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '38C' ? '' : '38C'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 20,0 15,5 5,5" fill="<?php echo e($odontogram_map['38T'] ?? ($odontogram === '38T' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="T" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '38T' ? '' : '38T'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="5,15 15,15 20,20 0,20" fill="<?php echo e($odontogram_map['38B'] ?? ($odontogram === '38B' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="B" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '38B' ? '' : '38B'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="15,5 20,0 20,20 15,15" fill="<?php echo e($odontogram_map['38R'] ?? ($odontogram === '38R' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="R" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '38R' ? '' : '38R'); ?>')">
+                                                        </polygon>
+                                                        <polygon class="cursor-pointer" points="0,0 5,5 5,15 0,20" fill="<?php echo e($odontogram_map['38L'] ?? ($odontogram === '38L' ? $odontogram_color : 'white')); ?>" stroke="black" stroke-width="0.5" id="L" opacity="1" wire:click="cekOdotogram('<?php echo e($odontogram === '38L' ? '' : '38L'); ?>')">
+                                                        </polygon>
+                                                        <text x="6" y="30" stroke="black" fill="black" stroke-width="0.1" style="font-size: 6pt;font-weight:normal">38</text>
+                                                    </g>
+                                                </g>
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                    <!-- Form Input -->
+                    <div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Gigi Terpilih</label>
+                            <input type="text" value="<?php echo e($odontogram); ?>" readonly class="form-control bg-gray-100 text-gray-700">
+                        </div>
+
+                        <!-- Color Input -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Warna Penanda</label>
+                            <input type="color" wire:model="odontogram_color" class="mt-1 block h-10 w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+
+                        <!-- Mode Input -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Mode Input</label>
+                            <div class="mt-1 flex gap-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" wire:model.live="odontogram_mode" value="manual" class="form-radio text-blue-600">
+                                    <span class="ml-2">Manual</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" wire:model.live="odontogram_mode" value="product" class="form-radio text-blue-600">
+                                    <span class="ml-2">Produk/Tindakan</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Product Selection Button -->
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($odontogram_mode == 'product'): ?>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700">Pilih Produk/Tindakan</label>
+                                <button wire:click="createOdontogramActions" class="w-full mt-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex justify-center items-center gap-2">
+                                    <i class="fas fa-plus"></i> Pilih Produk/Tindakan
+                                </button>
+                            </div>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                        <!-- Name -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Nama Tindakan <span class="text-red-600">*</span></label>
+                            <input type="text" wire:model="odontogram_name" class="form-control">
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['odontogram_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <span class="text-red-600 text-sm"><?php echo e($message); ?></span> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Harga <span class="text-red-600">*</span></label>
+                            <input type="text" wire:model="odontogram_price" class="form-control">
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['odontogram_price'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <span class="text-red-600 text-sm"><?php echo e($message); ?></span> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </div>
+
+                        <!-- Discount -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Diskon</label>
+                            <div class="flex items-stretch shadow-sm">
+                                <select 
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-l-lg focus:ring-blue-500 focus:border-blue-500 block p-2 outline-none border-r-0"
+                                    wire:model.lazy="odontogram_discount_type">
+                                    <option value="nominal">Rp</option>
+                                    <option value="percentage">%</option>       
+                                </select>
+                                <input type="number" 
+                                    class="bg-white border border-gray-300 text-gray-900 text-xs rounded-r-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 outline-none" 
+                                    wire:model.lazy="odontogram_discount"
+                                    placeholder="0">
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Keterangan</label>
+                            <textarea wire:model="odontogram_description" class="form-control"></textarea>
+                        </div>
+
+                        <button wire:click="saveOdontogram" class="w-full inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            Simpan ke Odontogram
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List Odontogram -->
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gigi</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tindakan</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keterangan</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Diskon</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_5 = true; $__currentLoopData = $transaction_odontograms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_5 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                        <tr <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'odontogram-'.e($item['id']).''; ?>wire:key="odontogram-<?php echo e($item['id']); ?>">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><?php echo e($item['odontogram_code']); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo e($item['name']); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo e($item['description']); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">Rp <?php echo e($item['price']); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(($item['discount_type'] ?? 'nominal') == 'percentage'): ?>
+                                    <span class="text-blue-600 font-semibold"><?php echo e($item['discount'] ?? 0); ?>%</span>
+                                <?php else: ?>
+                                    <span class="text-gray-600">Rp <?php echo e(number_format($item['discount_value'] ?? 0, 0, ',', '.')); ?></span>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">Rp <?php echo e($item['sub_total_price']); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button wire:click="confirmDeleteOdontogram('<?php echo e($item['id']); ?>')" class="text-red-600 hover:text-red-900">Hapus</button>
+                            </td>
+                        </tr>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_5): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                        <tr>
+                            <td colspan="10" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Belum ada data odontogram.</td>
+                        </tr>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($tab == 'diagnosa'): ?>
+        <div class="space-y-6 mb-6">
+            <div class="p-6 bg-white shadow rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- SOAP Fields -->
+                    <div class="md:col-span-2">
+                        <h3 class="text-lg font-medium text-gray-900">SOAP Assessment</h3>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Subjective <span
+                                class="text-red-600">*</span></label>
+                        <textarea wire:model.lazy="subjective" placeholder="Keluhan utama dan riwayat penyakit sekarang"
+                            class="mt-1 form-control h-20 auto-resize"></textarea>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['subjective'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Objective <span
+                                class="text-red-600">*</span></label>
+                        <textarea wire:model.lazy="objective" placeholder="Tanda vital, pemeriksaan fisik"
+                            class="mt-1 form-control h-20 auto-resize"></textarea>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['objective'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Assessment <span
+                                class="text-red-600">*</span></label>
+                        <textarea wire:model.lazy="assessment" placeholder="Diagnosis kerja dan diagnosis banding"
+                            class="mt-1 form-control h-20 auto-resize"></textarea>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['assessment'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Plan <span
+                                class="text-red-600">*</span></label>
+                        <textarea wire:model.lazy="plan" placeholder="Rencana terapi, edukasi, dan tindak lanjut"
+                            class="mt-1 form-control h-20 auto-resize"></textarea>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['plan'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </div>
+                    <!-- Anjuran Kembali -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Anjuran Kembali Ke Klinik</label>
+                        <textarea wire:model.lazy="return_recommendation" placeholder="Anjuran Kembali ke Klinik"
+                            class="mt-1 form-control h-20 auto-resize"></textarea>
+                    </div>
+                    <!-- Alergi -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Alergi Obat</label>
+                        <textarea wire:model.lazy="allergy_name" placeholder="Alergi terhadap obat tertentu (jika ada)"
+                            class="mt-1 form-control h-20 auto-resize"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="transaction_nurses" class="block text-sm font-medium text-gray-700">Perawat</label>
+                        <div <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'select-transaction-nurses'; ?>wire:key="select-transaction-nurses" wire:ignore>
+                            <select class="mt-1 form-control"
+                                x-data x-ref="input" x-init="$($refs.input).selectize({
+                                    dropdownParent: 'body',
+                                    allowClear: true,
+                                    plugins: ['clear_button'],
+                                    onChange: function(e) {
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('transaction_nurses', e ? e : null);
+                                    }
+                                });" wire:model.lazy="transaction_nurses"
+                                id="transaction_nurses" multiple>
+                                <option value="">-- Pilih Perawat --</option>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $nurses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $nurse): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                    <option value="<?php echo e($nurse['id']); ?>"><?php echo e($nurse['name']); ?></option>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-white shadow rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <!-- SATUSEHAT Condition Fields -->
+                    
+
+                    <!-- SNOMED CT Code untuk Keluhan -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">SNOMED CT Code <span
+                                class="text-red-600">*</span></label>
+                        <div <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'select-snomed-code'; ?>wire:key="select-snomed-code" wire:ignore>
+                            <select multiple class="mt-1 form-control"
+                                x-data x-ref="input" x-init="$($refs.input).selectize({
+                                    dropdownParent: 'body',
+                                    allowClear: true,
+                                    plugins: ['clear_button'],
+                                    onChange: function(e) {
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('snomed_code', e ? e : null);
+                                    }
+                                });" wire:model.lazy="snomed_code"
+                                id="snomed_code">
+                                <option value="">-- Pilih Snomed CD --</option>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $master_consultation_snomed_cts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $master_consultation_snomed_ct): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                    <option value="<?php echo e($master_consultation_snomed_ct['code']); ?>">
+                                        <?php echo e($master_consultation_snomed_ct['display']); ?>
+
+                                        (<?php echo e($master_consultation_snomed_ct['code']); ?>)
+                                    </option>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            </select>
+                        </div>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['snomed_code'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </div>
+
+                    <!-- Tanggal Mulai Keluhan -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Onset Date Time <span
+                                class="text-red-600">*</span></label>
+                        <input type="datetime-local" wire:model.lazy="onset_datetime"
+                            class="mt-1 form-control" />
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['onset_datetime'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </div>
+
+                    <!-- ICD-10 untuk Assessment -->
+                    <div class="md:col-span-2 mt-4">
+                        <h4 class="text-md font-medium text-gray-800 mb-2">ICD-10 Diagnosis (Optional)</h4>
+                            <div class="flex items-center justify-between bg-gray-100 rounded-lg mb-2">
+                                <div>
+                                    <button wire:click="createTransactionIcd10()"
+                                        class="mb-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+                                        <i class="fa-solid fa-plus"></i> Tambahkan ICD 10
+                                    </button>
+                                </div>
+                                <div>
+                                    <div <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'select-transaction-icd10-tops'; ?>wire:key="select-transaction-icd10-tops" wire:ignore>
+                                        <select multiple
+                                            class="mt-1 form-control"
+                                            style="width: 800px;" x-data x-ref="input" x-init="$($refs.input).selectize({
+                                                dropdownParent: 'body',
+                                                allowClear: true,
+                                                plugins: ['clear_button'],
+                                                onChange: function(e) {
+                                                    window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('transaction_icd10_tops', e ? e : null);
+                                                }
+                                            });"
+                                            wire:model.lazy="transaction_icd10_tops" id="transaction_icd10_tops">
+                                            <option value="">-- Pilih ICD 10 --</option>
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $topICD10s; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $topICD10): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                                <option value="<?php echo e($topICD10['icd10_id']); ?>">
+                                                    <?php echo e($topICD10['icd10']['display']); ?>
+
+                                                    (<?php echo e($topICD10['icd10']['code']); ?>)
+                                                </option>
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                        </select>
+                                    </div>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['transaction_icd10_tops'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </div>
+                            </div>
+
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_5 = true; $__currentLoopData = $transaction_icd10s; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $transaction_icd10): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_5 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                            <div class="flex items-center justify-between bg-gray-100 p-3 rounded-lg mb-2">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">
+                                        <?php echo e($transaction_icd10['icd10_code'] ?? '-'); ?> |
+                                        <?php echo e($transaction_icd10['icd10_display'] ?? '-'); ?>
+
+                                    </p>
+                                </div>
+                                    <button
+                                        wire:click="confirmDeleteTransactionIcd10('<?php echo e($transaction_icd10['id']); ?>')"
+                                        class="text-red-600 hover:text-red-800">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                            </div>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_5): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            <p class="text-sm text-gray-500">Tidak ada ICD-10 ditambahkan</p>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    <?php elseif($tab == 'tindakan'): ?>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($status, ['completed', 'cancelled'])): ?>
+            <div class="flex flex-col md:flex-row gap-2 mb-4 md:col-span-2">
+                <button wire:click="createActions()"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md w-full md:w-auto flex-1"><i
+                        class="fa-solid fa-plus"></i> Tambahkan Tindakan</button>
+            </div>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="w-1 center">No</th>
+                            <th>Nama Tindakan</th>
+                            <th>Harga</th>
+                            <th>Diskon</th>
+                            <th style="width: 100px">Jumlah</th>
+                            <th>Total</th>
+                            <th>Perawat</th>
+                            <th>Dokter</th>
+                            <th>Deskripsi</th>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($status, ['completed', 'cancelled'])): ?>
+                                <th class="w-1 center">Aksi</th>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_5 = true; $__currentLoopData = $transaction_actions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key_transaction_action => $transaction_action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_5 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                            <tr>
+                                <td class="center"><?php echo e($key_transaction_action + 1); ?></td>
+                                <td><?php echo e($transaction_action['name'] ?? '-'); ?></td>
+                                <td>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($status, ['completed', 'cancelled'])): ?>
+                                        <input type="number" class="form-control" style="width: 150px"
+                                            wire:model.lazy="transaction_actions.<?php echo e($key_transaction_action); ?>.price">
+                                    <?php else: ?>
+                                        <?php echo e($transaction_action['price'] ?? '-'); ?>
+
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </td>
+                                <td class="px-4 py-4 min-w-[200px]">
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($status, ['completed', 'cancelled'])): ?>
+                                        <div class="flex items-stretch shadow-sm">
+                                            <select 
+                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-l-lg focus:ring-blue-500 focus:border-blue-500 block p-2 outline-none border-r-0"
+                                                wire:model.lazy="transaction_actions.<?php echo e($key_transaction_action); ?>.discount_type">
+                                                <option value="nominal">Rp</option>
+                                                <option value="percentage">%</option>       
+                                            </select>
+                                            <input type="number" 
+                                                class="bg-white border border-gray-300 text-gray-900 text-xs rounded-r-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 outline-none" 
+                                                wire:model.lazy="transaction_actions.<?php echo e($key_transaction_action); ?>.discount"
+                                                placeholder="0">
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="flex items-center gap-1 text-xs font-semibold">
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(($transaction_action['discount_type'] ?? 'nominal') == 'percentage'): ?>
+                                                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded"><?php echo e($transaction_action['discount'] ?? 0); ?>%</span>
+                                            <?php else: ?>
+                                                <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded">Rp<?php echo e(number_format($transaction_action['discount'] ?? 0, 0, ',', '.')); ?></span>
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                        </div>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($status, ['completed', 'cancelled'])): ?>
+                                        <input type="number" class="form-control" style="width: 150px"
+                                            wire:model.lazy="transaction_actions.<?php echo e($key_transaction_action); ?>.quantity">
+                                    <?php else: ?>
+                                        <?php echo e($transaction_action['quantity'] ?? '-'); ?>
+
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </td>
+                                <td>Rp<?php echo e($transaction_action['sub_total_price'] ?? '-'); ?></td>
+                                <td>
+                                    <div <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'select-nurse-'.e($transaction_action['id']).''; ?>wire:key="select-nurse-<?php echo e($transaction_action['id']); ?>" wire:ignore>
+                            <select <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?>
+
+                                class="<?php echo e(in_array($status, ['completed', 'cancelled']) ? 'bg-gray-100 cursor-not-allowed' : null); ?> mt-1 form-control"
+                                x-data x-ref="input" x-init="$($refs.input).selectize({
+                                    dropdownParent: 'body',
+                                    allowClear: true,
+                                    plugins: ['clear_button'],
+                                    onChange: function(e) {
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('transaction_actions.<?php echo e($key_transaction_action); ?>.nurse_id', e ? e : null);
+                                    }
+                                });" wire:model.lazy="transaction_actions.<?php echo e($key_transaction_action); ?>.nurse_id"
+                                id="transaction_actions.<?php echo e($key_transaction_action); ?>.nurse_id">
+                                <option value="">-- Pilih Perawat --</option>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $perawats; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $perawat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                    <option value="<?php echo e($perawat['id']); ?>"><?php echo e($perawat['name']); ?></option>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            </select>
+                        </div>
+                    </td>
+                                <td>
+                                    <div <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'select-doctor-'.e($transaction_action['id']).''; ?>wire:key="select-doctor-<?php echo e($transaction_action['id']); ?>" wire:ignore>
+                            <select <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?>
+
+                                class="<?php echo e(in_array($status, ['completed', 'cancelled']) ? 'bg-gray-100 cursor-not-allowed' : null); ?> mt-1 form-control"
+                                x-data x-ref="input" x-init="$($refs.input).selectize({
+                                    dropdownParent: 'body',
+                                    allowClear: true,
+                                    plugins: ['clear_button'],
+                                    onChange: function(e) {
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('transaction_actions.<?php echo e($key_transaction_action); ?>.doctor_id', e ? e : null);
+                                    }
+                                });" wire:model.lazy="transaction_actions.<?php echo e($key_transaction_action); ?>.doctor_id"
+                                id="transaction_actions.<?php echo e($key_transaction_action); ?>.doctor_id">
+                                <option value="">-- Pilih Dokter --</option>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $doctors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $doctor): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                    <option value="<?php echo e($doctor['id']); ?>"><?php echo e($doctor['name']); ?></option>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            </select>
+                        </div>
+                    </td>
+                                <td>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($status, ['completed', 'cancelled'])): ?>
+                                        <input type="text" class="form-control"
+                                            wire:model.lazy="transaction_actions.<?php echo e($key_transaction_action); ?>.description"
+                                            placeholder="Masukan Deskripsi">
+                                    <?php else: ?>
+                                        <?php echo e($transaction_action['description'] ?? '-'); ?>
+
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </td>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($status, ['completed', 'cancelled'])): ?>
+                                    <td class="center">
+                                        <div class="flex items-center">
+                                            <button
+                                                class="btn btn-icon text-red-600 hover:text-red-800 transition-colors edit-btn"
+                                                wire:click="confirmDeleteAction('<?php echo e($transaction_action['id']); ?>')">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </tr>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_5): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            <tr>
+                                <td colspan="6" class="no-data">Tidak ada data</td>
+                            </tr>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <?php elseif($tab == 'bukti-tindakan'): ?>
+        <div x-data="{
+            showModal: false,
+            imgSrc: '',
+            scale: 1,
+            panning: false,
+            pointX: 0,
+            pointY: 0,
+            startX: 0,
+            startY: 0,
+            openModal(src) {
+                this.imgSrc = src;
+                this.showModal = true;
+                this.scale = 1;
+                this.pointX = 0;
+                this.pointY = 0;
+            },
+            closeModal() {
+                this.showModal = false;
+            },
+            zoomIn() {
+                this.scale *= 1.2;
+            },
+            zoomOut() {
+                this.scale /= 1.2;
+            },
+            reset() {
+                this.scale = 1;
+                this.pointX = 0;
+                this.pointY = 0;
+            },
+            startDrag(e) {
+                e.preventDefault();
+                this.panning = true;
+                this.startX = e.clientX - this.pointX;
+                this.startY = e.clientY - this.pointY;
+            },
+            drag(e) {
+                if (!this.panning) return;
+                e.preventDefault();
+                this.pointX = e.clientX - this.startX;
+                this.pointY = e.clientY - this.startY;
+            },
+            stopDrag() {
+                this.panning = false;
+            }
+        }">
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($status, ['completed', 'cancelled'])): ?>
+                <div class="md:col-span-2 mb-4">
+                    <button wire:click="createProofOfAction()"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md w-full"><i
+                            class="fa-solid fa-plus"></i> Tambahkan Bukti Tindakan</button>
+                </div>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th class="w-1 center">No</th>
+                                <th>Deskripsi</th>
+                                <th>Sebelum Tindakan</th>
+                                <th>Setelah Tindakan</th>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($status, ['completed', 'cancelled'])): ?>
+                                    <th class="w-1 center">Aksi</th>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_5 = true; $__currentLoopData = $proof_of_actions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key_proof_of_action => $proof_of_action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_5 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                <tr>
+                                    <td class="center"><?php echo e($key_proof_of_action + 1); ?></td>
+                                    <td><?php echo e($proof_of_action['description'] ?? '-'); ?></td>
+                                    <td>
+                                        <img src="<?php echo e($proof_of_action['before_photo'] ? asset('storage/' . $proof_of_action['before_photo']) : asset('asset/img/No-Image-Placeholder.svg.png')); ?>"
+                                            alt="Sebelum Tindakan" style="width: 250px; height: 250px;"
+                                            class="object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                            @click="openModal('<?php echo e($proof_of_action['before_photo'] ? asset('storage/' . $proof_of_action['before_photo']) : asset('asset/img/No-Image-Placeholder.svg.png')); ?>')"
+                                            id="before-image-<?php echo e($proof_of_action['id']); ?>">
+                                    </td>
+                                    <td>
+                                        <img src="<?php echo e($proof_of_action['after_photo'] ? asset('storage/' . $proof_of_action['after_photo']) : asset('asset/img/No-Image-Placeholder.svg.png')); ?>"
+                                            alt="Setelah Tindakan" style="width: 250px; height: 250px;"
+                                            class="object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                            @click="openModal('<?php echo e($proof_of_action['after_photo'] ? asset('storage/' . $proof_of_action['after_photo']) : asset('asset/img/No-Image-Placeholder.svg.png')); ?>')"
+                                            id="after-image-<?php echo e($proof_of_action['id']); ?>">
+                                    </td>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($status, ['completed', 'cancelled'])): ?>
+                                        <td class="center">
+                                            <div class="flex items-center justify-center gap-2">
+                                                <button
+                                                    wire:click="confirmDeleteProofOfAction('<?php echo e($proof_of_action['id']); ?>')"
+                                                    class="btn btn-danger" data-bs-toggle="tooltip"
+                                                    data-bs-placement="top" title="Hapus">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </tr>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_5): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                <tr>
+                                    <td colspan="6" class="no-data">Tidak ada data</td>
+                                </tr>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(count($patient_proof_of_actions) > 0): ?>
+            <div class="mt-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-amber-200 overflow-hidden mb-6"
+                 x-data="{ open: false }">
+                <div class="flex items-center justify-between px-4 py-3 bg-amber-50 border-b border-amber-200 cursor-pointer"
+                     @click="open = !open">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-600"></i>
+                        <span class="font-semibold text-amber-700">Riwayat Bukti Tindakan Pasien Sebelumnya</span>
+                        <span class="ml-2 bg-amber-200 text-amber-800 text-xs font-bold px-2 py-0.5 rounded-full">
+                            <?php echo e(count($patient_proof_of_actions)); ?> data
+                        </span>
+                    </div>
+                    <i class="fa-solid text-amber-600 transition-transform duration-200"
+                       :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </div>
+                <div x-show="open" x-transition style="display:none;">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th class="w-1 center">No</th>
+                                    <th>Kode Transaksi</th>
+                                    <th>Tanggal Kunjungan</th>
+                                    <th>Deskripsi</th>
+                                    <th>Sebelum Tindakan</th>
+                                    <th>Setelah Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $patient_proof_of_actions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $poa): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                    <tr>
+                                        <td class="center"><?php echo e($i + 1); ?></td>
+                                        <td class="font-mono text-sm text-[#1E3A8A] font-semibold"><?php echo e($poa['transaction_code']); ?></td>
+                                        <td class="whitespace-nowrap"><?php echo e($poa['transaction_date']); ?></td>
+                                        <td><?php echo e($poa['description'] ?? '-'); ?></td>
+                                        <td>
+                                            <img src="<?php echo e($poa['before_photo'] ? asset('storage/' . $poa['before_photo']) : asset('asset/img/No-Image-Placeholder.svg.png')); ?>"
+                                                alt="Sebelum" style="width: 180px; height: 180px;"
+                                                class="object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                                @click="openModal('<?php echo e($poa['before_photo'] ? asset('storage/' . $poa['before_photo']) : asset('asset/img/No-Image-Placeholder.svg.png')); ?>')">
+                                        </td>
+                                        <td>
+                                            <img src="<?php echo e($poa['after_photo'] ? asset('storage/' . $poa['after_photo']) : asset('asset/img/No-Image-Placeholder.svg.png')); ?>"
+                                                alt="Setelah" style="width: 180px; height: 180px;"
+                                                class="object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                                @click="openModal('<?php echo e($poa['after_photo'] ? asset('storage/' . $poa['after_photo']) : asset('asset/img/No-Image-Placeholder.svg.png')); ?>')">
+                                        </td>
+                                    </tr>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+            <!-- Image Modal -->
+            <div x-show="showModal" style="display: none;"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 transition-opacity"
+                x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+                <div class="relative w-full h-full flex items-center justify-center overflow-hidden"
+                    @mousemove="drag" @mouseup="stopDrag" @mouseleave="stopDrag">
+
+                    <!-- Image -->
+                    <img :src="imgSrc" class="max-w-none transition-transform duration-75 ease-linear cursor-grab active:cursor-grabbing"
+                        :style="`transform: translate(${pointX}px, ${pointY}px) scale(${scale})`"
+                        @mousedown="startDrag"
+                        draggable="false">
+
+                    <!-- Controls -->
+                    <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex gap-4 bg-white/20 backdrop-blur-md p-3 rounded-full shadow-lg">
+                        <button @click="zoomOut" class="p-2 rounded-full bg-white/10 hover:bg-white/30 text-white transition">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <button @click="reset" class="p-2 rounded-full bg-white/10 hover:bg-white/30 text-white transition text-xs font-bold px-3">
+                            RESET
+                        </button>
+                        <button @click="zoomIn" class="p-2 rounded-full bg-white/10 hover:bg-white/30 text-white transition">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <!-- Close Button -->
+                    <button @click="closeModal" class="absolute top-5 right-5 text-white text-4xl hover:text-gray-300 z-50">
+                        &times;
+                    </button>
+                </div>
+            </div>
+        </div>
+    <?php elseif($tab == 'persetujuan-tindakan'): ?>
+        <div class="space-y-6 mb-6">
+            <div class="p-6 bg-white shadow rounded-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">Persetujuan Tindakan</h3>
+                        <p class="text-sm text-gray-500">Isi tindakan medis spesifik yang memerlukan persetujuan pasien.</p>
+                    </div>
+                    <button wire:click="addConsentAction" type="button"
+                        class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring focus:ring-blue-300">
+                        + Tambah Tindakan
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+                    <h4 class="font-medium text-gray-800">Daftar Tindakan Medis yang Disetujui:</h4>
+                </div>
+
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(count($consent_actions) > 0): ?>
+                    <div class="space-y-4 pt-4 border-t border-gray-100">
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $consent_actions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                            <div class="flex items-start gap-4" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'consent-action-'.e($index).''; ?>wire:key="consent-action-<?php echo e($index); ?>">
+                                <div class="pt-2 font-medium text-gray-700"><?php echo e($index + 1); ?>.</div>
+                                <div class="flex-grow">
+                                    <input type="text" 
+                                           wire:model.live="consent_actions.<?php echo e($index); ?>" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                           placeholder="Jenis tindakan diagnostik / terapi..." />
+                                </div>
+                                <button wire:click="removeConsentAction(<?php echo e($index); ?>)" type="button"
+                                        class="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-md transition-colors" title="Hapus">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                </button>
+                            </div>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="text-center py-8 bg-gray-50 rounded-lg mt-4 border-2 border-dashed border-gray-200">
+                        <p class="text-gray-500">Belum ada tindakan spesifik ditambahkan.</p>
+                        <p class="text-xs text-gray-400 mt-1">Klik "+ Tambah Tindakan" untuk memulai.</p>
+                    </div>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                
+                <div class="mt-6 flex justify-end gap-3">
+                    <button wire:click="saveConsentAction" type="button" class="flex gap-2 bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 mt-0 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
+                        </svg>
+                        Simpan Tindakan
+                    </button>
+
+                    <button onclick="window.open('<?php echo e(route('user.consultation.consent.print', ['transaction_id' => $transaction_id])); ?>', '_blank')" type="button" class="flex gap-2 bg-gray-800 text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-700 mt-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+                            <path fill-rule="evenodd" d="M7.875 1.5C6.839 1.5 6 2.34 6 3.375v2.99c-.426.053-.851.11-1.274.174-1.454.218-2.476 1.483-2.476 2.917v6.294a3 3 0 0 0 3 3h.27l-.155 1.705A1.875 1.875 0 0 0 7.232 22.5h9.536a1.875 1.875 0 0 0 1.867-2.045l-.155-1.705h.27a3 3 0 0 0 3-3V9.456c0-1.434-1.022-2.7-2.476-2.917A48.716 48.716 0 0 0 18 6.366V3.375c0-1.036-.84-1.875-1.875-1.875h-8.25ZM16.5 6.205v-2.83A.375.375 0 0 0 16.125 3h-8.25a.375.375 0 0 0-.375.375v2.83a49.353 49.353 0 0 1 9 0Zm-.217 8.265c.178.018.317.16.333.337l.526 5.784a.375.375 0 0 1-.374.409H7.232a.375.375 0 0 1-.374-.409l.526-5.784a.373.373 0 0 1 .333-.337 41.741 41.741 0 0 1 8.566 0Zm.967-3.97a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H18a.75.75 0 0 1-.75-.75V10.5ZM15 16.5h-6a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5Z" clip-rule="evenodd"/>
+                        </svg>
+                        Cetak Persetujuan Tindakan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    <?php elseif($tab == 'resep'): ?>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($status, ['completed', 'cancelled'])): ?>
+            <div class="md:col-span-2 mb-4">
+                <button wire:click="createMedicine()"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md w-full"><i
+                        class="fa-solid fa-plus"></i> Tambahkan Resep</button>
+            </div>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr class="border-b">
+                            <th>Produk</th>
+                            <th>Quantity Request</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                            <th class="py-2 w-8"></th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_5 = true; $__currentLoopData = $recipes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key_recipe => $recipe): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_5 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                            <tr class="border-t-4" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'recipe-'.e($recipe['id']).''; ?>wire:key="recipe-<?php echo e($recipe['id']); ?>">
+                                <td colspan="4" class="py-3 px-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-medium text-blue-600"
+                                            style="width: <?php echo e($recipe['is_single'] ? '10%' : '15%'); ?>;">/R-<?php echo e($key_recipe + 1); ?></span>
+                                        <select <?php echo e(!in_array($status, ['completed', 'cancelled']) ? '' : 'disabled'); ?>
+
+                                            class="<?php echo e(in_array($status, ['completed', 'cancelled']) ? 'bg-gray-100 cursor-not-allowed' : null); ?> text-sm border rounded px-2 py-1"
+                                            wire:model.lazy='recipes.<?php echo e($key_recipe); ?>.medicine_type_id'
+                                            style="width: 50%;">
+                                            <option value="">Jenis Resep</option>
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $medicine_types; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $medicine_type): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                                <option value="<?php echo e($medicine_type['id']); ?>">
+                                                    <?php echo e($medicine_type['name']); ?>
+
+                                                </option>
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                        </select>
+                                        <div class="flex items-center border rounded px-2 py-1 bg-gray-100 cursor-not-allowed"
+                                            style="width: 50%;">
+                                            <span class="text-gray-500 mr-2 select-none">Rp</span>
+                                            <input type="text" disabled
+                                                wire:model='recipes.<?php echo e($key_recipe); ?>.price_service_one'
+                                                placeholder="Jasa 1"
+                                                class="text-sm bg-gray-100 text-gray-500 focus:outline-none w-full cursor-not-allowed" />
+                                        </div>
+                                        <input type="text"
+                                            wire:model.lazy='recipes.<?php echo e($key_recipe); ?>.numero_recipe'
+                                            placeholder="Numero Resep"
+                                            <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?>
+
+                                            class="<?php echo e(in_array($status, ['completed', 'cancelled']) ? 'bg-gray-100 cursor-not-allowed' : null); ?> text-sm border rounded px-2 py-1"
+                                            style="width: 50%;">
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$recipe['is_single']): ?>
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(in_array($transaction->status, ['consultation'])): ?>
+                                                
+                                                <button class="text-blue-500 hover:text-blue-700"
+                                                    wire:click="addDetail('<?php echo e($recipe['id']); ?>')">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                                
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(in_array($transaction->status, ['consultation'])): ?>
+                                            <button class="text-red-600 hover:text-red-800 mx-1"
+                                                wire:click="confirmDeleteTransactionRecipe('<?php echo e($recipe['id']); ?>')"
+                                                title="Hapus">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                    </div>
+                                    <div class="mt-2 text-sm text-gray-600">
+                                        <input type="text"
+                                            wire:model.lazy='recipes.<?php echo e($key_recipe); ?>.description'
+                                            placeholder="Informasi Tambahan Aturan Pakai"
+                                            <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?>
+
+                                            class="<?php echo e(in_array($status, ['completed', 'cancelled']) ? 'bg-gray-100 cursor-not-allowed' : null); ?> w-full border rounded px-2 py-1">
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($recipe['details'])): ?>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_6 = true; $__currentLoopData = $recipe['details']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index_detail => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_6 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                    <tr class="border-b" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'recipe-detail-'.e($item['id']).''; ?>wire:key="recipe-detail-<?php echo e($item['id']); ?>">
+                                        <td class="py-2" colspan="<?php echo e(!$recipe['is_single'] ? 1 : 2); ?>">
+                                            <p class="font-medium"><?php echo e($item['product_name']); ?></p>
+                                            <p class="text-xs text-gray-500">
+                                                @Rp<?php echo e(number_format($item['price'], 0, ',', '.')); ?></p>
+                                        </td>
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$recipe['is_single']): ?>
+                                            <td class="py-2">
+                                                <input
+                                                    wire:model.lazy="recipes.<?php echo e($key_recipe); ?>.details.<?php echo e($index_detail); ?>.quantity_real"
+                                                    type="text" placeholder="Dosis Obat"
+                                                    <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?>
+
+                                                    class="<?php echo e(in_array($status, ['completed', 'cancelled']) ? 'bg-gray-100 cursor-not-allowed' : null); ?> text-sm border rounded px-2 py-1"
+                                                    style="width: 100%;">
+                                            </td>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                        <td class="py-2 text-center">
+                                            <?php echo e($item['quantity']); ?>
+
+                                        </td>
+                                        <td class="py-2 px-2" style="width: 200px;">
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!in_array($status, ['completed', 'cancelled'])): ?>
+                                                <div class="flex items-stretch shadow-sm">
+                                                    <select 
+                                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-[10px] rounded-l-lg focus:ring-blue-500 focus:border-blue-500 block p-1 outline-none border-r-0"
+                                                        wire:model.lazy="recipes.<?php echo e($key_recipe); ?>.details.<?php echo e($index_detail); ?>.discount_type">
+                                                        <option value="nominal">Rp</option>
+                                                        <option value="percentage">%</option>       
+                                                    </select>
+                                                    <input type="number" 
+                                                        class="bg-white border border-gray-300 text-gray-900 text-xs rounded-r-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 outline-none" 
+                                                        wire:model.lazy="recipes.<?php echo e($key_recipe); ?>.details.<?php echo e($index_detail); ?>.discount"
+                                                        placeholder="0">
+                                                </div>
+                                            <?php else: ?>
+                                                <div class="text-[10px] text-gray-600">
+                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(($item['discount_type'] ?? 'nominal') == 'percentage'): ?>
+                                                        <?php echo e($item['discount'] ?? 0); ?>%
+                                                    <?php else: ?>
+                                                        Rp<?php echo e(number_format($item['discount_value'] ?? 0, 0, ',', '.')); ?>
+
+                                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                                </div>
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                        </td>
+                                        <td class="py-2 text-right">
+                                            Rp<?php echo e(number_format($item['sub_total_price'], 0, ',', '.')); ?></td>
+                                        <td class="py-2 text-center">
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(in_array($transaction->status, ['consultation'])): ?>
+                                                <button
+                                                    wire:click="confirmDeleteTransactionDetail('<?php echo e($item['id']); ?>')"
+                                                    class="text-red-500 hover:text-red-700"><i
+                                                        class="fas fa-trash"></i></button>
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_6): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                    <tr class="border-b">
+                                        <td colspan="7" class="py-2 text-center text-gray-500">Tidak ada detail
+                                            produk</td>
+                                    </tr>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_5): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            <tr>
+                                <td colspan="6" class="no-data">Tidak ada data</td>
+                            </tr>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <?php elseif($tab == 'jadwal-kontrol'): ?>
+        <div class="space-y-6 mb-6">
+            <!-- SECTION 1: Informasi Umum Produk -->
+            <div class="p-6 bg-white shadow rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="mb-4">
+                        <label for="date" class="block text-sm font-medium text-gray-700">Tanggal</label>
+                        <input type="date" id="date" wire:model.lazy="date"
+                            <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?>
+
+                            class="mt-1 form-control">
+                    </div>
+                    <div class="mb-4">
+                        <label for="doctor_id" class="block text-sm font-medium text-gray-700">Dokter</label>
+                        <div <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'select-doctor-control'; ?>wire:key="select-doctor-control" wire:ignore>
+                            <select <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?>
+
+                                class="<?php echo e(in_array($status, ['completed', 'cancelled']) ? 'bg-gray-100 cursor-not-allowed' : null); ?> mt-1 form-control"
+                                x-data x-ref="input" x-init="$($refs.input).selectize({
+                                    dropdownParent: 'body',
+                                    allowClear: true,
+                                    plugins: ['clear_button'],
+                                    onChange: function(e) {
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('doctor_id', e ? e : null);
+                                    }
+                                });" wire:model.lazy="doctor_id"
+                                id="doctor_id">
+                                <option value="">-- Pilih Dokter --</option>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $doctors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $doctor): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                    <option value="<?php echo e($doctor['id']); ?>"><?php echo e($doctor['name']); ?></option>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="location_id" class="block text-sm font-medium text-gray-700">Poli</label>
+                        <div <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'select-location-control'; ?>wire:key="select-location-control" wire:ignore>
+                            <select <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?>
+
+                                class="<?php echo e(in_array($status, ['completed', 'cancelled']) ? 'bg-gray-100 cursor-not-allowed' : null); ?> mt-1 form-control"
+                                x-data x-ref="input" x-init="$($refs.input).selectize({
+                                    dropdownParent: 'body',
+                                    allowClear: true,
+                                    plugins: ['clear_button'],
+                                    onChange: function(e) {
+                                        window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('location_id', e ? e : null);
+                                    }
+                                });" wire:model.lazy="location_id"
+                                id="location_id">
+                                <option value="">-- Pilih Poli --</option>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $locations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $location): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                    <option value="<?php echo e($location['id']); ?>"><?php echo e($location['name']); ?></option>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="description_control"
+                        class="block text-sm font-medium text-gray-700">Keterangan</label>
+                    <textarea id="description_control" wire:model.lazy="description_control" rows="3"
+                        <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?> class="mt-1 form-control"
+                        placeholder="Masukkan keterangan jadwal kontrol"></textarea>
+                </div>
+                <div>
+                    <label for="products" class="block text-sm font-medium text-gray-700">Tindakan</label>
+                    <div <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'select-products-control'; ?>wire:key="select-products-control" wire:ignore>
+                        <select <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?>
+
+                            class="<?php echo e(in_array($status, ['completed', 'cancelled']) ? 'bg-gray-100 cursor-not-allowed' : null); ?> mt-1 form-control"
+                            x-data x-ref="input" x-init="$($refs.input).selectize({
+                                dropdownParent: 'body',
+                                allowClear: true,
+                                plugins: ['clear_button'],
+                                onChange: function(e) {
+                                    window.Livewire.find('<?php echo e($_instance->getId()); ?>').set('products', e ? e : null);
+                                }
+                            });" wire:model.lazy="products" id="products"
+                            multiple>
+                            <option value="">-- Pilih Tindakan --</option>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $productGets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $productGet): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                <option value="<?php echo e($productGet->name); ?>"><?php echo e($productGet->sku_number); ?> -
+                                    <?php echo e($productGet->name); ?></option>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php elseif($tab == 'rujukan'): ?>
+        <div class="space-y-6 mb-6">
+            <div class="flex justify-end gap-2 mb-4">
+                <a href="<?php echo e(route('user.consultation.referral.print', $transaction_id)); ?>" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md relative group">
+                    <i class="fa-solid fa-print"></i> Cetak Rujukan
+                    <div class="absolute bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10 w-48 text-center" style="left: 50%; transform: translateX(-50%);">
+                        Simpan transaksi terlebih dahulu sebelum mencetak
+                    </div>
+                </a>
+            </div>
+            <!-- SECTION 1: Informasi Umum Produk -->
+            <div class="p-6 bg-white shadow rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Rujukan Ke</label>
+                        <input type="text" wire:model.lazy="hospital_name" placeholder="Contoh: Rumah Sakit XYZ"
+                            <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?>
+
+                            class="mt-1 form-control" />
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['hospital_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Dokter Rujukan</label>
+                        <input type="text" wire:model.lazy="doctor_name" placeholder="Contoh: Dr. John Doe"
+                            <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?>
+
+                            class="mt-1 form-control" />
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['doctor_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tanggal Rujukan</label>
+                        <input type="date" wire:model.lazy="date_refer"
+                            <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?>
+
+                            class="mt-1 form-control" />
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['date_refer'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="block text-sm font-medium text-gray-700">Keterangan Rujukan</label>
+                        <textarea wire:model.lazy="description_refer" placeholder="Contoh: Pasien perlu dirujuk untuk penanganan lebih lanjut"
+                            <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?> class="mt-1 form-control h-24"></textarea>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['description_refer'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php elseif($tab == 'observasi'): ?>
+        <div class="px-6 py-4 text-gray-600">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="mb-4">
+                    <label for="weight" class="block text-sm font-medium text-gray-700">Berat Badan</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?> type="text"
+                            id="weight"
+                            wire:model.lazy="weight"
+                            onblur="setTimeout(() => { if(typeof window.refreshGrowthCharts === 'function') window.refreshGrowthCharts(); }, 100);"
+                            placeholder="Masukkan Berat Badan"
+                            class="form-control rounded-r-none">
+                        <span
+                            class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
+                            kg
+                        </span>
+                    </div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['weight'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+                <div class="mb-4">
+                    <label for="height" class="block text-sm font-medium text-gray-700">Tinggi Badan</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?> type="text"
+                            id="height"
+                            wire:model.lazy="height"
+                            onblur="setTimeout(() => { if(typeof window.refreshGrowthCharts === 'function') window.refreshGrowthCharts(); }, 100);"
+                            placeholder="Masukkan Tinggi Badan"
+                            class="form-control rounded-r-none">
+                        <span
+                            class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
+                            cm
+                        </span>
+                    </div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['height'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+                <div class="mb-4">
+                    <label for="head_circumference" class="block text-sm font-medium text-gray-700">Lingkar
+                        Kepala</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?> type="text"
+                            id="head_circumference" wire:model.lazy="head_circumference"
+                            placeholder="Masukkan Lingkar Kepala" class="form-control rounded-r-none">
+                        <span
+                            class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
+                            cm
+                        </span>
+                    </div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['head_circumference'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+                <div class="mb-4">
+                    <label for="body_temperature" class="block text-sm font-medium text-gray-700">Suhu Tubuh</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?> type="text"
+                            id="body_temperature" wire:model.lazy="body_temperature"
+                            placeholder="Masukkan Suhu Tubuh" class="form-control rounded-r-none">
+                        <span
+                            class="inline-flex items-center rounded-r-md border bgiorder-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
+                            °C
+                        </span>
+                    </div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['body_temperature'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+                <div class="mb-4">
+                    <label for="heart_rate" class="block text-sm font-medium text-gray-700">Detak Jantung</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?> type="text"
+                            id="heart_rate" wire:model.lazy="heart_rate" placeholder="Masukkan Detak Jantung"
+                            class="form-control rounded-r-none">
+                        <span
+                            class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
+                            bpm
+                        </span>
+                    </div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['heart_rate'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+                <div class="mb-4">
+                    <label for="breathing" class="block text-sm font-medium text-gray-700">Pernafasan</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?> type="text"
+                            id="breathing" wire:model.lazy="breathing" placeholder="Masukkan Pernafasan"
+                            class="form-control rounded-r-none">
+                        <span
+                            class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
+                            /menit
+                        </span>
+                    </div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['breathing'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+                <div class="mb-4">
+                    <label for="blood_pressure_sistole" class="block text-sm font-medium text-gray-700">Tekanan Darah
+                        Sistolik</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?> type="text"
+                            id="blood_pressure_sistole" wire:model.lazy="blood_pressure_sistole"
+                            placeholder="Masukkan Tekanan Darah Sistolik" class="form-control rounded-r-none">
+                        <span
+                            class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
+                            mmHg
+                        </span>
+                    </div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['blood_pressure_sistole'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+                <div class="mb-4">
+                    <label for="blood_pressure_diastole" class="block text-sm font-medium text-gray-700">Tekanan Darah
+                        Diastolik</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input <?php echo e(in_array($status, ['completed', 'cancelled']) ? 'disabled' : null); ?> type="text"
+                            id="blood_pressure_diastole" wire:model.lazy="blood_pressure_diastole"
+                            placeholder="Masukkan Tekanan Darah Diastolik" class="form-control rounded-r-none">
+                        <span
+                            class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
+                            mmHg
+                        </span>
+                    </div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['blood_pressure_diastole'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="text-sm text-red-600 mt-1"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+            </div>
+
+            
+            <div class="mt-6">
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-t-xl">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 00-2-2m0 0h2a2 2 0 012-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Grafik Pertumbuhan Anak (WHO Standard)
+                    </h3>
+                    <p class="text-indigo-100 text-sm mt-1">
+                        Monitoring pertumbuhan berdasarkan standar WHO
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($transaction?->patient?->userDetail?->birth_date): ?>
+                            - Usia: <?php echo e(\Carbon\Carbon::parse($transaction->patient->userDetail->birth_date)->age); ?> tahun
+                        <?php else: ?>
+                            - <span class="text-yellow-300">⚠️ Tanggal lahir tidak tersedia, menggunakan estimasi</span>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </p>
+                </div>
+                <div class="bg-white p-6 rounded-b-xl border-x border-b border-indigo-200">
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$transaction?->patient?->userDetail?->birth_date): ?>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-yellow-700">
+                                        <strong>Perhatian:</strong> Tanggal lahir pasien belum terisi. Chart menggunakan estimasi usia 24 bulan untuk perhitungan.
+                                        Untuk hasil yang akurat, silakan lengkapi data tanggal lahir pasien.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                    <?php echo $__env->make('livewire.admin.consultation.consultation.detail.partials.growth-chart', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+    <!-- Card Total Biaya -->
+    <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
+        <div class="p-6">
+            <div class="text-center">
+                <div
+                    class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-receipt text-white text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Total Biaya Konsultasi</h3>
+                <p class="text-4xl font-bold text-gray-800 mb-2">
+                    Rp<?php echo e(number_format($transaction->grand_total_price ?? 0, 0, ',', '.')); ?>
+
+                </p>
+                <p class="text-sm text-red-500">
+                    Biaya Belum Termasuk Biaya Produk Pendukung
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<?php $__env->startPush('scripts'); ?>
+    <script>
+        let currentStream = null;
+        let availableCameras = [];
+        let isDetectingCameras = false;
+        let activeCamera = {
+            before: null,
+            after: null
+        };
+
+        // Initialize camera detection when button is clicked
+        function initializeCameraSelect(type) {
+            setTimeout(() => {
+                detectCameras(type);
+            }, 100);
+        }
+
+        // Event handler when camera dropdown selection changes
+        function onCameraChange(type) {
+            const select = document.getElementById(`camera-${type}-select`);
+            const selectedDeviceId = select.value;
+
+            if (selectedDeviceId) {
+                console.log(`Camera changed for ${type}:`, selectedDeviceId);
+                activeCamera[type] = selectedDeviceId;
+                openCameraWithDeviceId(type, selectedDeviceId);
+            } else {
+                // If no camera selected, stop current camera
+                stopCamera(type);
+            }
+        }
+
+        async function detectCameras(type) {
+            if (isDetectingCameras) return;
+
+            isDetectingCameras = true;
+            const select = document.getElementById(`camera-${type}-select`);
+
+            try {
+                select.innerHTML = '<option value="">Mendeteksi kamera...</option>';
+
+                // Check if browser supports getUserMedia
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Browser tidak mendukung akses kamera');
+                }
+
+                console.log('Requesting camera permission...');
+
+                // Request permission and get temporary stream to trigger permission dialog
+                const tempStream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: false
+                });
+
+                // Stop temporary stream immediately
+                tempStream.getTracks().forEach(track => track.stop());
+
+                console.log('Permission granted, enumerating devices...');
+
+                // Now enumerate devices (labels will be available after permission is granted)
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                availableCameras = devices.filter(device => device.kind === 'videoinput');
+
+                console.log('Found cameras:', availableCameras);
+
+                // Populate select options
+                select.innerHTML = '<option value="">Pilih kamera...</option>';
+
+                if (availableCameras.length === 0) {
+                    select.innerHTML = '<option value="">Tidak ada kamera ditemukan</option>';
+                } else {
+                    availableCameras.forEach((camera, index) => {
+                        const option = document.createElement('option');
+                        option.value = camera.deviceId;
+
+                        // Use label if available, otherwise create generic name
+                        let label = camera.label;
+                        if (!label || label.trim() === '') {
+                            label = `Kamera ${index + 1}`;
+                        }
+
+                        // Add more descriptive names based on common patterns
+                        if (label.toLowerCase().includes('integrated') || label.toLowerCase().includes(
+                                'built-in')) {
+                            label += ' (Built-in)';
+                        } else if (label.toLowerCase().includes('usb')) {
+                            label += ' (USB)';
+                        } else if (label.toLowerCase().includes('virtual')) {
+                            label += ' (Virtual)';
+                        }
+
+                        option.textContent = label;
+                        select.appendChild(option);
+                    });
+                }
+
+                // Also populate the other camera select if it exists
+                const otherType = type === 'before' ? 'after' : 'before';
+                const otherSelect = document.getElementById(`camera-${otherType}-select`);
+                if (otherSelect && otherSelect.innerHTML.includes('Memuat kamera')) {
+                    populateSelect(otherSelect);
+                }
+
+            } catch (error) {
+                console.error('Error detecting cameras:', error);
+
+                let errorMessage = 'Tidak dapat mendeteksi kamera';
+                if (error.name === 'NotAllowedError') {
+                    errorMessage = 'Izin kamera ditolak - refresh halaman dan izinkan akses kamera';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage = 'Tidak ada kamera ditemukan';
+                } else if (error.name === 'NotSupportedError') {
+                    errorMessage = 'Browser tidak mendukung akses kamera';
+                }
+
+                select.innerHTML = `<option value="">${errorMessage}</option>`;
+            } finally {
+                isDetectingCameras = false;
+            }
+        }
+
+        function populateSelect(select) {
+            select.innerHTML = '<option value="">Pilih kamera...</option>';
+
+            availableCameras.forEach((camera, index) => {
+                const option = document.createElement('option');
+                option.value = camera.deviceId;
+
+                let label = camera.label || `Kamera ${index + 1}`;
+                if (label.toLowerCase().includes('integrated') || label.toLowerCase().includes('built-in')) {
+                    label += ' (Built-in)';
+                } else if (label.toLowerCase().includes('usb')) {
+                    label += ' (USB)';
+                }
+
+                option.textContent = label;
+                select.appendChild(option);
+            });
+        }
+
+        function openCameraWithDeviceId(type, deviceId) {
+            const constraints = {
+                video: {
+                    deviceId: {
+                        exact: deviceId
+                    },
+                    width: {
+                        ideal: 1280
+                    },
+                    height: {
+                        ideal: 720
+                    }
+                }
+            };
+
+            // Stop existing stream if any
+            stopCamera(type);
+
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then(function(stream) {
+                    currentStream = stream;
+                    const video = document.getElementById(`camera-${type}-video`);
+                    const preview = document.getElementById(`camera-${type}-preview`);
+                    const button = document.getElementById(`camera-${type}-button`);
+                    const result = document.getElementById(`camera-${type}-result`);
+
+                    video.srcObject = stream;
+                    preview.style.display = 'block';
+                    button.style.display = 'none';
+                    result.style.display = 'none';
+
+                    console.log(`Camera ${type} started successfully with device:`, deviceId);
+                })
+                .catch(function(error) {
+                    console.error('Error accessing camera:', error);
+                    handleCameraError(error);
+
+                    // Reset dropdown to no selection on error
+                    const select = document.getElementById(`camera-${type}-select`);
+                    select.selectedIndex = 0;
+                });
+        }
+
+        // Legacy function for backward compatibility
+        function openCamera(type) {
+            const selectedDeviceId = document.getElementById(`camera-${type}-select`).value;
+
+            if (!selectedDeviceId) {
+                alert('Silakan pilih kamera terlebih dahulu');
+                return;
+            }
+
+            openCameraWithDeviceId(type, selectedDeviceId);
+        }
+
+        function restartCamera(type) {
+            const selectedDeviceId = activeCamera[type] || document.getElementById(`camera-${type}-select`).value;
+
+            if (selectedDeviceId) {
+                openCameraWithDeviceId(type, selectedDeviceId);
+            } else {
+                alert('Silakan pilih kamera terlebih dahulu');
+            }
+        }
+
+        function capturePhoto(type) {
+            const video = document.getElementById(`camera-${type}-video`);
+            const canvas = document.getElementById(`camera-${type}-canvas`);
+            const context = canvas.getContext('2d');
+            const preview = document.getElementById(`camera-${type}-preview`);
+            const result = document.getElementById(`camera-${type}-result`);
+            const image = document.getElementById(`camera-${type}-image`);
+
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw video frame to canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert canvas to data URL with better quality
+            const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+
+            // Show captured image
+            image.src = dataURL;
+            preview.style.display = 'none';
+            result.style.display = 'block';
+
+            // Stop camera stream
+            stopCamera(type);
+
+            // Convert data URL to blob and send to Livewire
+            fetch(dataURL)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], `camera-${type}-${Date.now()}.jpg`, {
+                        type: 'image/jpeg'
+                    });
+
+                    // Trigger Livewire file upload
+                    const property = type === 'before' ? 'before_photo' : 'after_photo';
+                    window.Livewire.find('<?php echo e($_instance->getId()); ?>').upload(property, file,
+                        (uploadedFilename) => {
+                            console.log('Photo uploaded successfully:', uploadedFilename);
+                        },
+                        (error) => {
+                            console.error('Upload error:', error);
+                            alert('Gagal mengunggah foto. Silakan coba lagi.');
+                            deletePhoto(type);
+                        }
+                    );
+                })
+                .catch(error => {
+                    console.error('Error processing captured photo:', error);
+                    alert('Gagal memproses foto. Silakan coba lagi.');
+                    deletePhoto(type);
+                });
+        }
+
+        function deletePhoto(type) {
+            const result = document.getElementById(`camera-${type}-result`);
+            const button = document.getElementById(`camera-${type}-button`);
+            const image = document.getElementById(`camera-${type}-image`);
+
+            // Clear the image
+            image.src = '';
+            result.style.display = 'none';
+            button.style.display = 'block';
+
+            // Clear Livewire property
+            const property = type === 'before' ? 'before_photo' : 'after_photo';
+            window.Livewire.find('<?php echo e($_instance->getId()); ?>').set(property, null);
+        }
+
+        function stopCamera(type) {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+
+            const preview = document.getElementById(`camera-${type}-preview`);
+            const button = document.getElementById(`camera-${type}-button`);
+
+            if (preview) preview.style.display = 'none';
+            if (button) button.style.display = 'block';
+        }
+
+        function handleCameraError(error) {
+            let errorMessage = 'Tidak dapat mengakses kamera.';
+
+            switch (error.name) {
+                case 'NotAllowedError':
+                    errorMessage = 'Izin kamera ditolak. Silakan izinkan akses kamera di browser dan refresh halaman.';
+                    break;
+                case 'NotFoundError':
+                    errorMessage = 'Kamera tidak ditemukan pada perangkat ini.';
+                    break;
+                case 'NotSupportedError':
+                    errorMessage = 'Browser tidak mendukung akses kamera.';
+                    break;
+                case 'OverconstrainedError':
+                    errorMessage = 'Kamera yang dipilih tidak mendukung pengaturan yang diminta.';
+                    break;
+                case 'SecurityError':
+                    errorMessage = 'Akses kamera diblokir karena alasan keamanan. Pastikan menggunakan HTTPS.';
+                    break;
+                default:
+                    errorMessage = `Error kamera: ${error.message}`;
+            }
+
+            alert(errorMessage);
+        }
+
+        // Clean up camera when page/modal is closed
+        window.addEventListener('beforeunload', function() {
+            stopCamera('before');
+            stopCamera('after');
+        });
+
+        // Listen for Livewire navigation
+        document.addEventListener('livewire:navigated', function() {
+            availableCameras = [];
+            activeCamera = {
+                before: null,
+                after: null
+            };
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('textarea.auto-resize').forEach(function(textarea) {
+                textarea.style.overflow = 'hidden';
+                textarea.style.resize = 'none';
+
+                const resize = () => {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = textarea.scrollHeight + 'px';
+                };
+
+                textarea.addEventListener('input', resize);
+                resize(); // Initial call
+            });
+        });
+    </script>
+
+    
+    <script>
+    console.log('🚀 === GROWTH CHART SCRIPT LOADING ===');
+
+   if (typeof Chart === 'undefined') {
+        console.log('📦 Loading Chart.js CDN...');
+        const chartScript = document.createElement('script');
+        chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+        chartScript.onload = function() {
+            console.log('✅ Chart.js loaded successfully');
+            initGrowthChartSystem();
+        };
+        chartScript.onerror = function() {
+            console.error('❌ Failed to load Chart.js from CDN');
+        };
+        document.head.appendChild(chartScript);
+    } else {
+        console.log('✅ Chart.js already available');
+        initGrowthChartSystem();
+    }
+
+    function initGrowthChartSystem() {
+        console.log('🎯 Initializing Growth Chart System...');
+
+        window.growthCharts = window.growthCharts || {bbU: null, pbU: null, bbPb: null};
+        window.chartGenerationCancelled = false; // Flag to cancel chart generation
+
+        window.cancelChartGeneration = function() {
+            console.log('🛑 Cancelling chart generation...');
+            window.chartGenerationCancelled = true;
+
+            // Destroy existing charts to free memory
+            if (window.growthCharts.bbU) {
+                window.growthCharts.bbU.destroy();
+                window.growthCharts.bbU = null;
+            }
+            if (window.growthCharts.pbU) {
+                window.growthCharts.pbU.destroy();
+                window.growthCharts.pbU = null;
+            }
+            if (window.growthCharts.bbPb) {
+                window.growthCharts.bbPb.destroy();
+                window.growthCharts.bbPb = null;
+            }
+        };
+
+        window.refreshGrowthCharts = function() {
+            // Reset cancellation flag
+            window.chartGenerationCancelled = false;
+
+            console.log('');
+            console.log('🔄 ========================================');
+            console.log('🔄 REFRESH GROWTH CHARTS STARTED');
+            console.log('🔄 ========================================');
+
+            const weightInput = document.getElementById('weight');
+            const heightInput = document.getElementById('height');
+
+            console.log('🔍 Searching for inputs...');
+            console.log('   Weight input:', !!weightInput, weightInput);
+            console.log('   Height input:', !!heightInput, heightInput);
+
+            if (!weightInput || !heightInput) {
+                console.error('❌ INPUTS NOT FOUND!');
+                console.error('💡 Make sure you are in OBSERVASI tab');
+                // Not in observasi tab, skip chart generation
+                return;
+            }
+
+            const weight = parseFloat(weightInput.value) || 0;
+            const height = parseFloat(heightInput.value) || 0;
+
+            console.log('📊 Values:', {weight, height});
+
+            const birthDate = '<?php echo e($transaction?->patient?->userDetail?->birth_date ?? ""); ?>';
+            console.log('👶 Birth Date:', birthDate || '(not set)');
+
+            const ageMonths = calculateAgeInMonths(birthDate);
+            console.log('👶 Age:', ageMonths, 'months');
+
+            if (weight <= 0 || height <= 0 || ageMonths <= 0) {
+                console.warn('⚠️ Data tidak lengkap untuk grafik pertumbuhan:', {weight, height, ageMonths});
+                console.warn('Mohon lengkapi: Berat: ' + weight + ' kg, Tinggi: ' + height + ' cm, Usia: ' + ageMonths + ' bulan');
+                return;
+            }
+
+            console.log('✅ All validations passed!');
+
+            // Use requestAnimationFrame for non-blocking execution
+            requestAnimationFrame(() => {
+                // Check if generation was cancelled
+                if (window.chartGenerationCancelled) {
+                    console.log('⏭️ Chart generation was cancelled');
+                    return;
+                }
+
+                try {
+                    updateAllCharts(weight, height, ageMonths);
+                    console.log('✅ Charts updated successfully!');
+                } catch (error) {
+                    console.error('❌ Error updating charts:', error);
+                    console.error('Error message:', error.message);
+                }
+
+                console.log('🔄 ========================================');
+                console.log('🔄 COMPLETED');
+                console.log('🔄 ========================================');
+            });
+        };
+
+        function calculateAgeInMonths(birthDate) {
+            if (!birthDate || birthDate === '') {
+                console.warn('⚠️ No birth date, using default 24 months');
+                return 24;
+            }
+            try {
+                const birth = new Date(birthDate);
+                const now = new Date();
+                const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+                return Math.max(1, months);
+            } catch (error) {
+                console.error('❌ Age calculation error:', error);
+                return 24;
+            }
+        }
+
+        function calculateZScore(value, mean, sd) {
+            return ((value - mean) / sd).toFixed(2);
+        }
+
+        function getStatusClass(zScore) {
+            const z = parseFloat(zScore);
+            if (z < -2) return {class: 'bg-red-100 text-red-800', status: 'Kurang', color: '#ef4444'};
+            if (z > 2) return {class: 'bg-orange-100 text-orange-800', status: 'Berlebih', color: '#f59e0b'};
+            return {class: 'bg-green-100 text-green-800', status: 'Normal', color: '#10b981'};
+        }
+
+        function updateAllCharts(weight, height, ageMonths) {
+            console.log('📊 Calculating WHO standards...');
+
+            // More accurate WHO reference data based on age
+            // This is still simplified - for production, use complete WHO LMS tables
+            const whoData = {
+                bbU: {
+                    mean: 3.3 + (ageMonths * 0.35) - (ageMonths > 24 ? (ageMonths - 24) * 0.02 : 0),
+                    sd: 0.4 + (ageMonths * 0.04)
+                },
+                pbU: {
+                    mean: 49.9 + (ageMonths * 1.5) - (ageMonths > 24 ? (ageMonths - 24) * 0.05 : 0),
+                    sd: 1.9 + (ageMonths * 0.03)
+                },
+                bbPb: {
+                    // Weight-for-height is more complex
+                    mean: -5.5 + (height * 0.17),
+                    sd: 0.8 + (height * 0.015)
+                }
+            };
+
+            console.log('📐 WHO Reference Values (Age:', ageMonths, 'months):');
+            console.log('   BB/U → Mean:', whoData.bbU.mean.toFixed(2), 'kg, SD:', whoData.bbU.sd.toFixed(2));
+            console.log('   PB/U → Mean:', whoData.pbU.mean.toFixed(2), 'cm, SD:', whoData.pbU.sd.toFixed(2));
+            console.log('   BB/PB → Mean:', whoData.bbPb.mean.toFixed(2), 'kg, SD:', whoData.bbPb.sd.toFixed(2));
+
+            const zBbU = calculateZScore(weight, whoData.bbU.mean, whoData.bbU.sd);
+            const zPbU = calculateZScore(height, whoData.pbU.mean, whoData.pbU.sd);
+            const zBbPb = calculateZScore(weight, whoData.bbPb.mean, whoData.bbPb.sd);
+
+            console.log('📊 Calculated Z-Scores:');
+            console.log('   BB/U:', zBbU, '→', getInterpretation(parseFloat(zBbU)));
+            console.log('   PB/U:', zPbU, '→', getInterpretation(parseFloat(zPbU)));
+            console.log('   BB/PB:', zBbPb, '→', getInterpretation(parseFloat(zBbPb)));
+
+            updateChart('bbU', zBbU, ageMonths, weight);
+            updateChart('pbU', zPbU, ageMonths, height);
+            updateChart('bbPb', zBbPb, height, weight);
+
+            updateRecommendations(zBbU, zPbU, zBbPb, weight, height, ageMonths);
+        }
+
+        function getInterpretation(z) {
+            if (z < -3) return 'Severely Below';
+            if (z < -2) return 'Below Normal';
+            if (z > 3) return 'Severely Above';
+            if (z > 2) return 'Above Normal';
+            return 'Normal';
+        }
+
+        function updateChart(type, zScore, xValue, yValue) {
+            const status = getStatusClass(parseFloat(zScore));
+
+            const statusEl = document.getElementById(`${type}Status`);
+            const ratingEl = document.getElementById(`${type}Rating`);
+            const zEl = document.getElementById(`${type}Z`);
+            const summaryEl = document.getElementById(`${type}Summary`);
+
+            if (statusEl) statusEl.textContent = status.status;
+            if (ratingEl) ratingEl.className = `text-center py-2 rounded-lg font-semibold ${status.class}`;
+            if (zEl) zEl.textContent = zScore;
+            if (summaryEl) summaryEl.textContent = `Z-Score: ${zScore} (${status.status})`;
+
+            createChart(type, xValue, yValue, status.color);
+        }
+
+        function createChart(type, xValue, yValue, color) {
+            const ctx = document.getElementById(`${type}Chart`);
+            if (!ctx) {
+                console.error(`❌ Canvas ${type}Chart not found`);
+                return;
+            }
+
+            if (window.growthCharts[type]) {
+                window.growthCharts[type].destroy();
+            }
+
+            const maxX = Math.max(60, Math.ceil(xValue) + 10);
+
+            // Generate WHO reference lines for different Z-scores
+            // This creates the characteristic WHO growth chart appearance
+            const whoLines = {
+                '-3SD': {color: '#dc2626', data: [], label: '-3 SD'},
+                '-2SD': {color: '#f97316', data: [], label: '-2 SD'},
+                '-1SD': {color: '#fbbf24', data: [], label: '-1 SD'},
+                'Median': {color: '#10b981', data: [], label: 'Median (0)'},
+                '+1SD': {color: '#fbbf24', data: [], label: '+1 SD'},
+                '+2SD': {color: '#f97316', data: [], label: '+2 SD'},
+                '+3SD': {color: '#dc2626', data: [], label: '+3 SD'}
+            };
+
+            // Calculate reference values for each age point
+            // OPTIMIZED: Use step of 2 instead of 1 to reduce data points by 50%
+            const step = 2;
+            for (let age = 0; age < maxX; age += step) {
+                // Check if generation was cancelled
+                if (window.chartGenerationCancelled) {
+                    console.log('⏭️ Chart data generation cancelled mid-loop');
+                    return;
+                }
+
+                let mean, sd;
+
+                if (type === 'bbU') {
+                    mean = 3.3 + (age * 0.35) - (age > 24 ? (age - 24) * 0.02 : 0);
+                    sd = 0.4 + (age * 0.04);
+                } else if (type === 'pbU') {
+                    mean = 49.9 + (age * 1.5) - (age > 24 ? (age - 24) * 0.05 : 0);
+                    sd = 1.9 + (age * 0.03);
+                } else { // bbPb - use height as x-axis
+                    const heightAtAge = 49.9 + (age * 1.5);
+                    mean = -5.5 + (heightAtAge * 0.17);
+                    sd = 0.8 + (heightAtAge * 0.015);
+                }
+
+                whoLines['-3SD'].data.push(mean - (3 * sd));
+                whoLines['-2SD'].data.push(mean - (2 * sd));
+                whoLines['-1SD'].data.push(mean - (sd));
+                whoLines['Median'].data.push(mean);
+                whoLines['+1SD'].data.push(mean + sd);
+                whoLines['+2SD'].data.push(mean + (2 * sd));
+                whoLines['+3SD'].data.push(mean + (3 * sd));
+            }
+
+            // Create datasets for Chart.js
+            const datasets = [
+                // WHO Reference Lines
+                {
+                    label: whoLines['-3SD'].label,
+                    data: whoLines['-3SD'].data,
+                    borderColor: whoLines['-3SD'].color,
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    tension: 0.4
+                },
+                {
+                    label: whoLines['-2SD'].label,
+                    data: whoLines['-2SD'].data,
+                    borderColor: whoLines['-2SD'].color,
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.4
+                },
+                {
+                    label: whoLines['-1SD'].label,
+                    data: whoLines['-1SD'].data,
+                    borderColor: whoLines['-1SD'].color,
+                    backgroundColor: 'transparent',
+                    borderWidth: 1.5,
+                    borderDash: [3, 3],
+                    pointRadius: 0,
+                    tension: 0.4
+                },
+                {
+                    label: whoLines['Median'].label,
+                    data: whoLines['Median'].data,
+                    borderColor: whoLines['Median'].color,
+                    backgroundColor: 'transparent',
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    tension: 0.4
+                },
+                {
+                    label: whoLines['+1SD'].label,
+                    data: whoLines['+1SD'].data,
+                    borderColor: whoLines['+1SD'].color,
+                    backgroundColor: 'transparent',
+                    borderWidth: 1.5,
+                    borderDash: [3, 3],
+                    pointRadius: 0,
+                    tension: 0.4
+                },
+                {
+                    label: whoLines['+2SD'].label,
+                    data: whoLines['+2SD'].data,
+                    borderColor: whoLines['+2SD'].color,
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.4
+                },
+                {
+                    label: whoLines['+3SD'].label,
+                    data: whoLines['+3SD'].data,
+                    borderColor: whoLines['+3SD'].color,
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    tension: 0.4
+                },
+                // Patient data point
+                {
+                    label: 'Pasien',
+                    // Calculate correct index based on xValue and step
+                    data: (() => {
+                        const dataLength = Math.ceil(maxX / step);
+                        const index = Math.floor(xValue / step);
+                        const arr = Array(dataLength).fill(null);
+                        // Make sure index is within bounds
+                        if (index >= 0 && index < dataLength) {
+                            arr[index] = yValue;
+                        }
+                        return arr;
+                    })(),
+                    borderColor: color,
+                    backgroundColor: color,
+                    pointRadius: 10,
+                    pointHoverRadius: 12,
+                    showLine: false
+                }
+            ];
+
+            window.growthCharts[type] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: Math.ceil(maxX / step)}, (_, i) => i * step),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 10,
+                                font: {size: 10}
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                title: function(context) {
+                                    return 'Usia: ' + context[0].label + ' bulan';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Usia (bulan)'
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: type === 'bbU' || type === 'bbPb' ? 'Berat (kg)' : 'Tinggi (cm)'
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateRecommendations(zBbU, zPbU, zBbPb, weight, height, ageMonths) {
+            const recommendations = [];
+            const zBbUNum = parseFloat(zBbU);
+            const zPbUNum = parseFloat(zPbU);
+            const zBbPbNum = parseFloat(zBbPb);
+
+            // BB/U Interpretation with severity levels
+            if (zBbUNum < -3) {
+                recommendations.push('🚨 <strong>SEVERELY UNDERWEIGHT</strong> (Z-Score: ' + zBbU + ')');
+                recommendations.push('⚠️ Kondisi <strong>gizi buruk</strong> - Rujuk ke ahli gizi <strong>SEGERA</strong>');
+                recommendations.push('🥗 Kebutuhan kalori tinggi: <strong>' + Math.round(100 * weight * 1.3) + ' kkal/hari</strong>');
+                recommendations.push('💊 Pertimbangkan suplementasi nutrisi');
+            } else if (zBbUNum < -2) {
+                recommendations.push('⚠️ <strong>UNDERWEIGHT</strong> (Z -Score: ' + zBbU + ')');
+                recommendations.push('📊 BB ideal untuk usia ' + ageMonths + ' bulan: <strong>' + (3.3 + ageMonths * 0.35).toFixed(1) + ' kg</strong>');
+                recommendations.push('🥗 Tingkatkan asupan: <strong>' + Math.round(100 * weight * 1.2) + ' kkal/hari</strong>');
+                recommendations.push('📈 Target kenaikan: <strong>0.5-1 kg/bulan</strong>');
+            } else if (zBbUNum > 3) {
+                recommendations.push('🚨 <strong>SEVERELY OVERWEIGHT</strong> (Z-Score: ' + zBbU + ')');
+                recommendations.push('⚠️ Risiko obesitas - Konsultasi ahli gizi SEGERA');
+            } else if (zBbUNum > 2) {
+                recommendations.push('⚠️ <strong>OVERWEIGHT</strong> (Z-Score: ' + zBbU + ')');
+                recommendations.push('👨‍⚕️ Atur pola makan seimbang, konsultasi ahli gizi');
+            } else {
+                recommendations.push('✅ <strong>BERAT BADAN NORMAL</strong> (Z-Score: ' + zBbU + ')');
+                recommendations.push('💚 Pertahankan pola makan sehat dan seimbang');
+            }
+
+            // PB/U Interpretation
+            if (zPbUNum < -3) {
+                recommendations.push('🚨 <strong>SEVERELY STUNTED</strong> - Tinggi sangat pendek');
+                recommendations.push('⚠️ Gizi kronis - Intervensi komprehensif diperlukan');
+            } else if (zPbUNum < -2) {
+                recommendations.push('� <strong>STUNTED</strong> (Z-Score PB/U: ' + zPbU + ')');
+                recommendations.push('⏱️ Tinggi ideal: <strong>' + (49.9 + ageMonths * 1.5).toFixed(1) + ' cm</strong>');
+                recommendations.push('🥛 Fokus nutrisi: protein, kalsium, vitamin D');
+            } else if (zPbUNum > 2) {
+                recommendations.push('📏 Tinggi badan <strong>di atas rata-rata</strong> (Z-Score: ' + zPbU + ')');
+            } else {
+                recommendations.push('✅ <strong>TINGGI BADAN NORMAL</strong> (Z-Score PB/U: ' + zPbU + ')');
+            }
+
+            // BB/PB Interpretation
+            if (zBbPbNum < -3) {
+                recommendations.push('� <strong>SEVERELY WASTED</strong> - Gizi buruk akut');
+                recommendations.push('⚠️ Rujuk RS untuk penanganan intensif');
+            } else if (zBbPbNum < -2) {
+                recommendations.push('📊 <strong>WASTED</strong> (Z-Score BB/PB: ' + zBbPb + ')');
+                recommendations.push('⚡ Gizi kurang akut - Tingkatkan asupan kalori segera');
+            } else if (zBbPbNum > 2) {
+                recommendations.push('⚠️ BB <strong>berlebih</strong> untuk tinggi badan (Risk obesitas)');
+            } else {
+                recommendations.push('✅ <strong>BB PROPORSIONAL</strong> dengan tinggi (Z-Score: ' + zBbPb + ')');
+            }
+
+            // Classification summary
+            recommendations.push('<hr class="my-3">');
+            recommendations.push('<strong>📋 Klasifikasi WHO:</strong>');
+            recommendations.push('• Normal: Z-Score -2 s/d +2');
+            recommendations.push('• Moderate: Z-Score -3 s/d -2 atau +2 s/d +3');
+            recommendations.push('• Severe: Z-Score < -3 atau > +3');
+
+            const recEl = document.getElementById('recommendations');
+            if (recEl) recEl.innerHTML = recommendations.map(r =>
+                `<p class="flex items-start gap-2 text-sm"><span>${r.includes('•') || r.includes('<hr') ? '' : '•'}</span><span>${r}</span></p>`
+            ).join('');
+        }
+
+        // Helper function to check if we're in observasi tab
+        function isObservasiTabActive() {
+            const weightInput = document.getElementById('weight');
+            const heightInput = document.getElementById('height');
+            return weightInput !== null && heightInput !== null;
+        }
+
+        // REMOVED: Auto-refresh on page load (causes infinite loop)
+        // Only refresh charts when user manually triggers it
+
+        // REMOVED: Livewire morph hook (THIS WAS CAUSING INFINITE LOOP!)
+        // No longer auto-refresh on every Livewire update
+        console.log('✅ === GROWTH CHART SYSTEM READY ===');
+        console.log('💡 Manual trigger: window.refreshGrowthCharts()');
+        console.log('💡 Chart will refresh when you update weight/height fields');
+    }
+    </script>
+<?php $__env->stopPush(); ?><?php /**PATH /Users/macbookair/Documents/mediction/mediction.id/resources/views/livewire/admin/consultation/consultation/detail/admin-consultation-consultation-detail-index.blade.php ENDPATH**/ ?>

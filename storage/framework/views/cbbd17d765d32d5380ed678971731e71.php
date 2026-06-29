@@ -1,0 +1,1 @@
+<?php /**PATH /Users/macbookair/Documents/mediction/mediction.id/resources/views/livewire/admin/promotion/create/admin-promotion-create-index-new.blade.php ENDPATH**/ ?>
