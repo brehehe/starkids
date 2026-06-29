@@ -169,6 +169,40 @@ namespace App\Models\Account{
 	class DetailCategoryAccount extends \Eloquent {}
 }
 
+namespace App\Models\Admin\Hr{
+/**
+ * @property string $id
+ * @property string|null $company_id
+ * @property string $name
+ * @property string $start_time
+ * @property string $end_time
+ * @property bool $is_active
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Company\Company|null $company
+ * @method static \Database\Factories\Admin\Hr\ShiftFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereCompanyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereEndTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereStartTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift withoutTrashed()
+ */
+	class Shift extends \Eloquent {}
+}
+
 namespace App\Models\Api{
 /**
  * @property string $id
@@ -225,7 +259,7 @@ namespace App\Models\Article{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\Article\ArticleCategory|null $category
- * @property-read \App\Models\Company\Company $company
+ * @property-read \App\Models\Company\Company|null $company
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Article newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Article newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Article onlyTrashed()
@@ -263,7 +297,7 @@ namespace App\Models\Article{
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Article\Article> $articles
  * @property-read int|null $articles_count
- * @property-read \App\Models\Company\Company $company
+ * @property-read \App\Models\Company\Company|null $company
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ArticleCategory newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ArticleCategory newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ArticleCategory onlyTrashed()
@@ -303,8 +337,6 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $clock_in_location_address
- * @property string|null $clock_out_location_address
  * @property string|null $location
  * @property string|null $clock_out_location
  * @property string|null $reason
@@ -314,13 +346,11 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereClockInLocationAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereClockInLocationLat($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereClockInLocationLong($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereClockInPhotoPath($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereClockInTime($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereClockOutLocation($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereClockOutLocationAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereClockOutLocationLat($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereClockOutLocationLong($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereClockOutPhotoPath($value)
@@ -357,7 +387,7 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Attendance|null $attendance
- * @property-read \App\Models\User $user
+ * @property-read \App\Models\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AttendanceHistory newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AttendanceHistory newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AttendanceHistory query()
@@ -386,7 +416,7 @@ namespace App\Models\Banner{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \App\Models\Company\Company $company
+ * @property-read \App\Models\Company\Company|null $company
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Banner newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Banner newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Banner onlyTrashed()
@@ -1645,8 +1675,8 @@ namespace App\Models\Doctor{
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Product\Product $product
- * @property-read \App\Models\User $user
+ * @property-read \App\Models\Product\Product|null $product
+ * @property-read \App\Models\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DoctorActionIncentive newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DoctorActionIncentive newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DoctorActionIncentive onlyTrashed()
@@ -2347,8 +2377,8 @@ namespace App\Models\Family{
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Family\Family $family
- * @property-read \App\Models\User $user
+ * @property-read \App\Models\Family\Family|null $family
+ * @property-read \App\Models\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FamilyMember newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FamilyMember newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|FamilyMember onlyTrashed()
@@ -2702,10 +2732,10 @@ namespace App\Models\Hr{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \App\Models\Company\Company $company
+ * @property-read \App\Models\Company\Company|null $company
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Hr\EmployeePayrollComponent> $components
  * @property-read int|null $components_count
- * @property-read \App\Models\User $user
+ * @property-read \App\Models\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmployeePayroll newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmployeePayroll newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmployeePayroll onlyTrashed()
@@ -2733,8 +2763,8 @@ namespace App\Models\Hr{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \App\Models\Hr\PayrollComponent $component
- * @property-read \App\Models\Hr\EmployeePayroll $employeePayroll
+ * @property-read \App\Models\Hr\PayrollComponent|null $component
+ * @property-read \App\Models\Hr\EmployeePayroll|null $employeePayroll
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmployeePayrollComponent newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmployeePayrollComponent newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmployeePayrollComponent onlyTrashed()
@@ -2767,9 +2797,10 @@ namespace App\Models\Hr{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \App\Models\Company\Company|null $company
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Hr\PayrollDetail> $details
  * @property-read int|null $details_count
- * @property-read \App\Models\User $user
+ * @property-read \App\Models\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payroll newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payroll newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Payroll onlyTrashed()
@@ -2806,7 +2837,7 @@ namespace App\Models\Hr{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \App\Models\User $user
+ * @property-read \App\Models\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PayrollAdjustment newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PayrollAdjustment newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PayrollAdjustment onlyTrashed()
@@ -2840,7 +2871,7 @@ namespace App\Models\Hr{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \App\Models\Company\Company $company
+ * @property-read \App\Models\Company\Company|null $company
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PayrollComponent newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PayrollComponent newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PayrollComponent onlyTrashed()
@@ -2870,6 +2901,7 @@ namespace App\Models\Hr{
  * @property numeric $amount
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Hr\Payroll|null $payroll
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PayrollDetail newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PayrollDetail newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PayrollDetail query()
@@ -2882,6 +2914,39 @@ namespace App\Models\Hr{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PayrollDetail whereUpdatedAt($value)
  */
 	class PayrollDetail extends \Eloquent {}
+}
+
+namespace App\Models\Hr{
+/**
+ * @property string $id
+ * @property string|null $company_id
+ * @property string $name
+ * @property string $start_time
+ * @property string $end_time
+ * @property bool $is_active
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Company\Company|null $company
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereCompanyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereEndTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereStartTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift withoutTrashed()
+ */
+	class Shift extends \Eloquent {}
 }
 
 namespace App\Models\Icd{
@@ -7698,7 +7763,6 @@ namespace App\Models\Patient{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property string|null $medical_record_number Nomor Rekam Medis (RM)
  * @property-read \App\Models\Patient\OneHealth\OneHealthPatient|null $OHPatient
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Condition\Condition> $conditions
  * @property-read int|null $conditions_count
@@ -7738,7 +7802,6 @@ namespace App\Models\Patient{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereIdentityCardMother($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereIhsNumber($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereMaritalStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereMedicalRecordNumber($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient wherePassportNumber($value)
@@ -7985,6 +8048,50 @@ namespace App\Models\Patient{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientIdentifier withoutTrashed()
  */
 	class PatientIdentifier extends \Eloquent {}
+}
+
+namespace App\Models\Patient{
+/**
+ * @property string $id
+ * @property string $referrer_id
+ * @property string $referred_id
+ * @property string|null $transaction_id
+ * @property numeric $amount
+ * @property string $incentive_type persen or rupiah
+ * @property string $status
+ * @property string|null $month
+ * @property string|null $year
+ * @property string|null $company_id
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Company\Company|null $company
+ * @property-read \App\Models\User|null $referred
+ * @property-read \App\Models\User|null $referrer
+ * @property-read \App\Models\Transaction\Transaction|null $transaction
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereCompanyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereIncentiveType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereMonth($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereReferredId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereReferrerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereTransactionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive whereYear($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PatientReferralIncentive withoutTrashed()
+ */
+	class PatientReferralIncentive extends \Eloquent {}
 }
 
 namespace App\Models\PaymentMethod{
@@ -8711,6 +8818,11 @@ namespace App\Models\Product{
  * @property int $order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Branch\Branch|null $branch
+ * @property-read \App\Models\Company\Company|null $company
+ * @property-read \App\Models\Product\Product|null $product
+ * @property-read \App\Models\Product\ProductPrice|null $productPrice
+ * @property-read \App\Models\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPriceHistory newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPriceHistory newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPriceHistory onlyTrashed()
@@ -9609,7 +9721,7 @@ namespace App\Models\Promotion{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Company\Company|null $company
- * @property-read \App\Models\Promotion\PromotionSimplified $promotion
+ * @property-read \App\Models\Promotion\PromotionSimplified|null $promotion
  * @property-read \App\Models\Transaction\Transaction|null $transaction
  * @property-read \App\Models\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromotionUsage active()
@@ -9650,7 +9762,7 @@ namespace App\Models\Promotion{
  * @property \Illuminate\Support\Carbon $used_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\User $customer
+ * @property-read \App\Models\User|null $customer
  * @property-read \App\Models\Promotion\PromotionEvent $promotion
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromotionUsageHistory byCustomer($customerId)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PromotionUsageHistory byPromotion($promotionId)
@@ -10140,6 +10252,39 @@ namespace App\Models\Service{
 	class ServiceMonthDetail extends \Eloquent {}
 }
 
+namespace App\Models{
+/**
+ * @property string $id
+ * @property string|null $company_id
+ * @property string $name
+ * @property string $start_time
+ * @property string $end_time
+ * @property bool $is_active
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Company\Company|null $company
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereCompanyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereEndTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereStartTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Shift withoutTrashed()
+ */
+	class Shift extends \Eloquent {}
+}
+
 namespace App\Models\Spatie{
 /**
  * @property string $uuid
@@ -10592,6 +10737,43 @@ namespace App\Models\SystemUpdate{
 	class SystemUpdate extends \Eloquent {}
 }
 
+namespace App\Models{
+/**
+ * @property string $id
+ * @property string $transaction_id
+ * @property int $tenor
+ * @property string $due_date
+ * @property int $amount
+ * @property string $status
+ * @property string|null $paid_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $company_id
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \App\Models\Company\Company|null $company
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment whereCompanyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment whereDueDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment wherePaidAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment whereTenor($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment whereTransactionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionInstallment withoutTrashed()
+ */
+	class TransactionInstallment extends \Eloquent {}
+}
+
 namespace App\Models\Transaction{
 /**
  * @property string $id
@@ -10708,6 +10890,8 @@ namespace App\Models\Transaction{
  * @property array<array-key, mixed>|null $consent_actions
  * @property array<array-key, mixed>|null $consent_signee
  * @property string|null $doctor_referral_id
+ * @property int|null $installment_count
+ * @property string|null $installment_period
  * @property-read \App\Models\Branch\Branch|null $branch
  * @property-read \App\Models\Company\Company|null $company
  * @property-read \App\Models\User\ControlDoctor|null $controlDoctor
@@ -10727,6 +10911,8 @@ namespace App\Models\Transaction{
  * @property-read \App\Models\Transaction\TransactionDiagnosis|null $transactionDiagnosis
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Transaction\TransactionIcd10> $transactionIcd10
  * @property-read int|null $transaction_icd10_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\TransactionInstallment> $transactionInstallments
+ * @property-read int|null $transaction_installments_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Transaction\TransactionNurse> $transactionNurses
  * @property-read int|null $transaction_nurses_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Transaction\TransactionPayment> $transactionPayments
@@ -10772,6 +10958,8 @@ namespace App\Models\Transaction{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Transaction whereGrandTotalPriceAdminFee($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Transaction whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Transaction whereImmunization($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Transaction whereInstallmentCount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Transaction whereInstallmentPeriod($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Transaction whereInsuranceId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Transaction whereInsuranceNumber($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Transaction whereIsInsurance($value)
@@ -10842,6 +11030,9 @@ namespace App\Models\Transaction{
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property numeric $discount
+ * @property string|null $discount_type
+ * @property numeric $discount_value
  * @property-read \App\Models\Company\Company|null $company
  * @property-read \App\Models\Product\Product|null $product
  * @property-read \App\Models\Transaction\Transaction|null $transaction
@@ -10853,6 +11044,9 @@ namespace App\Models\Transaction{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionAction whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionAction whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionAction whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionAction whereDiscount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionAction whereDiscountType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionAction whereDiscountValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionAction whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionAction whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionAction whereOrder($value)
@@ -10984,6 +11178,8 @@ namespace App\Models\Transaction{
  * @property numeric $incentive_doctor
  * @property string|null $odontogram_code
  * @property string|null $odontogram_color
+ * @property string|null $discount_type
+ * @property numeric $discount_value
  * @property-read \Illuminate\Database\Eloquent\Collection<int, TransactionDetail> $childDetails
  * @property-read int|null $child_details_count
  * @property-read \App\Models\Company\Company|null $company
@@ -11003,6 +11199,8 @@ namespace App\Models\Transaction{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionDetail whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionDetail whereDepositItemId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionDetail whereDiscount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionDetail whereDiscountType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionDetail whereDiscountValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionDetail whereDoctorDosageGram($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionDetail whereDoctorId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionDetail whereDosageDoctor($value)
@@ -11237,6 +11435,7 @@ namespace App\Models\Transaction{
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property bool $is_down_payment
  * @property-read \App\Models\Company\Company|null $company
  * @property-read \App\Models\PaymentMethod\PaymentMethod|null $paymentMethod
  * @property-read \App\Models\Transaction\Transaction|null $transaction
@@ -11251,6 +11450,7 @@ namespace App\Models\Transaction{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionPayment whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionPayment whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionPayment whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionPayment whereIsDownPayment($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionPayment whereIsSinglePayment($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionPayment whereOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TransactionPayment wherePaymentAmount($value)
@@ -11707,6 +11907,7 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property string|null $identity_card
  * @property bool|null $identity_card_mother
+ * @property string|null $shift_id
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Attendance> $attendances
  * @property-read int|null $attendances_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Company\Company> $companies
@@ -11725,11 +11926,15 @@ namespace App\Models{
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  * @property-read \App\Models\Patient\Patient|null $patient
+ * @property-read \App\Models\Patient\PatientReferralIncentive|null $patientReferralIncentiveReceived
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Patient\PatientReferralIncentive> $patientReferralIncentivesGiven
+ * @property-read int|null $patient_referral_incentives_given_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Spatie\Permission> $permissions
  * @property-read int|null $permissions_count
  * @property-read \App\Models\Doctor\Doctor|null $roleDoctor
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Spatie\Role> $roles
  * @property-read int|null $roles_count
+ * @property-read \App\Models\Hr\Shift|null $shift
  * @property-read User|null $user
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User\UserControlSchedule> $userControlSchedules
  * @property-read int|null $user_control_schedules_count
@@ -11764,6 +11969,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePhone($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereProfile($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereShiftId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTypeUser($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUserId($value)
@@ -12047,6 +12253,7 @@ namespace App\Models\User{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property string|null $transaction_detail_id ID detail transaksi untuk insentif berbasis produk
  * @property string|null $description
+ * @property bool $is_generate
  * @property-read \App\Models\Company\Company|null $company
  * @property-read \App\Models\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserIncentive newModelQuery()
@@ -12060,6 +12267,7 @@ namespace App\Models\User{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserIncentive whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserIncentive whereDescription($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserIncentive whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UserIncentive whereIsGenerate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserIncentive whereMonth($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserIncentive whereOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserIncentive whereStatus($value)
@@ -12208,7 +12416,7 @@ namespace App\Models\User{
  * @property-read \App\Models\Company\Company|null $company
  * @property-read mixed $incentive_description
  * @property-read mixed $price_range_description
- * @property-read \App\Models\User\UserType $userType
+ * @property-read \App\Models\User\UserType|null $userType
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserTypeIncentive active()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserTypeIncentive byCompany($companyId)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserTypeIncentive forPrice($price)
