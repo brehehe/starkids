@@ -77,56 +77,62 @@
     </div>
 
     <!-- Controls Area -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-        <div class="flex items-center">
-            <span class="text-sm text-gray-700 mr-2">Tampil</span>
-            <select class="mt-1 form-control" wire:model.live='perPage'>
-                <option value="5">5</option>
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-            </select>
-            <span class="text-sm text-gray-700 ml-2">data</span>
-        </div>
-
-        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($tab === 'outbox'): ?>
-            <div class="w-full sm:w-48">
-                <select class="mt-1 form-control" wire:model.live="outboxStatus">
-                    <option value="">Semua Status Antrian</option>
-                    <option value="pending">Pending</option>
-                    <option value="process">Proses</option>
-                    <option value="success">Sukses</option>
-                    <option value="failed">Gagal</option>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-gray-100 shadow-sm">
+        <!-- Left Section: Page Size & Status Filters -->
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div class="flex items-center">
+                <span class="text-sm text-gray-700 mr-2">Tampil</span>
+                <select class="form-control" style="width: auto;" wire:model.live='perPage'>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
                 </select>
+                <span class="text-sm text-gray-700 ml-2">data</span>
             </div>
-        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-        <div class="relative w-full sm:w-64">
-            <input type="text" class="mt-1 form-control-search pl-10" placeholder="Cari kata kunci..."
-                wire:model.live.debounce.300ms="search">
-            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <i class="fas fa-search h-3 w-3 text-gray-400"></i>
-            </div>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($tab === 'outbox'): ?>
+                <div class="w-full sm:w-48">
+                    <select class="form-control w-full" wire:model.live="outboxStatus">
+                        <option value="">Semua Status Antrian</option>
+                        <option value="pending">Pending</option>
+                        <option value="process">Proses</option>
+                        <option value="success">Sukses</option>
+                        <option value="failed">Gagal</option>
+                    </select>
+                </div>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
         </div>
 
-        <div class="flex gap-2 w-full sm:w-auto justify-end">
-            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($tab === 'patient'): ?>
-                <button wire:click="queueAllUnsyncedPatients" class="btn btn-primary">
-                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkron Semua Pasien (Max 100)
-                </button>
-            <?php elseif($tab === 'encounter'): ?>
-                <button wire:click="queueAllUnsyncedEncounters" class="btn btn-primary">
-                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkron Semua Kunjungan (Max 100)
-                </button>
-            <?php elseif($tab === 'outbox'): ?>
-                <button wire:click="retryFailedTasks" class="btn btn-warning text-white">
-                    <i class="fa-solid fa-arrows-rotate mr-2"></i> Coba Lagi Gagal
-                </button>
-                <button wire:click="clearFailedTasks" class="btn btn-danger">
-                    <i class="fa-solid fa-trash-can mr-2"></i> Hapus Gagal
-                </button>
-            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        <!-- Right Section: Search & Actions -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+            <div class="relative w-full sm:w-64">
+                <input type="text" class="form-control-search pl-10 w-full" placeholder="Cari kata kunci..."
+                    wire:model.live.debounce.300ms="search">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <i class="fas fa-search h-3 w-3 text-gray-400"></i>
+                </div>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($tab === 'patient'): ?>
+                    <button wire:click="queueAllUnsyncedPatients" class="btn btn-primary whitespace-nowrap">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkron Semua Pasien (Max 100)
+                    </button>
+                <?php elseif($tab === 'encounter'): ?>
+                    <button wire:click="queueAllUnsyncedEncounters" class="btn btn-primary whitespace-nowrap">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkron Semua Kunjungan (Max 100)
+                    </button>
+                <?php elseif($tab === 'outbox'): ?>
+                    <button wire:click="retryFailedTasks" class="btn btn-warning text-white whitespace-nowrap">
+                        <i class="fa-solid fa-arrows-rotate mr-2"></i> Coba Lagi Gagal
+                    </button>
+                    <button wire:click="clearFailedTasks" class="btn btn-danger whitespace-nowrap">
+                        <i class="fa-solid fa-trash-can mr-2"></i> Hapus Gagal
+                    </button>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            </div>
         </div>
     </div>
 
