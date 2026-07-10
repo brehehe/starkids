@@ -171,6 +171,7 @@
                             <th class="center">Status</th>
                             <th class="center">Percobaan</th>
                             <th>Tanggal Antrian</th>
+
                             <th class="w-1 center">Aksi</th>
                         </tr>
                     @endif
@@ -311,6 +312,7 @@
                                 </td>
                                 <td class="center">{{ $item->execution }} / 3</td>
                                 <td>{{ $item->created_at ? $item->created_at->locale('id')->isoFormat('D MMMM Y HH:mm:s') : '-' }}</td>
+
                                 <td class="center">
                                     @if ($item->status === 'failed')
                                         <button wire:click="retryFailedTasks" class="btn btn-icon text-yellow-600 hover:text-yellow-800" title="Coba Lagi">

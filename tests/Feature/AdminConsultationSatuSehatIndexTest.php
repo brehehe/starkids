@@ -42,7 +42,6 @@ class AdminConsultationSatuSehatIndexTest extends TestCase
             'company_id' => $company->id,
             'name' => 'Starkids Branch Utama',
         ]);
-
         // Create Role
         $role = \App\Models\Spatie\Role::create([
             'name' => 'Super Admin',

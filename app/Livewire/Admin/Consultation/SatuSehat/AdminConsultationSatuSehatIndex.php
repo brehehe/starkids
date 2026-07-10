@@ -451,6 +451,7 @@ class AdminConsultationSatuSehatIndex extends Component
             $dataList = Encounter::whereHas('transaction', function ($query) {
                 $query->where('company_id', auth()->user()->company_id);
             })
+
                 ->when($this->search, function ($query) {
                     $query->whereHas('transaction', function ($q) {
                         $q->where('code', 'ilike', '%'.$this->search.'%')

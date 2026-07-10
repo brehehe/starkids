@@ -18,4 +18,7 @@ Schedule::command('app:stock-opname-command')->everyTwoHours()->withoutOverlappi
 
 Schedule::command('app:api-outbox-daemon')->everyMinute()->withoutOverlapping();
 
-Schedule::command('backup:run')->dailyAt('00:00')->withoutOverlapping();
+Schedule::command('backup:run')
+    ->weekly()
+    ->at('00:00')
+    ->withoutOverlapping();
