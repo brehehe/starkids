@@ -39,10 +39,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Model::preventLazyLoading(! $this->app->isProduction());
 
-        if (config('app.env') !== 'local') {
-            URL::forceScheme('https');
-            $this->app['request']->server->set('HTTPS', true);
-        }
+        // Force all generated URLs to use the exact APP_URL (including port).
+        // This prevents Livewire redirect responses from stripping the port number,
+        // which causes CORS errors when the PHP built-in server rewrites the Host header.
+        URL::forceRootUrl(config('app.url'));
 
         Blade::directive('number', function ($expression) {
             return "<?php echo number_format($expression, 0, ',', '.'); ?>";
