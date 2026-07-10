@@ -92,6 +92,16 @@
                 <span class="text-sm text-gray-700 ml-2">data</span>
             </div>
 
+            @if ($tab === 'patient')
+                <div class="w-full sm:w-48">
+                    <select class="form-control w-full" wire:model.live="nikFilter">
+                        <option value="">Semua NIK</option>
+                        <option value="yes">Ada NIK</option>
+                        <option value="no">Tanpa NIK</option>
+                    </select>
+                </div>
+            @endif
+
             @if ($tab === 'outbox')
                 <div class="w-full sm:w-48">
                     <select class="form-control w-full" wire:model.live="outboxStatus">
@@ -128,11 +138,17 @@
                         <i class="fa-solid fa-arrows-rotate mr-2"></i> Update Ulang Semua Kunjungan (Max 100)
                     </button>
                 @elseif ($tab === 'outbox')
-                    <button wire:click="retryFailedTasks" class="btn btn-warning text-white whitespace-nowrap">
+                    <button wire:click="retryFailedTasks" class="btn btn-warning text-white whitespace-nowrap" title="Masukkan kembali tugas gagal ke antrian">
                         <i class="fa-solid fa-arrows-rotate mr-2"></i> Coba Lagi Gagal
                     </button>
-                    <button wire:click="clearFailedTasks" class="btn btn-danger whitespace-nowrap">
+                    <button wire:click="clearSuccessTasks" class="btn btn-secondary text-white whitespace-nowrap" title="Hapus seluruh riwayat antrian yang sukses">
+                        <i class="fa-solid fa-check mr-2"></i> Hapus Log Sukses
+                    </button>
+                    <button wire:click="clearFailedTasks" class="btn btn-danger whitespace-nowrap" title="Hapus seluruh riwayat antrian yang gagal">
                         <i class="fa-solid fa-trash-can mr-2"></i> Hapus Gagal
+                    </button>
+                    <button wire:click="clearAllTasks" class="btn btn-danger whitespace-nowrap bg-red-800 hover:bg-red-900 border-red-800" title="Hapus seluruh antrian log outbox dari database">
+                        <i class="fa-solid fa-circle-xmark mr-2"></i> Hapus Semua Log
                     </button>
                 @endif
             </div>

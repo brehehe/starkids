@@ -92,6 +92,16 @@
                 <span class="text-sm text-gray-700 ml-2">data</span>
             </div>
 
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($tab === 'patient'): ?>
+                <div class="w-full sm:w-48">
+                    <select class="form-control w-full" wire:model.live="nikFilter">
+                        <option value="">Semua NIK</option>
+                        <option value="yes">Ada NIK</option>
+                        <option value="no">Tanpa NIK</option>
+                    </select>
+                </div>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($tab === 'outbox'): ?>
                 <div class="w-full sm:w-48">
                     <select class="form-control w-full" wire:model.live="outboxStatus">
@@ -128,11 +138,17 @@
                         <i class="fa-solid fa-arrows-rotate mr-2"></i> Update Ulang Semua Kunjungan (Max 100)
                     </button>
                 <?php elseif($tab === 'outbox'): ?>
-                    <button wire:click="retryFailedTasks" class="btn btn-warning text-white whitespace-nowrap">
+                    <button wire:click="retryFailedTasks" class="btn btn-warning text-white whitespace-nowrap" title="Masukkan kembali tugas gagal ke antrian">
                         <i class="fa-solid fa-arrows-rotate mr-2"></i> Coba Lagi Gagal
                     </button>
-                    <button wire:click="clearFailedTasks" class="btn btn-danger whitespace-nowrap">
+                    <button wire:click="clearSuccessTasks" class="btn btn-secondary text-white whitespace-nowrap" title="Hapus seluruh riwayat antrian yang sukses">
+                        <i class="fa-solid fa-check mr-2"></i> Hapus Log Sukses
+                    </button>
+                    <button wire:click="clearFailedTasks" class="btn btn-danger whitespace-nowrap" title="Hapus seluruh riwayat antrian yang gagal">
                         <i class="fa-solid fa-trash-can mr-2"></i> Hapus Gagal
+                    </button>
+                    <button wire:click="clearAllTasks" class="btn btn-danger whitespace-nowrap bg-red-800 hover:bg-red-900 border-red-800" title="Hapus seluruh antrian log outbox dari database">
+                        <i class="fa-solid fa-circle-xmark mr-2"></i> Hapus Semua Log
                     </button>
                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </div>
@@ -171,6 +187,7 @@
                             <th class="center">Status</th>
                             <th class="center">Percobaan</th>
                             <th>Tanggal Antrian</th>
+
                             <th class="w-1 center">Aksi</th>
                         </tr>
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
@@ -311,6 +328,7 @@
                                 </td>
                                 <td class="center"><?php echo e($item->execution); ?> / 3</td>
                                 <td><?php echo e($item->created_at ? $item->created_at->locale('id')->isoFormat('D MMMM Y HH:mm:s') : '-'); ?></td>
+
                                 <td class="center">
                                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($item->status === 'failed'): ?>
                                         <button wire:click="retryFailedTasks" class="btn btn-icon text-yellow-600 hover:text-yellow-800" title="Coba Lagi">

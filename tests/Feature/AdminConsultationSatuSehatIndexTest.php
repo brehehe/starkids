@@ -191,6 +191,74 @@ class AdminConsultationSatuSehatIndexTest extends TestCase
         $this->assertEquals(0, ApiOutboxTask::count());
     }
 
+    public function test_can_clear_success_tasks(): void
+    {
+        $adminUser = User::where('name', 'Admin User')->first();
+
+        ApiOutboxTask::create([
+            'model_classes' => ['App\Models\Patient\OneHealth\OneHealthPatient'],
+            'model_ids' => ['01987918-8494-73e4-ad37-a6ac4934d586'],
+            'service_class' => 'App\Services\OneHealth\Patient\PatientService',
+            'service_method' => 'postPutPatient',
+            'request_body' => json_encode(['foo' => 'bar']),
+            'status' => 'success',
+            'execution' => 1,
+        ]);
+
+        ApiOutboxTask::create([
+            'model_classes' => ['App\Models\Patient\OneHealth\OneHealthPatient'],
+            'model_ids' => ['01987918-8494-73e4-ad37-a6ac4934d587'],
+            'service_class' => 'App\Services\OneHealth\Patient\PatientService',
+            'service_method' => 'postPutPatient',
+            'request_body' => json_encode(['foo' => 'baz']),
+            'status' => 'failed',
+            'execution' => 1,
+        ]);
+
+        $this->assertEquals(2, ApiOutboxTask::count());
+
+        Livewire::actingAs($adminUser)
+            ->test(AdminConsultationSatuSehatIndex::class)
+            ->call('clearSuccessTasks');
+
+        $this->assertEquals(1, ApiOutboxTask::count());
+        $this->assertEquals('failed', ApiOutboxTask::first()->status);
+    }
+
+    public function test_can_clear_failed_tasks(): void
+    {
+        $adminUser = User::where('name', 'Admin User')->first();
+
+        ApiOutboxTask::create([
+            'model_classes' => ['App\Models\Patient\OneHealth\OneHealthPatient'],
+            'model_ids' => ['01987918-8494-73e4-ad37-a6ac4934d586'],
+            'service_class' => 'App\Services\OneHealth\Patient\PatientService',
+            'service_method' => 'postPutPatient',
+            'request_body' => json_encode(['foo' => 'bar']),
+            'status' => 'success',
+            'execution' => 1,
+        ]);
+
+        ApiOutboxTask::create([
+            'model_classes' => ['App\Models\Patient\OneHealth\OneHealthPatient'],
+            'model_ids' => ['01987918-8494-73e4-ad37-a6ac4934d587'],
+            'service_class' => 'App\Services\OneHealth\Patient\PatientService',
+            'service_method' => 'postPutPatient',
+            'request_body' => json_encode(['foo' => 'baz']),
+            'status' => 'failed',
+            'execution' => 1,
+        ]);
+
+        $this->assertEquals(2, ApiOutboxTask::count());
+
+        Livewire::actingAs($adminUser)
+            ->test(AdminConsultationSatuSehatIndex::class)
+            ->call('clearFailedTasks');
+
+        $this->assertEquals(1, ApiOutboxTask::count());
+        $this->assertEquals('success', ApiOutboxTask::first()->status);
+    }
+
     public function test_can_queue_all_syncable_encounters(): void
     {
         $adminUser = User::where('name', 'Admin User')->first();

@@ -274,6 +274,13 @@ class AdminConsultationSatuSehatIndex extends Component
         AlertHelper::success('Berhasil', "Berhasil menyetel ulang {$updated} antrian gagal kembali ke antrian aktif.");
     }
 
+    public function clearSuccessTasks(): void
+    {
+        $deleted = ApiOutboxTask::where('status', 'success')->delete();
+
+        AlertHelper::success('Berhasil', "Berhasil membersihkan {$deleted} antrian yang sukses.");
+    }
+
     public function clearFailedTasks(): void
     {
         $deleted = ApiOutboxTask::where('status', 'failed')->delete();
