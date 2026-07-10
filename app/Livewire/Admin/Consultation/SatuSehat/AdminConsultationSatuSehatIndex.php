@@ -134,13 +134,19 @@ class AdminConsultationSatuSehatIndex extends Component
         $patient = Patient::where('user_id', $transaction->patient_id)->select('id')->first();
         $doctor = Practitioner::where('user_id', $transaction->doctor_id)->select('id')->first();
 
+        if (! $patient) {
+            AlertHelper::info('Dilewati', "Kunjungan transaksi {$transaction->code} dilewati karena data pasien tidak ditemukan.");
+
+            return;
+        }
+
         $data = [
             'pending' => true,
             'id' => $encounter->id,
             'transaction_id' => $transaction->id,
             'company_id' => $transaction->company_id,
             'location_id' => $transaction->location_id,
-            'patient_id' => $patient->id ?? null,
+            'patient_id' => $patient->id,
             'practitioner_id' => $doctor->id ?? null,
             'type' => 'outpatient',
             'status' => 'planned',

@@ -117,20 +117,26 @@ class AdminConsultationConsultationIndex extends Component
             $patient = Patient::where('user_id', $transaction->patient_id)->select('id')->first();
             $doctor = Practitioner::where('user_id', $transaction->doctor_id)->select('id')->first();
 
-            $data = [
-                'pending' => true,
-                'id' => $encounter->id ?? null,
-                'transaction_id' => $transaction->id,
-                'company_id' => $transaction->company_id,
-                'location_id' => $transaction->location_id,
-                'patient_id' => $patient->id ?? null,
-                'practitioner_id' => $doctor->id ?? null,
-                'type' => 'outpatient',
-                'status' => 'cancelled',
-                'class_code' => 'AMB',
-            ];
+            if ($patient) {
+                $data = [
+                    'pending' => true,
+                    'id' => $encounter->id ?? null,
+                    'transaction_id' => $transaction->id,
+                    'company_id' => $transaction->company_id,
+                    'location_id' => $transaction->location_id,
+                    'patient_id' => $patient->id,
+                    'practitioner_id' => $doctor->id ?? null,
+                    'type' => 'outpatient',
+                    'status' => 'cancelled',
+                    'class_code' => 'AMB',
+                ];
 
-            app(apiservice::class)->createTransaction($data);
+                try {
+                    app(apiservice::class)->createTransaction($data);
+                } catch (\Exception $e) {
+                    // Lewati jika data tidak lengkap atau API gagal
+                }
+            }
 
             $this->reverseStockForTransaction($transaction);
 
@@ -187,20 +193,26 @@ class AdminConsultationConsultationIndex extends Component
             $patient = Patient::where('user_id', $transaction->patient_id)->select('id')->first();
             $doctor = Practitioner::where('user_id', $transaction->doctor_id)->select('id')->first();
 
-            $data = [
-                'pending' => true,
-                'id' => $encounter->id ?? null,
-                'transaction_id' => $transaction->id,
-                'company_id' => $transaction->company_id,
-                'location_id' => $transaction->location_id,
-                'patient_id' => $patient->id ?? null,
-                'practitioner_id' => $doctor->id ?? null,
-                'type' => 'outpatient',
-                'status' => 'in-progress',
-                'class_code' => 'AMB',
-            ];
+            if ($patient) {
+                $data = [
+                    'pending' => true,
+                    'id' => $encounter->id ?? null,
+                    'transaction_id' => $transaction->id,
+                    'company_id' => $transaction->company_id,
+                    'location_id' => $transaction->location_id,
+                    'patient_id' => $patient->id,
+                    'practitioner_id' => $doctor->id ?? null,
+                    'type' => 'outpatient',
+                    'status' => 'in-progress',
+                    'class_code' => 'AMB',
+                ];
 
-            app(apiservice::class)->createTransaction($data);
+                try {
+                    app(apiservice::class)->createTransaction($data);
+                } catch (\Exception $e) {
+                    // Lewati jika data tidak lengkap atau API gagal
+                }
+            }
 
             $transaction->update([
                 'status' => 'consultation',

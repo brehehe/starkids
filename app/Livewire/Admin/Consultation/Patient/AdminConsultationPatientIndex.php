@@ -1329,37 +1329,46 @@ class AdminConsultationPatientIndex extends Component
             $patient = Patient::where('user_id', $transaction->patient_id)->select('id')->first();
             $doctor = Practitioner::where('user_id', $transaction->doctor_id)->select('id')->first();
 
-            $data = [
-                'pending' => true,
-                'id' => null,
-                'transaction_id' => $transaction->id,
-                'company_id' => $transaction->company_id,
-                'location_id' => $transaction->location_id,
-                'patient_id' => $patient->id ?? null,
-                'practitioner_id' => $doctor->id ?? null,
-                'type' => 'outpatient',
-                'status' => 'planned',
-                'class_code' => 'AMB',
-            ];
+            if ($patient) {
+                try {
+                    $data = [
+                        'pending' => true,
+                        'id' => null,
+                        'transaction_id' => $transaction->id,
+                        'company_id' => $transaction->company_id,
+                        'location_id' => $transaction->location_id,
+                        'patient_id' => $patient->id,
+                        'practitioner_id' => $doctor->id ?? null,
+                        'type' => 'outpatient',
+                        'status' => 'planned',
+                        'class_code' => 'AMB',
+                    ];
 
-            app(apiservice::class)->createTransaction($data);
+                    app(apiservice::class)->createTransaction($data);
 
-            $encounter = Encounter::where('transaction_id', $transaction->id)->first();
+                    $encounter = Encounter::where('transaction_id', $transaction->id)->first();
 
-            $data = [
-                'pending' => true,
-                'id' => $encounter->id ?? null,
-                'transaction_id' => $transaction->id,
-                'company_id' => $transaction->company_id,
-                'location_id' => $transaction->location_id,
-                'patient_id' => $patient->id ?? null,
-                'practitioner_id' => $doctor->id ?? null,
-                'type' => 'outpatient',
-                'status' => 'arrived',
-                'class_code' => 'AMB',
-            ];
+                    $data = [
+                        'pending' => true,
+                        'id' => $encounter->id ?? null,
+                        'transaction_id' => $transaction->id,
+                        'company_id' => $transaction->company_id,
+                        'location_id' => $transaction->location_id,
+                        'patient_id' => $patient->id,
+                        'practitioner_id' => $doctor->id ?? null,
+                        'type' => 'outpatient',
+                        'status' => 'arrived',
+                        'class_code' => 'AMB',
+                    ];
 
-            app(apiservice::class)->createTransaction($data);
+                    app(apiservice::class)->createTransaction($data);
+                } catch (\Exception $e) {
+                    Log::warning('SatuSehat API skipped for patient transaction', [
+                        'transaction_id' => $transaction->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             Log::info('Patient transaction created', [
                 'transaction_id' => $transaction->id,

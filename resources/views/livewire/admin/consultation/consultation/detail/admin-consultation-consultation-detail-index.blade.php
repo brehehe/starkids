@@ -65,15 +65,21 @@
                     @php
                         use Carbon\Carbon;
 
-                        $birthDate = Carbon::parse($transaction->patient->userDetail->birth_date);
-                        $now = Carbon::now();
-
-                        $years = $birthDate->diff($now)->y;
-                        $months = $birthDate->diff($now)->m;
-                        $days = $birthDate->diff($now)->d;
+                        $birthDateRaw = $transaction?->patient?->userDetail?->birth_date;
+                        if ($birthDateRaw) {
+                            $birthDate = Carbon::parse($birthDateRaw);
+                            $now = Carbon::now();
+                            $years = $birthDate->diff($now)->y;
+                            $months = $birthDate->diff($now)->m;
+                            $days = $birthDate->diff($now)->d;
+                        }
                     @endphp
 
-                    {{ $years }} tahun {{ $months }} bulan {{ $days }} hari
+                    @if ($birthDateRaw)
+                        {{ $years }} tahun {{ $months }} bulan {{ $days }} hari
+                    @else
+                        -
+                    @endif
                 </p>
             </div>
             <div class="md:col-span-2">

@@ -321,7 +321,9 @@ class AdminConsultationConsultationDetailIndex extends Component
         }
 
         $this->transaction = Transaction::with(['patient.userDetail', 'doctor.userDetail', 'controlDoctor', 'location'])->find($this->transaction_id);
-        $this->patient_id = User::find($this->transaction->patient_id)->id;
+        $this->patient_id = $this->transaction?->patient_id
+    ? User::find($this->transaction->patient_id)?->id
+    : null;
         $this->consent_actions = is_array($this->transaction->consent_actions) ? $this->transaction->consent_actions : [];
         $this->consent_signee = is_array($this->transaction->consent_signee) ? $this->transaction->consent_signee : [];
         $this->product_types = Cache::remember('product_types_tindakan_paket', 3600, function () {
