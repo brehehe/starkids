@@ -28,11 +28,12 @@ class GetPatient extends FormRequest
             //
             'company_id' => 'required|uuid',
             'nik' => 'nullable|numeric',
-            'name' => 'required',
+            'name' => 'nullable',
             'user_id' => 'nullable',
             'gender' => 'nullable|string',
             'birth_date' => 'nullable|date',
             'identity_card_mother' => 'nullable',
+            'id_patient' => 'nullable|string',
         ];
     }
 

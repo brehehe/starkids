@@ -162,4 +162,78 @@ class OneHealthPatientSearchTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonPath('data.resource.id', 'satusehat-id-fallback');
     }
+
+    /**
+     * Test search by Patient ID (SatuSehat ID)
+     */
+    public function test_search_by_id(): void
+    {
+        Http::fake([
+            '*/oauth2/v1/accesstoken*' => Http::response([
+                'access_token' => 'mock-access-token-123',
+            ], 200),
+            '*/fhir-r4/v1/Patient/satusehat-id-123' => Http::response([
+                'resourceType' => 'Patient',
+                'id' => 'satusehat-id-123',
+                'active' => true,
+                'name' => [
+                    ['text' => 'John Doe'],
+                ],
+                'gender' => 'male',
+                'birthDate' => '1990-01-01',
+            ], 200),
+        ]);
+
+        $response = $this->getJson('/api/testing/patient/get-nik?'.http_build_query([
+            'company_id' => $this->company->id,
+            'id_patient' => 'satusehat-id-123',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.resource.id', 'satusehat-id-123');
+    }
+
+    /**
+     * Test sequential fallback: ID (not found) -> NIK (found)
+     */
+    public function test_sequential_fallback_id_to_nik(): void
+    {
+        Http::fake([
+            '*/oauth2/v1/accesstoken*' => Http::response([
+                'access_token' => 'mock-access-token-123',
+            ], 200),
+            // Patient ID request fails / returns 404
+            '*/fhir-r4/v1/Patient/wrong-id' => Http::response([
+                'resourceType' => 'OperationOutcome',
+                'issue' => [['severity' => 'error', 'code' => 'not-found']],
+            ], 404),
+            // NIK request succeeds
+            '*/fhir-r4/v1/Patient?identifier=https%3A%2F%2Ffhir.kemkes.go.id%2Fid%2Fnik%7C3515155012910001' => Http::response([
+                'resourceType' => 'Bundle',
+                'entry' => [
+                    [
+                        'resource' => [
+                            'resourceType' => 'Patient',
+                            'id' => 'satusehat-id-fallback-nik',
+                            'identifier' => [
+                                ['system' => 'https://fhir.kemkes.go.id/id/nik', 'value' => '3515155012910001'],
+                            ],
+                            'name' => [['text' => 'Budi Santoso']],
+                            'gender' => 'male',
+                            'birthDate' => '1991-12-15',
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->getJson('/api/testing/patient/get-nik?'.http_build_query([
+            'company_id' => $this->company->id,
+            'id_patient' => 'wrong-id',
+            'nik' => '3515155012910001',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.resource.id', 'satusehat-id-fallback-nik');
+    }
 }

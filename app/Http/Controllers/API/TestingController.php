@@ -343,13 +343,18 @@ class TestingController extends BaseController
             }
         }
 
-        // get patient by user_id first, fallback to NIK
+        // get patient by user_id first, fallback to NIK or id_patient
         $get_patient = null;
         if (! empty($validatedData['user_id'])) {
             $get_patient = Patient::where('user_id', $validatedData['user_id'])->first();
         }
         if (! $get_patient && ! empty($validatedData['nik'])) {
             $get_patient = Patient::findByIdentityCard($validatedData['nik']);
+        }
+        if (! $get_patient && ! empty($validatedData['id_patient'])) {
+            $get_patient = Patient::whereHas('OHPatient', function ($q) use ($validatedData) {
+                $q->where('id_patient', $validatedData['id_patient']);
+            })->first();
         }
 
         try {
@@ -387,7 +392,7 @@ class TestingController extends BaseController
                 'user_id' => $validatedData['user_id'] ?? null,
                 'company_id' => $company?->id,
                 'id_patient' => $data['resource']['id'] ?? null,
-                'name' => $validatedData['name'] ?? $data['resource']['name'][0]['text'],
+                'name' => $validatedData['name'] ?? $data['resource']['name'][0]['text'] ?? null,
                 'email' => null,
                 'gender' => $gender,
                 'birth_date' => $birthDate,

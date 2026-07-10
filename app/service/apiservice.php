@@ -123,16 +123,47 @@ class apiservice
 
     public function createUser(User $user, bool $identity_card_mother = false): array
     {
+        $userDetail = $user->userDetail;
+
+        $gender = $userDetail?->administrative_gender;
+        $birthDate = $userDetail?->birth_date;
+        $deceasedDate = $userDetail?->deceased_date;
+        $identityCard = $userDetail?->identity_card;
+        $passportNumber = $userDetail?->passport_number;
+        $familyCardNumber = $userDetail?->family_card_number;
+        $maritalStatus = $userDetail?->marital_status;
+        $provinceCode = $userDetail?->province_code;
+        $cityCode = $userDetail?->city_code;
+        $districtCode = $userDetail?->district_code;
+        $subDistrictCode = $userDetail?->sub_district_code;
+        $address = $userDetail?->address;
+        $postalCode = $userDetail?->postal_code;
+        $rt = $userDetail?->rt;
+        $rw = $userDetail?->rw;
+
+        if (config('app.env') === 'local' || config('app.env') === 'testing') {
+            $gender = $gender ?: 'male';
+            $maritalStatus = $maritalStatus ?: 'U';
+            $provinceCode = $provinceCode ?: '35';
+            $cityCode = $cityCode ?: '3578';
+            $districtCode = $districtCode ?: '357801';
+            $subDistrictCode = $subDistrictCode ?: '3578011001';
+            $address = $address ?: 'Jl. Raya Mediction';
+            $postalCode = $postalCode ?: '60111';
+            $rt = $rt ?: '001';
+            $rw = $rw ?: '001';
+        }
+
         // Langkah 1: Cek apakah sudah ada pasien berdasarkan company_id, nik, dan name
         $checkResponse = $this->withHeaders([
             'Accept' => 'application/json',
         ])->get($this->url.'/testing/patient/get-nik', [
             'company_id' => $user->company_id,
-            'nik' => $user->userDetail->identity_card,
+            'nik' => $identityCard,
             'name' => $user->name,
             'user_id' => $user->id,
-            'gender' => $user->userDetail->administrative_gender,
-            'birth_date' => $user->userDetail->birth_date ? $user->userDetail->birth_date->format('Y-m-d') : null,
+            'gender' => $gender,
+            'birth_date' => $birthDate ? $birthDate->format('Y-m-d') : null,
             'identity_card_mother' => $identity_card_mother ? 1 : 0,
         ]);
 
@@ -162,33 +193,33 @@ class apiservice
             'company_id' => $user->company_id,
             'name' => $user->name,
             'email' => $user->email,
-            'gender' => $user->userDetail->administrative_gender,
-            'birth_date' => $user->userDetail->birth_date,
-            'deceased_date' => $user->userDetail->deceased_date,
-            'identity_card' => $user->userDetail->identity_card,
-            'passport_number' => $user?->userDetail?->passport_number,
-            'family_card_number' => $user?->userDetail?->family_card_number,
-            'marital_status' => $user->userDetail->marital_status,
+            'gender' => $gender ?? 'male',
+            'birth_date' => $birthDate ? $birthDate->format('Y-m-d') : null,
+            'deceased_date' => $deceasedDate ? $deceasedDate->format('Y-m-d') : null,
+            'identity_card' => $identityCard,
+            'passport_number' => $passportNumber,
+            'family_card_number' => $familyCardNumber,
+            'marital_status' => $maritalStatus ?? 'U',
             'identity_card_mother' => $identity_card_mother,
             'status' => 'active',
             'patient_detail' => [
                 'province' => [
-                    'code' => $user->userDetail->province_code,
+                    'code' => $provinceCode,
                 ],
                 'city' => [
-                    'code' => $user->userDetail->city_code,
+                    'code' => $cityCode,
                 ],
                 'district' => [
-                    'code' => $user->userDetail->district_code,
+                    'code' => $districtCode,
                 ],
                 'sub_district' => [
-                    'code' => $user->userDetail->sub_district_code,
+                    'code' => $subDistrictCode,
                 ],
-                'address' => $user->userDetail->address,
-                'postal_code' => $user->userDetail->postal_code,
+                'address' => $address,
+                'postal_code' => $postalCode,
                 'country' => 'ID',
-                'rt' => $user->userDetail->rt,
-                'rw' => $user->userDetail->rw,
+                'rt' => $rt,
+                'rw' => $rw,
                 'longitude' => 0,
                 'latitude' => 0,
                 'altitude' => 0,
@@ -205,6 +236,18 @@ class apiservice
             'status_code' => $response->status(),
             'success' => $response->successful(),
         ]);
+
+        if (! $response->successful()) {
+            $msg = $responseData['message'] ?? 'Gagal menambahkan pasien ke antrian';
+            if (! empty($responseData['errors'])) {
+                $details = [];
+                foreach ($responseData['errors'] as $field => $errs) {
+                    $details[] = implode(', ', $errs);
+                }
+                $msg .= ' ('.implode('; ', $details).')';
+            }
+            throw new \Exception($msg);
+        }
 
         return $responseData;
     }
@@ -312,6 +355,18 @@ class apiservice
             'status_code' => $response->status(),
             'success' => $response->successful(),
         ]);
+
+        if (! $response->successful()) {
+            $msg = $responseData['message'] ?? 'Gagal menambahkan kunjungan ke antrian';
+            if (! empty($responseData['errors'])) {
+                $details = [];
+                foreach ($responseData['errors'] as $field => $errs) {
+                    $details[] = implode(', ', $errs);
+                }
+                $msg .= ' ('.implode('; ', $details).')';
+            }
+            throw new \Exception($msg);
+        }
 
         return $responseData;
     }

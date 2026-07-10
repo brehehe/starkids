@@ -32,6 +32,12 @@ class PatientService
         $OHPatient->refresh();
         $OHOrganization->refresh();
 
+        Log::info('[PatientService] postPutPatient routing', [
+            'has_id_patient' => ! empty($OHPatient?->id_patient),
+            'id_patient' => $OHPatient?->id_patient,
+            'pending' => $pending,
+        ]);
+
         if ($OHPatient?->id_patient) {
             return $this->patchPatient($OHPatient, $OHOrganization, $pending, $requestBody);
         } else {
@@ -53,11 +59,11 @@ class PatientService
                 'name' => [
                     [
                         'use' => $OHPatient?->name_use,
-                        'text' => $OHPatient?->name_text,
+                        'text' => ucwords(strtolower(trim($OHPatient?->name_text ?? ''))),
                     ],
                 ],
                 'gender' => $OHPatient?->gender,
-                'birthDate' => $OHPatient?->birth_date?->format('Y-m-d'),
+                'birthDate' => $OHPatient?->getRawOriginal('birth_date'),
                 'deceasedBoolean' => $OHPatient?->deceased_boolean,
                 'address' => [
                     [
@@ -125,9 +131,43 @@ class PatientService
 
         // going to API
         $company = Company::find($OHOrganization?->company?->id);
+
+        // 1. GET check: step-by-step fallback chain before attempting POST
+        $existingPatient = $this->searchPatientInSatuSehat($request, $OHPatient, $OHOrganization, $company);
+        // Reload company after potential token refresh inside searchPatientInSatuSehat
+        $company = Company::find($OHOrganization?->company?->id);
+
+        Log::info('[PatientService] searchPatientInSatuSehat result', [
+            'found' => ! is_null($existingPatient),
+            'satusehat_id' => $existingPatient['id'] ?? null,
+        ]);
+
+        if ($existingPatient && isset($existingPatient['id'])) {
+            $OHPatient->updateQuietly([
+                'id_patient' => $existingPatient['id'],
+            ]);
+
+            Log::info('Patient already exists in SatuSehat, skipped POST and updated ID', $existingPatient);
+
+            return $existingPatient;
+        }
+
+        // 2. CREATE: POST to register if not found
+        Log::info('[PatientService] POST /Patient request payload', [
+            'name' => $request['name'] ?? null,
+            'birthDate' => $request['birthDate'] ?? null,
+            'gender' => $request['gender'] ?? null,
+            'identifier' => $request['identifier'] ?? null,
+        ]);
+
         $response = Http::withToken($company?->one_health_access_token ?? '')
             ->withOptions(['verify' => false])
             ->post($this->url.'/Patient', $request);
+
+        Log::info('[PatientService] POST /Patient response status', [
+            'status' => $response->status(),
+            'successful' => $response->successful(),
+        ]);
 
         if ($response->unauthorized()) {
             $this->accessToken($OHOrganization?->company);
@@ -155,7 +195,118 @@ class PatientService
         return $responseBody;
     }
 
-    private function getIdentifier($OHPatient)
+    /**
+     * Step-by-step fallback search chain for a patient in SatuSehat.
+     *
+     * Steps (returns first match found):
+     *  1. GET by NIK IBU + birthdate       (newborn/bayi)
+     *  2. GET by NIK                        (regular patient)
+     *  3. GET by Name + NIK                 (combined search)
+     *  4. GET by Name + Birthdate + Gender  (last fallback when no NIK)
+     *
+     * @param  array<string, mixed>  $request
+     * @param  mixed  $OHPatient
+     * @param  mixed  $OHOrganization
+     * @param  mixed  $company
+     * @return array<string, mixed>|null
+     */
+    private function searchPatientInSatuSehat(array $request, $OHPatient, $OHOrganization, &$company): ?array
+    {
+        $nik = null;
+        $isNewborn = (bool) ($OHPatient->patient?->identity_card_mother ?? false);
+        $birthDate = $request['birthDate'] ?? null;
+        $gender = $request['gender'] ?? null;
+        $nameText = null;
+
+        foreach ($request['identifier'] ?? [] as $identifier) {
+            if ($identifier['system'] === 'https://fhir.kemkes.go.id/id/nik') {
+                $nik = $identifier['value'];
+            } elseif ($identifier['system'] === 'https://fhir.kemkes.go.id/id/nik-ibu') {
+                $nik = $identifier['value'];
+                $isNewborn = true;
+            }
+        }
+
+        foreach ($request['name'] ?? [] as $nameObj) {
+            $nameText = $nameObj['text'] ?? $nameText;
+        }
+
+        $steps = [];
+
+        // Step 1: GET by NIK IBU + birthdate (for newborns)
+        if ($isNewborn && $nik && $birthDate) {
+            $steps[] = [
+                'label' => 'NIK IBU + birthdate',
+                'params' => [
+                    'identifier' => 'https://fhir.kemkes.go.id/id/nik-ibu|'.$nik,
+                    'birthdate' => $birthDate,
+                ],
+            ];
+        }
+
+        // Step 2: GET by NIK (regular patient)
+        if ($nik && ! $isNewborn) {
+            $steps[] = [
+                'label' => 'NIK',
+                'params' => [
+                    'identifier' => 'https://fhir.kemkes.go.id/id/nik|'.$nik,
+                ],
+            ];
+        }
+
+        // Step 3: GET by Name + NIK (combined)
+        if ($nameText && $nik && ! $isNewborn) {
+            $steps[] = [
+                'label' => 'Name + NIK',
+                'params' => [
+                    'name' => $nameText,
+                    'identifier' => 'https://fhir.kemkes.go.id/id/nik|'.$nik,
+                ],
+            ];
+        }
+
+        // Step 4: GET by Name + Birthdate + Gender (last fallback)
+        if ($nameText && $birthDate && $gender) {
+            $steps[] = [
+                'label' => 'Name + Birthdate + Gender',
+                'params' => [
+                    'name' => $nameText,
+                    'birthdate' => $birthDate,
+                    'gender' => $gender,
+                ],
+            ];
+        }
+
+        foreach ($steps as $step) {
+            $response = Http::withToken($company?->one_health_access_token ?? '')
+                ->withOptions(['verify' => false])
+                ->get($this->url.'/Patient', $step['params']);
+
+            if ($response->unauthorized()) {
+                $this->accessToken($OHOrganization?->company);
+                $company = Company::find($OHOrganization?->company?->id);
+
+                $response = Http::withToken($company?->one_health_access_token ?? '')
+                    ->withOptions(['verify' => false])
+                    ->get($this->url.'/Patient', $step['params']);
+            }
+
+            if ($response->successful()) {
+                $body = $response->json();
+                $found = $body['entry'][0]['resource'] ?? null;
+
+                if ($found && isset($found['id'])) {
+                    Log::info('Patient found at SatuSehat via step: '.$step['label'], ['satusehat_id' => $found['id']]);
+
+                    return $found;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function getIdentifier($OHPatient): array
     {
         $identifiers = [];
         // set identifier
@@ -211,7 +362,7 @@ class PatientService
                     'value' => [
                         [
                             'use' => $OHPatient?->name_use,
-                            'text' => $OHPatient?->name_text,
+                            'text' => ucwords(strtolower(trim($OHPatient?->name_text ?? ''))),
                         ],
                     ],
                 ],
@@ -221,7 +372,7 @@ class PatientService
                     'value' => [
                         [
                             'use' => $OHPatient?->name_use,
-                            'text' => $OHPatient?->name_text,
+                            'text' => ucwords(strtolower(trim($OHPatient?->name_text ?? ''))),
                         ],
                     ],
                 ],
@@ -238,12 +389,12 @@ class PatientService
                 [
                     'op' => 'test',
                     'path' => '/birthDate',
-                    'value' => $OHPatient?->birth_date?->format('Y-m-d'),
+                    'value' => $OHPatient?->getRawOriginal('birth_date'),
                 ],
                 [
                     'op' => 'replace',
                     'path' => '/birthDate',
-                    'value' => $OHPatient?->birth_date?->format('Y-m-d'),
+                    'value' => $OHPatient?->getRawOriginal('birth_date'),
                 ],
                 [
                     'op' => 'replace',
@@ -291,7 +442,6 @@ class PatientService
             if (! $identifier_nik) {
                 unset($request[6]);
             }
-
         } else {
             $request = $requestBody;
         }
@@ -314,6 +464,14 @@ class PatientService
 
         // going to API
         $company = Company::find($OHOrganization?->company?->id);
+
+        Log::info('[PatientService] patchPatient PATCH payload', [
+            'id_patient' => $OHPatient?->id_patient,
+            'name_text' => $OHPatient?->name_text,
+            'birth_date' => $OHPatient?->birth_date?->format('Y-m-d'),
+            'request_preview' => array_map(fn ($r) => ['op' => $r['op'] ?? null, 'path' => $r['path'] ?? null], is_array($request) ? array_values($request) : []),
+        ]);
+
         $response = Http::withToken($company?->one_health_access_token ?? '')
             ->withOptions(['verify' => false])
             ->patch($this->url.'/Patient/'.$OHPatient?->id_patient, $request);
@@ -351,41 +509,66 @@ class PatientService
         $company = Company::find($company->id);
 
         $responseBody = null;
-        $hasNik = ! empty($request['nik']) && empty($request['identity_card_mother']);
-        $isNewborn = ! empty($request['identity_card_mother']) && ! empty($request['nik']);
+        $idPatient = $request['id_patient'] ?? $request['id'] ?? null;
+        $nik = $request['nik'] ?? null;
+        $name = $request['name'] ?? null;
+        $gender = $request['gender'] ?? null;
+        $birthDate = $request['birth_date'] ?? $request['birthdate'] ?? null;
 
-        if ($hasNik) {
-            // 1. Cari berdasarkan NIK
-            $param = [
-                'identifier' => 'https://fhir.kemkes.go.id/id/nik|'.$request['nik'],
-            ];
-            $responseBody = $this->queryPatientApi($param, $company);
-        } elseif ($isNewborn) {
-            // 2. Cari berdasarkan NIK Ibu
-            $param = [
-                'identifier' => 'https://fhir.kemkes.go.id/id/nik-ibu|'.$request['nik'],
-            ];
-            $responseBody = $this->queryPatientApi($param, $company);
-        } else {
-            // 3. Cari berdasarkan Nama + Tanggal Lahir + Gender
-            $gender = $request['gender'] ?? null;
-            $birthDate = null;
-            if (! empty($request['birth_date'])) {
-                $birthDate = Carbon::parse($request['birth_date'])->format('Y-m-d');
-            }
-            $param = [
-                'name' => $request['name'] ?? null,
-                'birthdate' => $birthDate,
-                'gender' => $gender,
-            ];
-            $param = array_filter($param);
+        // 1. Cari berdasarkan ID SatuSehat
+        if ($idPatient) {
+            try {
+                $response = Http::withToken($company->one_health_access_token ?? '')
+                    ->withOptions(['verify' => false])
+                    ->get($this->url.'/Patient/'.$idPatient);
 
-            if (! empty($param['name']) && ! empty($param['birthdate']) && ! empty($param['gender'])) {
-                $responseBody = $this->queryPatientApi($param, $company);
+                if ($response->unauthorized()) {
+                    $this->accessToken($company);
+                    $company = Company::find($company->id);
+
+                    $response = Http::withToken($company->one_health_access_token ?? '')
+                        ->withOptions(['verify' => false])
+                        ->get($this->url.'/Patient/'.$idPatient);
+                }
+
+                if ($response->successful()) {
+                    $responseBody = [
+                        'resourceType' => 'Bundle',
+                        'entry' => [
+                            [
+                                'resource' => $response->json(),
+                            ],
+                        ],
+                    ];
+                }
+            } catch (\Throwable $th) {
+                Log::warning('Failed search patient by ID fallback to NIK: '.$th->getMessage());
             }
         }
 
-        if (! $responseBody) {
+        // 2. Cari berdasarkan NIK jika belum ditemukan
+        if ((! $responseBody || (isset($responseBody['entry']) && empty($responseBody['entry']))) && $nik) {
+            $isNewborn = ! empty($request['identity_card_mother']);
+            $identifierSystem = $isNewborn ? 'https://fhir.kemkes.go.id/id/nik-ibu|' : 'https://fhir.kemkes.go.id/id/nik|';
+
+            $param = [
+                'identifier' => $identifierSystem.$nik,
+            ];
+            $responseBody = $this->queryPatientApi($param, $company);
+        }
+
+        // 3. Cari berdasarkan Nama + Tanggal Lahir + Gender jika belum ditemukan
+        if ((! $responseBody || (isset($responseBody['entry']) && empty($responseBody['entry']))) && $name && $birthDate && $gender) {
+            $formattedBirthDate = Carbon::parse($birthDate)->format('Y-m-d');
+            $param = [
+                'name' => $name,
+                'birthdate' => $formattedBirthDate,
+                'gender' => $gender,
+            ];
+            $responseBody = $this->queryPatientApi($param, $company);
+        }
+
+        if (! $responseBody || (isset($responseBody['entry']) && empty($responseBody['entry']))) {
             return [
                 'success' => false,
                 'message' => 'Pasien tidak ditemukan di Satu Sehat',

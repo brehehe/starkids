@@ -1,1 +1,0 @@
-<?php /**PATH /Users/macbookair/Documents/mediction/mediction.id/resources/views/components/layouts/app/header.blade.php ENDPATH**/ ?>

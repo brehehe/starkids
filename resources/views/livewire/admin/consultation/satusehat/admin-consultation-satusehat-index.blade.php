@@ -121,8 +121,11 @@
                         <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkron Semua Pasien (Max 100)
                     </button>
                 @elseif ($tab === 'encounter')
-                    <button wire:click="queueAllUnsyncedEncounters" class="btn btn-primary whitespace-nowrap">
-                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkron Semua Kunjungan (Max 100)
+                    <button wire:click="queueAllUnsyncedEncounters" class="btn btn-primary whitespace-nowrap" title="Sinkronkan hanya kunjungan yang belum pernah sinkron">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkron Kunjungan Baru (Max 100)
+                    </button>
+                    <button wire:click="queueAllSyncableEncounters" class="btn btn-success text-white whitespace-nowrap" title="Sinkronkan/Update ulang semua data kunjungan dari pasien yang sudah tersinkron">
+                        <i class="fa-solid fa-arrows-rotate mr-2"></i> Update Ulang Semua Kunjungan (Max 100)
                     </button>
                 @elseif ($tab === 'outbox')
                     <button wire:click="retryFailedTasks" class="btn btn-warning text-white whitespace-nowrap">
@@ -168,7 +171,6 @@
                             <th class="center">Status</th>
                             <th class="center">Percobaan</th>
                             <th>Tanggal Antrian</th>
-                            <th>Respon / Error</th>
                             <th class="w-1 center">Aksi</th>
                         </tr>
                     @endif
@@ -183,12 +185,40 @@
                                 <td>{{ $item->userDetail->administrative_gender === 'male' ? 'Laki-laki' : ($item->userDetail->administrative_gender === 'female' ? 'Perempuan' : '-') }}</td>
                                 <td>{{ $item->userDetail->birth_date ? \Carbon\Carbon::parse($item->userDetail->birth_date)->locale('id')->isoFormat('D MMMM Y') : '-' }}</td>
                                 <td class="center">
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Belum Sync</span>
+                                    @php
+                                        $task = $outboxStatuses[$item->patient?->OHPatient?->id ?? ''] ?? null;
+                                    @endphp
+                                    @if (!$task)
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">Belum Sync</span>
+                                    @elseif ($task->status === 'pending')
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800" title="Menunggu antrian">Antrian Pending</span>
+                                    @elseif ($task->status === 'process')
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800" title="Sedang diproses"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Memproses</span>
+                                    @elseif ($task->status === 'failed')
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 cursor-pointer" title="{{ $this->formatResponseBody($task->response_body) }}">Gagal Sync</span>
+                                    @else
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Sukses</span>
+                                    @endif
                                 </td>
                                 <td class="center">
-                                    <button wire:click="queuePatient('{{ $item->id }}')" class="btn btn-icon text-blue-600 hover:text-blue-800" title="Sinkronkan Pasien">
-                                        <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
-                                    </button>
+                                    @php
+                                        $isQueueing = $task && in_array($task->status, ['pending', 'process']);
+                                    @endphp
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button wire:click="queuePatient('{{ $item->id }}')" 
+                                                class="btn btn-icon text-blue-600 hover:text-blue-800 disabled:text-gray-300" 
+                                                title="Sinkronkan Pasien"
+                                                @if($isQueueing) disabled @endif>
+                                            <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                                        </button>
+                                        @if ($task)
+                                            <button wire:click="editTask('{{ $task->id }}')" 
+                                                    class="btn btn-icon text-yellow-600 hover:text-yellow-800" 
+                                                    title="Lihat/Edit Payload Antrian">
+                                                <i class="fa-solid fa-pen-to-square text-lg"></i>
+                                            </button>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @elseif ($tab === 'encounter')
@@ -199,12 +229,66 @@
                                 <td>{{ $item->transaction->doctor_name ?? '-' }}</td>
                                 <td>{{ $item->transaction->date ? \Carbon\Carbon::parse($item->transaction->date)->locale('id')->isoFormat('D MMMM Y') : '-' }}</td>
                                 <td class="center">
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Belum Sync</span>
+                                    @php
+                                        $task = $outboxStatuses[$item->OHEncounter?->id ?? ''] ?? null;
+                                        $hasRemoteId = $item->OHEncounter?->id_encounter !== null;
+                                        $patientSynced = $item->transaction->patient?->patient?->OHPatient?->id_patient !== null;
+                                    @endphp
+                                    @if (!$patientSynced)
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-50 text-red-700 border border-red-200" title="Pasien belum memiliki ID SatuSehat. Sinkronisasi akan mendaftarkan pasien secara otomatis terlebih dahulu.">Pasien Belum Sync</span>
+                                    @elseif ($task)
+                                        @if ($task->status === 'pending')
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800" title="Menunggu antrian">Antrian Pending</span>
+                                        @elseif ($task->status === 'process')
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800" title="Sedang diproses"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Memproses</span>
+                                        @elseif ($task->status === 'failed')
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 cursor-pointer" title="{{ $this->formatResponseBody($task->response_body) }}">Gagal Sync</span>
+                                        @else
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Sukses</span>
+                                        @endif
+                                    @else
+                                        @if ($hasRemoteId)
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800" title="ID: {{ $item->OHEncounter?->id_encounter }}">Sukses Sync</span>
+                                        @else
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">Belum Sync</span>
+                                        @endif
+                                    @endif
                                 </td>
                                 <td class="center">
-                                    <button wire:click="queueEncounter('{{ $item->id }}')" class="btn btn-icon text-blue-600 hover:text-blue-800" title="Sinkronkan Kunjungan">
-                                        <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
-                                    </button>
+                                    @php
+                                        $isQueueing = $task && in_array($task->status, ['pending', 'process']);
+                                    @endphp
+                                    <div class="flex items-center justify-center gap-2">
+                                        @if (!$patientSynced)
+                                            <button wire:click="queueEncounter('{{ $item->id }}')" 
+                                                    class="btn btn-icon text-blue-600 hover:text-blue-800 disabled:text-gray-300" 
+                                                    title="Sinkronkan Pasien & Kunjungan"
+                                                    @if($isQueueing) disabled @endif>
+                                                <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                                            </button>
+                                        @elseif ($hasRemoteId)
+                                            <button wire:click="queueEncounter('{{ $item->id }}')" 
+                                                    class="btn btn-icon text-green-600 hover:text-green-800 disabled:text-gray-300" 
+                                                    title="Update Status / Sync Ulang Kunjungan"
+                                                    @if($isQueueing) disabled @endif>
+                                                <i class="fa-solid fa-arrows-rotate text-lg"></i>
+                                            </button>
+                                        @else
+                                            <button wire:click="queueEncounter('{{ $item->id }}')" 
+                                                    class="btn btn-icon text-blue-600 hover:text-blue-800 disabled:text-gray-300" 
+                                                    title="Sinkronkan Kunjungan"
+                                                    @if($isQueueing) disabled @endif>
+                                                <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                                            </button>
+                                        @endif
+                                        @if ($task)
+                                            <button wire:click="editTask('{{ $task->id }}')" 
+                                                    class="btn btn-icon text-yellow-600 hover:text-yellow-800" 
+                                                    title="Lihat/Edit Payload Antrian">
+                                                <i class="fa-solid fa-pen-to-square text-lg"></i>
+                                            </button>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @elseif ($tab === 'outbox')
@@ -227,15 +311,6 @@
                                 </td>
                                 <td class="center">{{ $item->execution }} / 3</td>
                                 <td>{{ $item->created_at ? $item->created_at->locale('id')->isoFormat('D MMMM Y HH:mm:s') : '-' }}</td>
-                                <td>
-                                    @if ($item->response_body)
-                                        <div class="max-w-xs truncate text-xs text-gray-500" title="{{ $item->response_body }}">
-                                            {{ $item->response_body }}
-                                        </div>
-                                    @else
-                                        <span class="text-xs text-gray-400">-</span>
-                                    @endif
-                                </td>
                                 <td class="center">
                                     @if ($item->status === 'failed')
                                         <button wire:click="retryFailedTasks" class="btn btn-icon text-yellow-600 hover:text-yellow-800" title="Coba Lagi">
@@ -249,7 +324,7 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="7" class="p-8 text-center text-gray-400">
+                            <td colspan="6" class="p-8 text-center text-gray-400">
                                 <i class="fa-solid fa-inbox text-3xl mb-2 block"></i>
                                 Tidak ada data yang ditemukan.
                             </td>

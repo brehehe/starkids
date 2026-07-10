@@ -1,1 +1,0 @@
-<?php /**PATH /Users/macbookair/Documents/mediction/mediction.id/resources/views/content/dashboard/modal-dashboard.blade.php ENDPATH**/ ?>
