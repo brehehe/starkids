@@ -146,9 +146,9 @@ class Location extends Model
         }
 
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%'.$search.'%')
-                ->orWhere('description', 'like', '%'.$search.'%')
-                ->orWhere('slug', 'like', '%'.$search.'%');
+            $q->where('name', 'ilike', '%'.$search.'%')
+                ->orWhere('description', 'ilike', '%'.$search.'%')
+                ->orWhere('slug', 'ilike', '%'.$search.'%');
         });
     }
 

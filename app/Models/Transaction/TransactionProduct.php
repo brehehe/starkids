@@ -44,15 +44,15 @@ class TransactionProduct extends Model
     {
         if (trim($search) !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('product_name', 'like', '%'.$search.'%')
-                    ->orWhere('id', 'like', '%'.$search.'%')
+                $q->where('product_name', 'ilike', '%'.$search.'%')
+                    ->orWhere('id', 'ilike', '%'.$search.'%')
                     ->orWhereHas('product', function ($q) use ($search) {
-                        $q->where('sku_number', 'like', '%'.$search.'%')
-                            ->orWhere('name', 'like', '%'.$search.'%');
+                        $q->where('sku_number', 'ilike', '%'.$search.'%')
+                            ->orWhere('name', 'ilike', '%'.$search.'%');
                     })
                     ->orWhereHas('transaction', function ($q) use ($search) {
-                        $q->where('code', 'like', '%'.$search.'%')
-                            ->orWhere('patient_name', 'like', '%'.$search.'%');
+                        $q->where('code', 'ilike', '%'.$search.'%')
+                            ->orWhere('patient_name', 'ilike', '%'.$search.'%');
                     });
             });
         }

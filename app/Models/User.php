@@ -287,6 +287,7 @@ class User extends Authenticatable
                 ->orWhere('email', 'ilike', "%{$search}%")
                 ->orWhere('phone', 'ilike', "%{$search}%")
                 ->orWhere('username', 'ilike', "%{$search}%")
+                ->orWhereRaw('similarity(name, ?) > 0.3', [$search])
                 ->orWhereHas('companyRoles', function ($r) use ($search) {
                     $r->where('medical_record_number', 'ilike', "%{$search}%")
                         ->orWhereHas('role', function ($qr) use ($search) {

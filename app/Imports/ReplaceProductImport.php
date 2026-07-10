@@ -153,7 +153,7 @@ class ReplaceProductImport implements ToCollection, WithBatchInserts, WithChunkR
 
         if (! $product) {
             // Try to find by name
-            $product = Product::where('name', 'LIKE', '%'.$row['product_name'].'%')->first();
+            $product = Product::where('name', 'ilike', '%'.$row['product_name'].'%')->first();
         }
 
         if (! $product) {

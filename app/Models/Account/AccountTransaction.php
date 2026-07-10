@@ -39,14 +39,14 @@ class AccountTransaction extends Model
     public function scopeSearch($query, $search)
     {
         if ($search) {
-            $query->where('description', 'like', '%'.$search.'%')
-                ->orWhere('date', 'like', '%'.$search.'%')
-                ->orWhere('debit', 'like', '%'.$search.'%')
-                ->orWhere('credit', 'like', '%'.$search.'%')
+            $query->where('description', 'ilike', '%'.$search.'%')
+                ->orWhere('date', 'ilike', '%'.$search.'%')
+                ->orWhere('debit', 'ilike', '%'.$search.'%')
+                ->orWhere('credit', 'ilike', '%'.$search.'%')
                 ->orWhereHas('account', function ($q) use ($search) {
-                    $q->where('name', 'like', '%'.$search.'%');
+                    $q->where('name', 'ilike', '%'.$search.'%');
                 })->orWhereHas('journal', function ($q) use ($search) {
-                    $q->where('code', 'like', '%'.$search.'%');
+                    $q->where('code', 'ilike', '%'.$search.'%');
                 });
         }
 

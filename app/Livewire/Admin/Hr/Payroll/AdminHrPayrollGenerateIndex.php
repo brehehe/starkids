@@ -244,7 +244,7 @@ class AdminHrPayrollGenerateIndex extends Component
             ->where('period', $this->filterPeriod)
             ->where(function ($query) {
                 $query->whereHas('user', function ($q) {
-                    $q->where('name', 'like', '%'.$this->search.'%');
+                    $q->where('name', 'ilike', '%'.$this->search.'%');
                 });
             })
             ->orderBy('created_at', 'desc')

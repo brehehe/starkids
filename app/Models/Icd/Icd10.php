@@ -26,9 +26,9 @@ class Icd10 extends Model
     public function scopeSearch($query, $search)
     {
         if ($search) {
-            return $query->where('code', 'like', '%'.$search.'%')
-                ->orWhere('display', 'like', '%'.$search.'%')
-                ->orWhere('version', 'like', '%'.$search.'%');
+            return $query->where('code', 'ilike', '%'.$search.'%')
+                ->orWhere('display', 'ilike', '%'.$search.'%')
+                ->orWhere('version', 'ilike', '%'.$search.'%');
         }
 
         return $query;

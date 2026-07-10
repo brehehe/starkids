@@ -27,8 +27,8 @@ class UserType extends Model
     public function scopeSearch($query, $search)
     {
         if ($search) {
-            return $query->where('name', 'like', '%'.$search.'%')
-                ->orWhere('description', 'like', '%'.$search.'%');
+            return $query->where('name', 'ilike', '%'.$search.'%')
+                ->orWhere('description', 'ilike', '%'.$search.'%');
         }
 
         return $query;

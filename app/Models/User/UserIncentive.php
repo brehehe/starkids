@@ -27,16 +27,16 @@ class UserIncentive extends Model
 
     public function scopeSearch($query, $search)
     {
-        return $query->where('amount', 'like', '%'.$search.'%')
-            ->orWhere('month', 'like', '%'.$search.'%')
-            ->orWhere('year', 'like', '%'.$search.'%')
-            ->orWhere('status', 'like', '%'.$search.'%')
+        return $query->where('amount', 'ilike', '%'.$search.'%')
+            ->orWhere('month', 'ilike', '%'.$search.'%')
+            ->orWhere('year', 'ilike', '%'.$search.'%')
+            ->orWhere('status', 'ilike', '%'.$search.'%')
             ->orWhereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', '%'.$search.'%')
-                    ->orWhere('email', 'like', '%'.$search.'%');
+                $q->where('name', 'ilike', '%'.$search.'%')
+                    ->orWhere('email', 'ilike', '%'.$search.'%');
             })
             ->orWhereHas('company', function ($q) use ($search) {
-                $q->where('name', 'like', '%'.$search.'%');
+                $q->where('name', 'ilike', '%'.$search.'%');
             });
     }
 

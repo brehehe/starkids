@@ -150,7 +150,7 @@ class AdminHrAttendanceMonitorIndex extends Component
     {
         $attendances = AttendanceHistory::with(['user', 'attendance'])
             ->whereHas('user', function ($query) {
-                $query->where('name', 'like', '%'.$this->search.'%');
+                $query->where('name', 'ilike', '%'.$this->search.'%');
             })
             ->when($this->filterStatus !== 'all', function ($query) {
                 $query->whereHas('attendance', function ($q) {

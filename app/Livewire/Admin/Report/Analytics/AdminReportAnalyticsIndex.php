@@ -201,9 +201,9 @@ class AdminReportAnalyticsIndex extends Component
 
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('products.name', 'like', '%'.$this->search.'%')
-                    ->orWhere('products.sku_number', 'like', '%'.$this->search.'%')
-                    ->orWhere('product_categories.name', 'like', '%'.$this->search.'%');
+                $q->where('products.name', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('products.sku_number', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('product_categories.name', 'ilike', '%'.$this->search.'%');
             });
         }
 
@@ -241,8 +241,8 @@ class AdminReportAnalyticsIndex extends Component
 
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('users.name', 'like', '%'.$this->search.'%')
-                    ->orWhere('users.email', 'like', '%'.$this->search.'%');
+                $q->where('users.name', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('users.email', 'ilike', '%'.$this->search.'%');
             });
         }
 
@@ -281,9 +281,9 @@ class AdminReportAnalyticsIndex extends Component
 
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('transactions.patient_name', 'like', '%'.$this->search.'%')
-                    ->orWhere('patients.phone', 'like', '%'.$this->search.'%')
-                    ->orWhere('patients.email', 'like', '%'.$this->search.'%');
+                $q->where('transactions.patient_name', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('patients.phone', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('patients.email', 'ilike', '%'.$this->search.'%');
             });
         }
 

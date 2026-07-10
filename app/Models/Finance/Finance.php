@@ -44,13 +44,13 @@ class Finance extends Model
     public function scopeSearch($query, $search)
     {
         if ($search) {
-            $query->where('description', 'like', '%'.$search.'%')
-                ->orWhere('date', 'like', '%'.$search.'%')
-                ->orWhere('type', 'like', '%'.$search.'%')
-                ->orWhere('sub_total', 'like', '%'.$search.'%')
-                ->orWhere('discount', 'like', '%'.$search.'%')
-                ->orWhere('tax', 'like', '%'.$search.'%')
-                ->orWhere('grand_total', 'like', '%'.$search.'%');
+            $query->where('description', 'ilike', '%'.$search.'%')
+                ->orWhere('date', 'ilike', '%'.$search.'%')
+                ->orWhere('type', 'ilike', '%'.$search.'%')
+                ->orWhere('sub_total', 'ilike', '%'.$search.'%')
+                ->orWhere('discount', 'ilike', '%'.$search.'%')
+                ->orWhere('tax', 'ilike', '%'.$search.'%')
+                ->orWhere('grand_total', 'ilike', '%'.$search.'%');
         }
 
         return $query;

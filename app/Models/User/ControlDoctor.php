@@ -54,13 +54,13 @@ class ControlDoctor extends Model
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->whereHas('user', function ($q) use ($search) {
-                    $q->where('name', 'like', '%'.$search.'%');
-                })->orWhere('day', 'like', '%'.$search.'%')
-                    ->orWhere('start_time', 'like', '%'.$search.'%')
-                    ->orWhere('end_time', 'like', '%'.$search.'%')
-                    ->orWhere('max_patients', 'like', '%'.$search.'%')
+                    $q->where('name', 'ilike', '%'.$search.'%');
+                })->orWhere('day', 'ilike', '%'.$search.'%')
+                    ->orWhere('start_time', 'ilike', '%'.$search.'%')
+                    ->orWhere('end_time', 'ilike', '%'.$search.'%')
+                    ->orWhere('max_patients', 'ilike', '%'.$search.'%')
                     ->orWhereHas('company', function ($q) use ($search) {
-                        $q->where('name', 'like', '%'.$search.'%');
+                        $q->where('name', 'ilike', '%'.$search.'%');
                     });
             });
         }

@@ -34,10 +34,10 @@ class ProductExpiredDate extends Model
     {
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('batch_number', 'like', '%'.$search.'%')
-                    ->orWhere('expired_date', 'like', '%'.$search.'%')
+                $q->where('batch_number', 'ilike', '%'.$search.'%')
+                    ->orWhere('expired_date', 'ilike', '%'.$search.'%')
                     ->orWhereHas('product', function ($q) use ($search) {
-                        $q->where('name', 'like', '%'.$search.'%');
+                        $q->where('name', 'ilike', '%'.$search.'%');
                     });
             });
         }

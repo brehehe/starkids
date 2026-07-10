@@ -1368,7 +1368,7 @@ class AdminConsultationConsultationDetailIndex extends Component
 
         $this->odontogram_product_results = Product::where('company_id', Auth::user()->company_id)
             ->where('is_active', true)
-            ->where('name', 'like', '%'.$this->odontogram_product_search.'%')
+            ->where('name', 'ilike', '%'.$this->odontogram_product_search.'%')
             ->whereHas('productType', function ($query) {
                 $query->whereIn('name', ['Jasa', 'Tindakan']);
             })

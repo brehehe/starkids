@@ -118,9 +118,9 @@ class PromotionList extends Component
         // Apply search filter
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('name', 'like', '%'.$this->search.'%')
-                    ->orWhere('code', 'like', '%'.$this->search.'%')
-                    ->orWhere('description', 'like', '%'.$this->search.'%');
+                $q->where('name', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('code', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('description', 'ilike', '%'.$this->search.'%');
             });
         }
 

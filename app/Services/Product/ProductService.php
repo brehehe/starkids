@@ -91,7 +91,7 @@ class ProductService
         $today = date('ymd'); // Tahun 2 digit
         $prefix = 'IN/'.$today.'/';
 
-        $lastHistory = ProductStockHistory::where('code', 'like', $prefix.'%')
+        $lastHistory = ProductStockHistory::where('code', 'ilike', $prefix.'%')
             ->where('company_id', Auth::user()->company_id)
             ->where('branch_id', $this->branch->id)
             ->orderBy('code', 'desc')
@@ -191,7 +191,7 @@ class ProductService
         $today = date('ymd');
         $prefix = 'OUT/'.$today.'/';
 
-        $lastHistory = ProductStockHistory::where('code', 'like', $prefix.'%')
+        $lastHistory = ProductStockHistory::where('code', 'ilike', $prefix.'%')
             ->where('company_id', Auth::user()->company_id)
             ->where('branch_id', $this->branch->id)
             ->orderBy('code', 'desc')

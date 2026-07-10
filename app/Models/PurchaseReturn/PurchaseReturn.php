@@ -46,10 +46,10 @@ class PurchaseReturn extends Model
     {
         if (trim($search) !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('return_number', 'like', '%'.$search.'%')
-                    ->orWhere('date', 'like', '%'.$search.'%')
+                $q->where('return_number', 'ilike', '%'.$search.'%')
+                    ->orWhere('date', 'ilike', '%'.$search.'%')
                     ->orWhereHas('supplier', function ($q) use ($search) {
-                        $q->where('name', 'like', '%'.$search.'%');
+                        $q->where('name', 'ilike', '%'.$search.'%');
                     });
             });
         }

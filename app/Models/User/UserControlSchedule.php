@@ -65,11 +65,11 @@ class UserControlSchedule extends Model
     public function scopeSearch($query, $searchTerm)
     {
         return $query->where(function ($q) use ($searchTerm) {
-            $q->where('date', 'like', "%{$searchTerm}%")
+            $q->where('date', 'ilike', "%{$searchTerm}%")
                 ->orWhereHas('doctor', function ($q) use ($searchTerm) {
-                    $q->where('name', 'like', "%{$searchTerm}%");
+                    $q->where('name', 'ilike', "%{$searchTerm}%");
                 })->orWhereHas('user', function ($q) use ($searchTerm) {
-                    $q->where('name', 'like', "%{$searchTerm}%");
+                    $q->where('name', 'ilike', "%{$searchTerm}%");
                 });
         });
     }

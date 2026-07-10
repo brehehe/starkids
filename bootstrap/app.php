@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             // ->api(prepend: [
             //     AcceptJson::class,
             // ])
+            ->trustProxies(at: '*')
             ->alias([
                 // 'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,
                 // 'permission'         => \Spatie\Permission\Middleware\PermissionMiddleware::class,

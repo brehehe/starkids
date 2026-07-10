@@ -38,7 +38,7 @@ class AdminQueueMonitorIndex extends Component
 
         // Get active schedules for today
         $schedules = ControlDoctor::with(['user', 'location'])
-            ->where('days', 'like', '%'.$todayIndo.'%')
+            ->where('days', 'ilike', '%'.$todayIndo.'%')
             ->get();
 
         $this->queues = $schedules->map(function ($schedule) {

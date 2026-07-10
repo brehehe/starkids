@@ -31,10 +31,10 @@ class CategoryAccount extends Model
 
     public function scopeSearch($query, $search)
     {
-        return $query->where('name', 'like', '%'.$search.'%')
-            ->orWhere('cash_flow', 'like', '%'.$search.'%')
+        return $query->where('name', 'ilike', '%'.$search.'%')
+            ->orWhere('cash_flow', 'ilike', '%'.$search.'%')
             ->orWhereHas('detailCategoryAccount', function ($q) use ($search) {
-                $q->where('name', 'like', '%'.$search.'%');
+                $q->where('name', 'ilike', '%'.$search.'%');
             });
     }
 

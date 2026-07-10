@@ -263,8 +263,8 @@ class SaleCommand extends Command
 
                             $paymentMethod = PaymentMethod::where('company_id', $company->id)
                                 ->where(function ($q) {
-                                    $q->where('name', 'like', '%Tunai%')
-                                        ->orWhere('name', 'like', '%Cash%');
+                                    $q->where('name', 'ilike', '%Tunai%')
+                                        ->orWhere('name', 'ilike', '%Cash%');
                                 })
                                 ->first();
 

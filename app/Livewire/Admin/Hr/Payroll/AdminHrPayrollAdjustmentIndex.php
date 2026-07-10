@@ -142,9 +142,9 @@ class AdminHrPayrollAdjustmentIndex extends Component
             ->where('company_id', $companyId)
             ->where('period', $this->filterPeriod)
             ->where(function ($query) {
-                $query->where('name', 'like', '%'.$this->search.'%')
+                $query->where('name', 'ilike', '%'.$this->search.'%')
                     ->orWhereHas('user', function ($q) {
-                        $q->where('name', 'like', '%'.$this->search.'%');
+                        $q->where('name', 'ilike', '%'.$this->search.'%');
                     });
             })
             ->orderBy('created_at', 'desc')

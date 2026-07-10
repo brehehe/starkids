@@ -32,15 +32,15 @@ class StockMutation extends Model
     public function scopeSearch($query, $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('code', 'like', '%'.$search.'%')
-                ->orWhere('name', 'like', '%'.$search.'%')
-                ->orWhere('description', 'like', '%'.$search.'%')
+            $q->where('code', 'ilike', '%'.$search.'%')
+                ->orWhere('name', 'ilike', '%'.$search.'%')
+                ->orWhere('description', 'ilike', '%'.$search.'%')
                 ->orWhereHas('company', function ($q) use ($search) {
-                    $q->where('name', 'like', '%'.$search.'%');
+                    $q->where('name', 'ilike', '%'.$search.'%');
                 })->orWhereHas('companyMain', function ($q) use ($search) {
-                    $q->where('name', 'like', '%'.$search.'%');
+                    $q->where('name', 'ilike', '%'.$search.'%');
                 })->orWhereHas('companyBranch', function ($q) use ($search) {
-                    $q->where('name', 'like', '%'.$search.'%');
+                    $q->where('name', 'ilike', '%'.$search.'%');
                 });
         });
     }

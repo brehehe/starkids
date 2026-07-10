@@ -174,20 +174,20 @@ class Company extends Model
     public function scopeSearch($query, $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%'.$search.'%')
-                ->orWhere('code', 'like', '%'.$search.'%')
-                ->orWhere('email', 'like', '%'.$search.'%')
-                ->orWhere('phone', 'like', '%'.$search.'%')
-                ->orWhere('website', 'like', '%'.$search.'%')
-                ->orWhere('pic_name', 'like', '%'.$search.'%')
-                ->orWhere('pic_email', 'like', '%'.$search.'%')
-                ->orWhere('pic_phone', 'like', '%'.$search.'%')
-                ->orWhere('pic_position', 'like', '%'.$search.'%')
+            $q->where('name', 'ilike', '%'.$search.'%')
+                ->orWhere('code', 'ilike', '%'.$search.'%')
+                ->orWhere('email', 'ilike', '%'.$search.'%')
+                ->orWhere('phone', 'ilike', '%'.$search.'%')
+                ->orWhere('website', 'ilike', '%'.$search.'%')
+                ->orWhere('pic_name', 'ilike', '%'.$search.'%')
+                ->orWhere('pic_email', 'ilike', '%'.$search.'%')
+                ->orWhere('pic_phone', 'ilike', '%'.$search.'%')
+                ->orWhere('pic_position', 'ilike', '%'.$search.'%')
                 ->orWhereHas('companyDetail', function ($q) use ($search) {
-                    $q->where('address', 'like', '%'.$search.'%')
-                        ->orWhere('city', 'like', '%'.$search.'%')
-                        ->orWhere('province', 'like', '%'.$search.'%')
-                        ->orWhere('postal_code', 'like', '%'.$search.'%');
+                    $q->where('address', 'ilike', '%'.$search.'%')
+                        ->orWhere('city', 'ilike', '%'.$search.'%')
+                        ->orWhere('province', 'ilike', '%'.$search.'%')
+                        ->orWhere('postal_code', 'ilike', '%'.$search.'%');
                 });
         });
     }

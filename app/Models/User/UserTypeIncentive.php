@@ -137,9 +137,9 @@ class UserTypeIncentive extends Model
     public function scopeSearch($query, $search)
     {
         if ($search) {
-            return $query->where('description', 'like', '%'.$search.'%')
+            return $query->where('description', 'ilike', '%'.$search.'%')
                 ->orWhereHas('userType', function ($q) use ($search) {
-                    $q->where('name', 'like', '%'.$search.'%');
+                    $q->where('name', 'ilike', '%'.$search.'%');
                 });
         }
 

@@ -138,7 +138,7 @@ class AdminHrMasterPayrollSettingIndex extends Component
         $employees = User::where('type_user', 'employee')
             ->where('company_id', $companyId)
             ->where('is_active', true)
-            ->where('name', 'like', '%'.$this->search.'%')
+            ->where('name', 'ilike', '%'.$this->search.'%')
             ->orderBy('name')
             ->paginate($this->perPage);
 

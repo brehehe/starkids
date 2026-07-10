@@ -150,7 +150,7 @@ class FixDuplicateSkuCommand extends Command
      */
     private function generateNextIncrementalSku($companyId, $prefix)
     {
-        $lastProduct = Product::where('sku_number', 'like', $prefix.'%')
+        $lastProduct = Product::where('sku_number', 'ilike', $prefix.'%')
             ->where('company_id', $companyId)
             ->whereRaw("sku_number ~ '^{$prefix}[0-9]+$'") // Gunakan regex untuk memastikan format Prefix + Angka
             ->orderByRaw('LENGTH(sku_number) DESC')

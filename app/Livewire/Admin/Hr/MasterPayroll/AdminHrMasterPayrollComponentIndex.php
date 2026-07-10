@@ -113,7 +113,7 @@ class AdminHrMasterPayrollComponentIndex extends Component
         $companyId = Auth::user()->company->is_main ? Auth::user()->company->id : Auth::user()->company->company_id;
 
         $components = PayrollComponent::where('company_id', $companyId)
-            ->where('name', 'like', '%'.$this->search.'%')
+            ->where('name', 'ilike', '%'.$this->search.'%')
             ->latest()
             ->paginate($this->perPage);
 

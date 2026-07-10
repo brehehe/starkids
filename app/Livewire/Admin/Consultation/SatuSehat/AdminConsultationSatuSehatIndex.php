@@ -445,10 +445,10 @@ class AdminConsultationSatuSehatIndex extends Component
             if (! empty($ohPatientIds)) {
                 $tasks = ApiOutboxTask::where(function ($query) use ($ohPatientIds) {
                     foreach ($ohPatientIds as $id) {
-                        $query->orWhere('model_ids', 'like', '%"'.$id.'"%');
+                        $query->orWhere('model_ids', 'ilike', '%"'.$id.'"%');
                     }
                 })
-                    ->where('model_classes', 'like', '%OneHealthPatient%')
+                    ->where('model_classes', 'ilike', '%OneHealthPatient%')
                     ->orderBy('created_at', 'asc')
                     ->get();
 
@@ -483,10 +483,10 @@ class AdminConsultationSatuSehatIndex extends Component
             if (! empty($ohEncounterIds)) {
                 $tasks = ApiOutboxTask::where(function ($query) use ($ohEncounterIds) {
                     foreach ($ohEncounterIds as $id) {
-                        $query->orWhere('model_ids', 'like', '%"'.$id.'"%');
+                        $query->orWhere('model_ids', 'ilike', '%"'.$id.'"%');
                     }
                 })
-                    ->where('model_classes', 'like', '%OneHealthEncounter%')
+                    ->where('model_classes', 'ilike', '%OneHealthEncounter%')
                     ->orderBy('created_at', 'asc')
                     ->get();
 

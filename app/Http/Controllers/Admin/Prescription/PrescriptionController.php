@@ -287,10 +287,10 @@ class PrescriptionController extends Controller
         if ($request->search) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('code', 'like', '%'.$search.'%')
-                    ->orWhere('code_consultation', 'like', '%'.$search.'%')
-                    ->orWhere('patient_name', 'like', '%'.$search.'%')
-                    ->orWhere('doctor_name', 'like', '%'.$search.'%');
+                $q->where('code', 'ilike', '%'.$search.'%')
+                    ->orWhere('code_consultation', 'ilike', '%'.$search.'%')
+                    ->orWhere('patient_name', 'ilike', '%'.$search.'%')
+                    ->orWhere('doctor_name', 'ilike', '%'.$search.'%');
             });
         }
 

@@ -81,8 +81,8 @@ class AdminHrShiftSettingIndex extends Component
             ->where('company_id', $companyId)
             ->where('type_user', 'employee')
             ->where(function ($q) {
-                $q->where('name', 'like', '%'.$this->search.'%')
-                    ->orWhere('phone', 'like', '%'.$this->search.'%');
+                $q->where('name', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('phone', 'ilike', '%'.$this->search.'%');
             })
             ->orderBy('name')
             ->paginate($this->perPage);

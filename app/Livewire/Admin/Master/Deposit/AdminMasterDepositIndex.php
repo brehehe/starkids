@@ -194,12 +194,12 @@ class AdminMasterDepositIndex extends Component
         // Search filter
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('code', 'like', '%'.$this->search.'%')
-                    ->orWhere('text', 'like', '%'.$this->search.'%')
-                    ->orWhere('description', 'like', '%'.$this->search.'%')
+                $q->where('code', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('text', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('description', 'ilike', '%'.$this->search.'%')
                     ->orWhereHas('patient', function ($patientQuery) {
-                        $patientQuery->where('name', 'like', '%'.$this->search.'%')
-                            ->orWhere('phone', 'like', '%'.$this->search.'%');
+                        $patientQuery->where('name', 'ilike', '%'.$this->search.'%')
+                            ->orWhere('phone', 'ilike', '%'.$this->search.'%');
                     });
             });
         }

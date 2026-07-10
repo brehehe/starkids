@@ -82,8 +82,8 @@ class AdminNotificationIndex extends Component
 
         if (! empty($this->search)) {
             $query->where(function ($q) {
-                $q->where('title', 'like', '%'.$this->search.'%')
-                    ->orWhere('message', 'like', '%'.$this->search.'%');
+                $q->where('title', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('message', 'ilike', '%'.$this->search.'%');
             });
         }
 

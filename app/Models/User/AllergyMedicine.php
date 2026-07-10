@@ -32,6 +32,6 @@ class AllergyMedicine extends Model
 
     public function scopeSearch($query, $searchTerm)
     {
-        return $query->where('description', 'like', '%'.$searchTerm.'%');
+        return $query->where('description', 'ilike', '%'.$searchTerm.'%');
     }
 }

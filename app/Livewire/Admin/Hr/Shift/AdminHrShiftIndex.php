@@ -107,7 +107,7 @@ class AdminHrShiftIndex extends Component
             : Auth::user()->company->company_id;
 
         $shifts = Shift::where('company_id', $companyId)
-            ->where('name', 'like', '%'.$this->search.'%')
+            ->where('name', 'ilike', '%'.$this->search.'%')
             ->orderBy('start_time')
             ->paginate($this->perPage);
 

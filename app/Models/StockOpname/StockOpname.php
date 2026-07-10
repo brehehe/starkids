@@ -51,20 +51,20 @@ class StockOpname extends Model
     public function scopeSearch($query, $search)
     {
         return $query->where(function ($query) use ($search) {
-            $query->where('code', 'like', "%{$search}%")
-                ->orWhere('date', 'like', "%{$search}%")
-                ->orWhere('description', 'like', "%{$search}%")
+            $query->where('code', 'ilike', "%{$search}%")
+                ->orWhere('date', 'ilike', "%{$search}%")
+                ->orWhere('description', 'ilike', "%{$search}%")
                 ->orWhereHas('user', function ($query) use ($search) {
-                    $query->where('name', 'like', "%{$search}%");
+                    $query->where('name', 'ilike', "%{$search}%");
                 })
                 ->orWhereHas('branch', function ($query) use ($search) {
-                    $query->where('name', 'like', "%{$search}%");
+                    $query->where('name', 'ilike', "%{$search}%");
                 })
                 ->orWhereHas('approvedBy', function ($query) use ($search) {
-                    $query->where('name', 'like', "%{$search}%");
+                    $query->where('name', 'ilike', "%{$search}%");
                 })
                 ->orWhereHas('company', function ($query) use ($search) {
-                    $query->where('name', 'like', "%{$search}%");
+                    $query->where('name', 'ilike', "%{$search}%");
                 });
         });
     }

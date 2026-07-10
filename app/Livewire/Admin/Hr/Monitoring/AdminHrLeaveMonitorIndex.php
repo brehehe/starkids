@@ -48,7 +48,7 @@ class AdminHrLeaveMonitorIndex extends Component
     {
         $leaves = Leave::with('user')
             ->whereHas('user', function ($query) {
-                $query->where('name', 'like', '%'.$this->search.'%');
+                $query->where('name', 'ilike', '%'.$this->search.'%');
             })
             ->when($this->filterStatus !== 'all', function ($query) {
                 $query->where('status', $this->filterStatus);

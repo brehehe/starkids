@@ -55,7 +55,7 @@ class AdminConsultationClaimInsuranceIndex extends Component
 
         $this->patients = User::query()
             ->companyRole('Pasien', auth()->user()->company_id)
-            ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%")
+            ->when($this->search, fn ($q) => $q->where('name', 'ilike', "%{$this->search}%")
             )
             ->pluck('name', 'id')
             ->toArray();
