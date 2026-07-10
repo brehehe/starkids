@@ -16,6 +16,6 @@ Schedule::command('app:purchase-command')->everyTwoHours()->withoutOverlapping()
 Schedule::command('app:sale-command')->everyTwoHours()->withoutOverlapping();
 Schedule::command('app:stock-opname-command')->everyTwoHours()->withoutOverlapping();
 
-Schedule::command('app:api-outbox')->everyMinute()->withoutOverlapping();
+Schedule::command('app:api-outbox-daemon')->everyMinute()->withoutOverlapping();
 
 Schedule::command('backup:run')->dailyAt('00:00')->withoutOverlapping();
