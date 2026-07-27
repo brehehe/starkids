@@ -2,7 +2,7 @@
 
 namespace App\Services\System\ApiOutboxTask;
 
-use App\Models\API\ApiOutboxTask;
+use App\Models\Api\ApiOutboxTask;
 
 class ApiOutboxTaskService
 {

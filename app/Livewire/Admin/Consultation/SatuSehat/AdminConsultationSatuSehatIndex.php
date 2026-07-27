@@ -205,6 +205,12 @@ class AdminConsultationSatuSehatIndex extends Component
             return;
         }
 
+        if (! $doctor) {
+            AlertHelper::info('Dilewati', "Kunjungan transaksi {$transaction->code} dilewati karena data praktisi (dokter) belum terdaftar di master praktisi.");
+
+            return;
+        }
+
         $data = [
             'pending' => true,
             'id' => $encounter?->id ?? null,
@@ -212,7 +218,7 @@ class AdminConsultationSatuSehatIndex extends Component
             'company_id' => $transaction->company_id,
             'location_id' => $transaction->location_id,
             'patient_id' => $patient->id,
-            'practitioner_id' => $doctor->id ?? null,
+            'practitioner_id' => $doctor->id,
             'type' => 'outpatient',
             'status' => $this->getEncounterStatus($transaction, $encounter),
             'class_code' => 'AMB',
@@ -261,6 +267,10 @@ class AdminConsultationSatuSehatIndex extends Component
         foreach ($unsyncedTransactions as $transaction) {
             $patientId = $patientsMap[$transaction->patient_id] ?? null;
             $doctorId = $doctorsMap[$transaction->doctor_id] ?? null;
+
+            if (! $patientId || ! $doctorId) {
+                continue;
+            }
 
             $data = [
                 'pending' => true,
@@ -312,6 +322,10 @@ class AdminConsultationSatuSehatIndex extends Component
         foreach ($transactions as $transaction) {
             $patientId = $patientsMap[$transaction->patient_id] ?? null;
             $doctorId = $doctorsMap[$transaction->doctor_id] ?? null;
+
+            if (! $patientId || ! $doctorId) {
+                continue;
+            }
 
             $data = [
                 'pending' => true,

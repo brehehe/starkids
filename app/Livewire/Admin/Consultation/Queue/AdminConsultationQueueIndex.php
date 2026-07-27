@@ -120,7 +120,7 @@ class AdminConsultationQueueIndex extends Component
             $patient = Patient::where('user_id', $transaction->patient_id)->select('id')->first();
             $doctor = Practitioner::where('user_id', $transaction->doctor_id)->select('id')->first();
 
-            if ($patient) {
+            if ($patient && $doctor) {
                 $data = [
                     'pending' => true,
                     'id' => $encounter->id ?? null,
@@ -128,7 +128,7 @@ class AdminConsultationQueueIndex extends Component
                     'company_id' => $transaction->company_id,
                     'location_id' => $transaction->location_id,
                     'patient_id' => $patient->id,
-                    'practitioner_id' => $doctor->id ?? null,
+                    'practitioner_id' => $doctor->id,
                     'type' => 'outpatient',
                     'status' => 'cancelled',
                     'class_code' => 'AMB',

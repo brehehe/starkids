@@ -14,7 +14,7 @@ use App\Http\Requests\Observation\UpdateCreateObservation;
 use App\Http\Requests\Patient\GetPatient;
 use App\Http\Requests\Patient\UpdateCreatePatient;
 use App\Http\Requests\Practitiont\GetPractitiont;
-use App\Models\API\ApiOutboxTask;
+use App\Models\Api\ApiOutboxTask;
 use App\Models\Company\Company;
 use App\Models\Condition\Condition;
 use App\Models\Encounter\Encounter;
