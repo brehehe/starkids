@@ -49,8 +49,13 @@ class apiservice
 
     public function handleHttpRequest(string $method, string $url, array $data = [])
     {
+        $appHost = parse_url(config('app.url'), PHP_URL_HOST) ?? '';
         $host = parse_url($url, PHP_URL_HOST) ?? '';
-        $isInternal = in_array(config('app.env'), ['local', 'development', 'testing']) || in_array($host, ['localhost', '127.0.0.1']);
+
+        $isInternal = str_contains($url, '/api/testing/')
+            || in_array(config('app.env'), ['local', 'development', 'testing'])
+            || in_array($host, ['localhost', '127.0.0.1', $appHost])
+            || empty($host);
 
         if ($isInternal) {
             $parsedUrl = parse_url($url);
