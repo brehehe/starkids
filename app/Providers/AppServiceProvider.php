@@ -48,6 +48,10 @@ class AppServiceProvider extends ServiceProvider
         // which causes CORS errors when the PHP built-in server rewrites the Host header.
         URL::forceRootUrl(config('app.url'));
 
+        if (str_starts_with(config('app.url'), 'https://') || $this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         Blade::directive('number', function ($expression) {
             return "<?php echo number_format($expression, 0, ',', '.'); ?>";
         });
