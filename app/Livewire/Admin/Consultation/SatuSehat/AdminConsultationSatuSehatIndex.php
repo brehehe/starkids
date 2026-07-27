@@ -98,7 +98,8 @@ class AdminConsultationSatuSehatIndex extends Component
                         });
                 })->orWhereDoesntHave('patient');
             })
-            ->take(100) // limit to avoid memory/time limit
+            ->with(['patient', 'userDetail'])
+            ->take(100)
             ->get();
 
         if ($unsyncedUsers->isEmpty()) {
@@ -109,7 +110,7 @@ class AdminConsultationSatuSehatIndex extends Component
 
         $queued = 0;
         foreach ($unsyncedUsers as $user) {
-            $patient = Patient::where('user_id', $user->id)->first();
+            $patient = $user->patient;
             $identityCardMother = $patient ? $patient->identity_card_mother : false;
             try {
                 app(apiservice::class)->createUser($user, $identityCardMother);
@@ -131,6 +132,35 @@ class AdminConsultationSatuSehatIndex extends Component
         }
 
         return is_array($ids) ? $ids : [];
+    }
+
+    protected function fetchOutboxStatuses(array $modelIds, string $modelClassKeyword): array
+    {
+        if (empty($modelIds)) {
+            return [];
+        }
+
+        $outboxStatuses = [];
+        $tasks = ApiOutboxTask::query()
+            ->select(['id', 'model_ids', 'model_classes', 'status', 'response_body'])
+            ->where(function ($query) use ($modelIds) {
+                foreach ($modelIds as $id) {
+                    $query->orWhereRaw('model_ids::text ILIKE ?', ['%'.$id.'%']);
+                }
+            })
+            ->whereRaw('model_classes::text ILIKE ?', ['%'.$modelClassKeyword.'%'])
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        foreach ($tasks as $task) {
+            foreach ($this->getOutboxModelIds($task) as $id) {
+                if (in_array($id, $modelIds)) {
+                    $outboxStatuses[$id] = $task;
+                }
+            }
+        }
+
+        return $outboxStatuses;
     }
 
     protected function getEncounterStatus(Transaction $transaction, ?Encounter $encounter = null): string
@@ -221,10 +251,16 @@ class AdminConsultationSatuSehatIndex extends Component
             return;
         }
 
+        $patientUserIds = $unsyncedTransactions->pluck('patient_id')->filter()->unique();
+        $doctorUserIds = $unsyncedTransactions->pluck('doctor_id')->filter()->unique();
+
+        $patientsMap = Patient::whereIn('user_id', $patientUserIds)->pluck('id', 'user_id');
+        $doctorsMap = Practitioner::whereIn('user_id', $doctorUserIds)->pluck('id', 'user_id');
+
         $queued = 0;
         foreach ($unsyncedTransactions as $transaction) {
-            $patient = Patient::where('user_id', $transaction->patient_id)->select('id')->first();
-            $doctor = Practitioner::where('user_id', $transaction->doctor_id)->select('id')->first();
+            $patientId = $patientsMap[$transaction->patient_id] ?? null;
+            $doctorId = $doctorsMap[$transaction->doctor_id] ?? null;
 
             $data = [
                 'pending' => true,
@@ -232,8 +268,8 @@ class AdminConsultationSatuSehatIndex extends Component
                 'transaction_id' => $transaction->id,
                 'company_id' => $transaction->company_id,
                 'location_id' => $transaction->location_id,
-                'patient_id' => $patient->id ?? null,
-                'practitioner_id' => $doctor->id ?? null,
+                'patient_id' => $patientId,
+                'practitioner_id' => $doctorId,
                 'type' => 'outpatient',
                 'status' => $this->getEncounterStatus($transaction, $transaction->encounter),
                 'class_code' => 'AMB',
@@ -266,10 +302,16 @@ class AdminConsultationSatuSehatIndex extends Component
             return;
         }
 
+        $patientUserIds = $transactions->pluck('patient_id')->filter()->unique();
+        $doctorUserIds = $transactions->pluck('doctor_id')->filter()->unique();
+
+        $patientsMap = Patient::whereIn('user_id', $patientUserIds)->pluck('id', 'user_id');
+        $doctorsMap = Practitioner::whereIn('user_id', $doctorUserIds)->pluck('id', 'user_id');
+
         $queued = 0;
         foreach ($transactions as $transaction) {
-            $patient = Patient::where('user_id', $transaction->patient_id)->select('id')->first();
-            $doctor = Practitioner::where('user_id', $transaction->doctor_id)->select('id')->first();
+            $patientId = $patientsMap[$transaction->patient_id] ?? null;
+            $doctorId = $doctorsMap[$transaction->doctor_id] ?? null;
 
             $data = [
                 'pending' => true,
@@ -277,8 +319,8 @@ class AdminConsultationSatuSehatIndex extends Component
                 'transaction_id' => $transaction->id,
                 'company_id' => $transaction->company_id,
                 'location_id' => $transaction->location_id,
-                'patient_id' => $patient->id ?? null,
-                'practitioner_id' => $doctor->id ?? null,
+                'patient_id' => $patientId,
+                'practitioner_id' => $doctorId,
                 'type' => 'outpatient',
                 'status' => $this->getEncounterStatus($transaction, $transaction->encounter),
                 'class_code' => 'AMB',
@@ -440,11 +482,20 @@ class AdminConsultationSatuSehatIndex extends Component
 
     public function render(): View
     {
+        $statsRaw = ApiOutboxTask::query()
+            ->selectRaw("
+                COUNT(*) FILTER (WHERE status = 'pending') as pending,
+                COUNT(*) FILTER (WHERE status = 'process') as process,
+                COUNT(*) FILTER (WHERE status = 'success') as success,
+                COUNT(*) FILTER (WHERE status = 'failed') as failed
+            ")
+            ->first();
+
         $stats = [
-            'pending' => ApiOutboxTask::where('status', 'pending')->count(),
-            'process' => ApiOutboxTask::where('status', 'process')->count(),
-            'success' => ApiOutboxTask::where('status', 'success')->count(),
-            'failed' => ApiOutboxTask::where('status', 'failed')->count(),
+            'pending' => (int) ($statsRaw->pending ?? 0),
+            'process' => (int) ($statsRaw->process ?? 0),
+            'success' => (int) ($statsRaw->success ?? 0),
+            'failed' => (int) ($statsRaw->failed ?? 0),
         ];
 
         $dataList = [];
@@ -490,24 +541,7 @@ class AdminConsultationSatuSehatIndex extends Component
                 ->filter()
                 ->toArray();
 
-            if (! empty($ohPatientIds)) {
-                $tasks = ApiOutboxTask::where(function ($query) use ($ohPatientIds) {
-                    foreach ($ohPatientIds as $id) {
-                        $query->orWhereRaw('model_ids::text ILIKE ?', ['%'.$id.'%']);
-                    }
-                })
-                    ->whereRaw('model_classes::text ILIKE ?', ['%OneHealthPatient%'])
-                    ->orderBy('created_at', 'asc')
-                    ->get();
-
-                foreach ($tasks as $task) {
-                    foreach ($this->getOutboxModelIds($task) as $id) {
-                        if (in_array($id, $ohPatientIds)) {
-                            $outboxStatuses[$id] = $task;
-                        }
-                    }
-                }
-            }
+            $outboxStatuses = $this->fetchOutboxStatuses($ohPatientIds, 'OneHealthPatient');
         } elseif ($this->tab === 'synced_patient') {
             $dataList = User::query()
                 ->companyRole('Pasien', auth()->user()->company_id)
@@ -534,26 +568,8 @@ class AdminConsultationSatuSehatIndex extends Component
                 ->filter()
                 ->toArray();
 
-            if (! empty($ohPatientIds)) {
-                $tasks = ApiOutboxTask::where(function ($query) use ($ohPatientIds) {
-                    foreach ($ohPatientIds as $id) {
-                        $query->orWhereRaw('model_ids::text ILIKE ?', ['%'.$id.'%']);
-                    }
-                })
-                    ->whereRaw('model_classes::text ILIKE ?', ['%OneHealthPatient%'])
-                    ->orderBy('created_at', 'asc')
-                    ->get();
-
-                foreach ($tasks as $task) {
-                    foreach ($this->getOutboxModelIds($task) as $id) {
-                        if (in_array($id, $ohPatientIds)) {
-                            $outboxStatuses[$id] = $task;
-                        }
-                    }
-                }
-            }
+            $outboxStatuses = $this->fetchOutboxStatuses($ohPatientIds, 'OneHealthPatient');
         } elseif ($this->tab === 'encounter') {
-            // Hanya transaksi yang pasiennya sudah tersinkron ke SatuSehat (ada id_patient)
             $dataList = Transaction::query()
                 ->where('company_id', auth()->user()->company_id)
                 ->whereHas('patient.patient.OHPatient', function ($query) {
@@ -578,26 +594,8 @@ class AdminConsultationSatuSehatIndex extends Component
                 ->filter()
                 ->toArray();
 
-            if (! empty($ohEncounterIds)) {
-                $tasks = ApiOutboxTask::where(function ($query) use ($ohEncounterIds) {
-                    foreach ($ohEncounterIds as $id) {
-                        $query->orWhereRaw('model_ids::text ILIKE ?', ['%'.$id.'%']);
-                    }
-                })
-                    ->whereRaw('model_classes::text ILIKE ?', ['%OneHealthEncounter%'])
-                    ->orderBy('created_at', 'asc')
-                    ->get();
-
-                foreach ($tasks as $task) {
-                    foreach ($this->getOutboxModelIds($task) as $id) {
-                        if (in_array($id, $ohEncounterIds)) {
-                            $outboxStatuses[$id] = $task;
-                        }
-                    }
-                }
-            }
+            $outboxStatuses = $this->fetchOutboxStatuses($ohEncounterIds, 'OneHealthEncounter');
         } elseif ($this->tab === 'synced_encounter') {
-            // Kunjungan dari pasien yang sudah punya id_patient di SatuSehat
             $dataList = Encounter::whereHas('transaction', function ($query) {
                 $query->where('company_id', auth()->user()->company_id);
             })
@@ -622,24 +620,7 @@ class AdminConsultationSatuSehatIndex extends Component
                 ->filter()
                 ->toArray();
 
-            if (! empty($ohEncounterIds)) {
-                $tasks = ApiOutboxTask::where(function ($query) use ($ohEncounterIds) {
-                    foreach ($ohEncounterIds as $id) {
-                        $query->orWhereRaw('model_ids::text ILIKE ?', ['%'.$id.'%']);
-                    }
-                })
-                    ->whereRaw('model_classes::text ILIKE ?', ['%OneHealthEncounter%'])
-                    ->orderBy('created_at', 'asc')
-                    ->get();
-
-                foreach ($tasks as $task) {
-                    foreach ($this->getOutboxModelIds($task) as $id) {
-                        if (in_array($id, $ohEncounterIds)) {
-                            $outboxStatuses[$id] = $task;
-                        }
-                    }
-                }
-            }
+            $outboxStatuses = $this->fetchOutboxStatuses($ohEncounterIds, 'OneHealthEncounter');
         } elseif ($this->tab === 'outbox') {
             $dataList = ApiOutboxTask::query()
                 ->when($this->outboxStatus, function ($query) {

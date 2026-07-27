@@ -11,8 +11,12 @@ use App\Observers\Transaction\TransactionDetailObserver;
 use App\Observers\Transaction\TransactionRecipeObserver;
 use App\Observers\TransactionObserver;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -53,5 +57,40 @@ class AppServiceProvider extends ServiceProvider
         // TransactionDetail::observe(TransactionDetailObserver::class);
         // TransactionRecipe::observe(TransactionRecipeObserver::class);
         PromotionSimplified::observe(PromotionObserver::class);
+
+        // Register a global booted event listener for all Eloquent models to apply a default ASC ordering
+        Event::listen('eloquent.booted: *', function ($eventName, array $data) {
+            $model = $data[0];
+            $modelClass = get_class($model);
+
+            if (str_starts_with($modelClass, 'App\\')) {
+                $modelClass::addGlobalScope('default_order', function (Builder $builder) {
+                    $query = $builder->getQuery();
+                    if (empty($query->orders) && empty($query->groups) && empty($query->aggregate)) {
+                        // Check if any custom selected columns contain aggregate functions
+                        $hasAggregate = false;
+                        if (! empty($query->columns)) {
+                            foreach ($query->columns as $column) {
+                                $colStr = $column instanceof Expression
+                                    ? $column->getValue(DB::connection()->getQueryGrammar())
+                                    : (string) $column;
+
+                                if (preg_match('/\b(count|sum|avg|min|max|stddev|variance|string_agg|array_agg|json_agg|jsonb_agg)\s*\(/i', $colStr)) {
+                                    $hasAggregate = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (! $hasAggregate) {
+                            $model = $builder->getModel();
+                            if ($model->getKeyName()) {
+                                $builder->orderBy($model->getTable().'.'.$model->getKeyName(), 'asc');
+                            }
+                        }
+                    }
+                });
+            }
+        });
     }
 }

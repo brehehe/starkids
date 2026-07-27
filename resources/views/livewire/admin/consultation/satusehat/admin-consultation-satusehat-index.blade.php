@@ -348,12 +348,14 @@
                                         $isQueueing = $task && in_array($task->status, ['pending', 'process']);
                                     @endphp
                                     <div class="flex items-center justify-center gap-2">
-                                        <button wire:click="queueEncounter('{{ $encounterId ?? $item->id }}')"
-                                                class="btn btn-icon {{ $hasRemoteId ? 'text-green-600 hover:text-green-800' : 'text-blue-600 hover:text-blue-800' }} disabled:text-gray-300"
-                                                title="{{ $hasRemoteId ? 'Update/Sync Ulang Kunjungan' : ($hasEncounter ? 'Sinkronkan Kunjungan' : 'Buat Encounter & Sinkronkan') }}"
-                                                @if($isQueueing) disabled @endif>
-                                            <i class="fa-solid {{ $hasRemoteId ? 'fa-arrows-rotate' : 'fa-cloud-arrow-up' }} text-lg"></i>
-                                        </button>
+                                        @if (!$hasRemoteId || ($task && $task->status === 'failed'))
+                                            <button wire:click="queueEncounter('{{ $encounterId ?? $item->id }}')"
+                                                    class="btn btn-icon text-blue-600 hover:text-blue-800 disabled:text-gray-300"
+                                                    title="{{ $hasEncounter ? 'Sinkronkan Kunjungan' : 'Buat Encounter & Sinkronkan' }}"
+                                                    @if($isQueueing) disabled @endif>
+                                                <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                                            </button>
+                                        @endif
                                         @if ($task)
                                             <button wire:click="editTask('{{ $task->id }}')"
                                                     class="btn btn-icon text-yellow-600 hover:text-yellow-800"
@@ -404,18 +406,14 @@
                                 </td>
                                 <td class="center">
                                     <div class="flex items-center justify-center gap-2">
-                                        <button wire:click="queueEncounter('{{ $item->id }}')"
-                                                class="btn btn-icon {{ $hasRemoteId ? 'text-green-600 hover:text-green-800' : 'text-blue-600 hover:text-blue-800' }} disabled:text-gray-300"
-                                                title="{{ $hasRemoteId ? 'Update/Sync Ulang Kunjungan' : 'Sinkronkan Kunjungan' }}"
-                                                @if($isQueueing) disabled @endif>
-                                            <i class="fa-solid {{ $hasRemoteId ? 'fa-arrows-rotate' : 'fa-cloud-arrow-up' }} text-lg"></i>
-                                        </button>
                                         @if ($task)
                                             <button wire:click="editTask('{{ $task->id }}')"
                                                     class="btn btn-icon text-yellow-600 hover:text-yellow-800"
                                                     title="Lihat/Edit Payload Antrian">
                                                 <i class="fa-solid fa-pen-to-square text-lg"></i>
                                             </button>
+                                        @else
+                                            <span class="text-green-600 font-medium text-xs"><i class="fa-solid fa-circle-check mr-1"></i>Tersinkron</span>
                                         @endif
                                     </div>
                                 </td>
@@ -448,11 +446,13 @@
                                                 title="Lihat / Edit Payload & Response Outbox">
                                             <i class="fa-solid fa-pen-to-square text-lg"></i>
                                         </button>
-                                        <button wire:click="retryTask('{{ $item->id }}')" 
-                                                class="btn btn-icon text-blue-600 hover:text-blue-800" 
-                                                title="Coba Lagi Antrian Ini">
-                                            <i class="fa-solid fa-arrows-rotate text-lg"></i>
-                                        </button>
+                                        @if ($item->status !== 'success')
+                                            <button wire:click="retryTask('{{ $item->id }}')" 
+                                                    class="btn btn-icon text-blue-600 hover:text-blue-800" 
+                                                    title="Coba Lagi Antrian Ini">
+                                                <i class="fa-solid fa-arrows-rotate text-lg"></i>
+                                            </button>
+                                        @endif
                                         <button wire:click="deleteTask('{{ $item->id }}')" 
                                                 wire:confirm="Yakin ingin menghapus antrian ini?"
                                                 class="btn btn-icon text-red-600 hover:text-red-800" 
@@ -493,4 +493,62 @@
             </div>
         @endif
     </div>
+
+    <!-- Modal Edit Task Payload -->
+    @if ($showEditModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {{-- Backdrop Overlay --}}
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" wire:click="closeEditModal"></div>
+
+            {{-- Modal Card --}}
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden z-10 text-left">
+                {{-- Header --}}
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Detail & Edit Payload Antrian Outbox</h3>
+                        <p class="text-blue-100 text-xs mt-0.5">Edit payload JSON request jika ada kesalahan data untuk dicoba ulang.</p>
+                    </div>
+                    <button wire:click="closeEditModal" class="text-white/80 hover:text-white transition-colors">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+                {{-- Body --}}
+                <div class="p-6 overflow-y-auto flex-1 space-y-4">
+                    @if (!empty($editingTaskError))
+                        <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800">
+                            <p class="font-bold mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-red-600 text-base"></i>
+                                Pesan Error / Tanggapan API:
+                            </p>
+                            <pre class="whitespace-pre-wrap font-mono text-xs overflow-x-auto max-h-40 bg-red-100/60 p-3 rounded-lg border border-red-200 mt-2 text-red-900 leading-relaxed">{{ $this->formatResponseBody($editingTaskError) }}</pre>
+                        </div>
+                    @endif
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Payload Request (JSON):</label>
+                        <textarea wire:model="editingRequestBody" rows="12"
+                                  class="w-full font-mono text-xs p-3.5 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 text-gray-800 leading-relaxed"></textarea>
+                        <p class="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-info text-blue-500"></i>
+                            Anda dapat mengubah JSON di atas lalu menekan <strong>"Simpan & Coba Lagi"</strong> untuk memproses ulang antrian.
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Footer --}}
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+                    <button wire:click="closeEditModal" type="button"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
+                        Batal
+                    </button>
+                    <button wire:click="saveTaskPayload" type="button"
+                            class="px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Simpan & Coba Lagi
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
