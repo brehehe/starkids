@@ -2,7 +2,7 @@
 
 namespace App\Models\Practitiont\OneHealth;
 
-use App\Models\Encounter\Onehealth\OneHealthEnconterParticipant;
+use App\Models\Encounter\OneHealth\OneHealthEnconterParticipant;
 use App\Models\MedicationDispense\OneHealth\OneHealthMedicationDispense;
 use App\Models\Observation\OneHealth\OneHealthObservation;
 use App\Models\Practitiont\Practitioner;

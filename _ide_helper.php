@@ -26215,6 +26215,13 @@ namespace App\Livewire\Admin\Consultation\DateControl {
             }
     }
 
+namespace App\Livewire\Admin\Consultation\SatuSehat {
+    /**
+     */
+    class AdminConsultationSatuSehatIndex extends \Livewire\Component {
+            }
+    }
+
 namespace App\Livewire\Admin\Receipt\Invoice {
     /**
      */

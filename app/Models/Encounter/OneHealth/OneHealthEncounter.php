@@ -5,7 +5,6 @@ namespace App\Models\Encounter\OneHealth;
 use App\Models\Company\OneHealth\OneHealthOrganization;
 use App\Models\Condition\OneHealth\OneHealthCondition;
 use App\Models\Encounter\Encounter;
-use App\Models\Encounter\Onehealth\OneHealthEnconterParticipant;
 use App\Models\Master\CodeSystem\Encounter\MasterEncounterActCode;
 use App\Models\Master\CodeSystem\Encounter\MasterEncounterStatus;
 use App\Models\MedicationDispense\OneHealth\OneHealthMedicationDispense;
