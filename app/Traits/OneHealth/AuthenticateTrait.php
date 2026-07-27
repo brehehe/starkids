@@ -21,8 +21,11 @@ trait AuthenticateTrait
 
         $company_has_one_health = $this->getCompanyHasOneHealth($company);
 
-        $client_id = $company_has_one_health?->oneHealthy?->client_id ? Crypt::decryptString($company_has_one_health?->oneHealthy?->client_id) : $company_has_one_health?->oneHealthy?->client_id;
-        $client_secret = $company_has_one_health?->oneHealthy?->client_secret ? Crypt::decryptString($company_has_one_health?->oneHealthy?->client_secret) : $company_has_one_health?->oneHealthy?->client_secret;
+        $rawClientId = $company_has_one_health?->oneHealthy?->client_id;
+        $rawClientSecret = $company_has_one_health?->oneHealthy?->client_secret;
+
+        $client_id = $rawClientId ? Crypt::decryptString($rawClientId) : config('app.one_health.client_id');
+        $client_secret = $rawClientSecret ? Crypt::decryptString($rawClientSecret) : config('app.one_health.client_secret');
 
         try {
             $response = Http::asForm()

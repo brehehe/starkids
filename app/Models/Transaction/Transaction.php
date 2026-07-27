@@ -5,6 +5,7 @@ namespace App\Models\Transaction;
 use App\Models\Branch\Branch;
 use App\Models\Company\Company;
 use App\Models\Deposit\Deposit;
+use App\Models\Encounter\Encounter;
 use App\Models\Insurance\Insurance;
 use App\Models\Location\Location;
 use App\Models\Patient\PatientReferralIncentive;
@@ -91,6 +92,11 @@ class Transaction extends Model
     public function transactionDiagnosis()
     {
         return $this->hasOne(TransactionDiagnosis::class, 'transaction_id', 'id');
+    }
+
+    public function encounter()
+    {
+        return $this->hasOne(Encounter::class, 'transaction_id', 'id');
     }
 
     public function doctor()

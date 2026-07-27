@@ -663,7 +663,7 @@ class QueueRegister extends Component
                 'patient_id' => $patient->id ?? null,
                 'practitioner_id' => $doctor->id ?? null,
                 'type' => 'outpatient',
-                'status' => 'Arrived',
+                'status' => 'arrived',
                 'class_code' => 'AMB',
             ];
 

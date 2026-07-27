@@ -1,0 +1,25 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     * Mengaktifkan ekstensi pg_trgm untuk fungsi similarity() pada PostgreSQL.
+     * Dibutuhkan oleh scope pencarian fuzzy di User model.
+     */
+    public function up(): void
+    {
+        DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        DB::statement('DROP EXTENSION IF EXISTS pg_trgm');
+    }
+};

@@ -35,9 +35,16 @@ class EncounterService
         $one_health_organization_id = $one_health[0];
 
         if (empty($requestBody)) {
+            $diagnosis = $this->getDiagnosis($OHEncounter);
+            $status = $OHEncounter?->status;
+
+            if ($status === 'finished' && empty($diagnosis)) {
+                $status = 'in-progress';
+            }
+
             $request = [
                 'resourceType' => 'Encounter',
-                'status' => $OHEncounter?->status,
+                'status' => $status,
                 'class' => [
                     'system' => $OHEncounter?->class_system,
                     'code' => $OHEncounter?->class_code,
@@ -53,7 +60,7 @@ class EncounterService
                     'end' => $OHEncounter?->period_end,
                 ],
                 'location' => $this->getLocation($OHEncounter),
-                'statusHistory' => $this->getStatusHistory($OHEncounter?->encounter),
+                'statusHistory' => $this->getStatusHistory($OHEncounter?->encounter, $status),
                 'serviceProvider' => [
                     'reference' => $OHEncounter?->service_provider_reference.$one_health_organization_id,
                 ],
@@ -75,7 +82,7 @@ class EncounterService
                         'text' => $OHEncounter?->OHEncounterHospitalDischarge?->text,
                     ],
                 ],
-                'diagnosis' => $this->getDiagnosis($OHEncounter),
+                'diagnosis' => $diagnosis,
             ];
 
             if (! $OHEncounter?->period_end) {
@@ -86,11 +93,17 @@ class EncounterService
                 unset($request['hospitalization']);
             }
 
-            if ($OHEncounter?->status != 'finished') {
+            if (empty($request['diagnosis'])) {
                 unset($request['diagnosis']);
             }
         } else {
             $request = $requestBody;
+            if (isset($request['status']) && $request['status'] === 'finished' && (empty($request['diagnosis']) || ! isset($request['diagnosis']))) {
+                $request['status'] = 'in-progress';
+            }
+            if (isset($request['diagnosis']) && empty($request['diagnosis'])) {
+                unset($request['diagnosis']);
+            }
         }
 
         Log::info('EncounterService->buildRequestBody', $request);
@@ -223,13 +236,19 @@ class EncounterService
         return $locations;
     }
 
-    private function getStatusHistory($encounter)
+    private function getStatusHistory($encounter, ?string $overrideLatestStatus = null)
     {
         $status_histories = [];
+        $histories = $encounter->statusHistories ?? [];
+        $count = count($histories);
 
-        foreach ($encounter->statusHistories ?? [] as $key => $status) {
+        foreach ($histories as $key => $status) {
+            $statusCode = $status?->status;
+            if ($overrideLatestStatus && $key === $count - 1 && $statusCode === 'finished') {
+                $statusCode = $overrideLatestStatus;
+            }
             $status_histories[] = [
-                'status' => $status?->status,
+                'status' => $statusCode,
                 'period' => [
                     'start' => $status?->period_start,
                     'end' => $status?->period_end,
@@ -272,12 +291,14 @@ class EncounterService
         $diagnosis = [];
 
         foreach ($OHEncounter?->OHConditions ?? [] as $key => $OHCondition) {
-            $diagnosis[] = [
-                'condition' => [
-                    'reference' => 'Condition/'.$OHCondition?->id_condition,
-                ],
-                'rank' => $key + 1,
-            ];
+            if (! empty($OHCondition?->id_condition)) {
+                $diagnosis[] = [
+                    'condition' => [
+                        'reference' => 'Condition/'.$OHCondition->id_condition,
+                    ],
+                    'rank' => count($diagnosis) + 1,
+                ];
+            }
         }
 
         return $diagnosis;

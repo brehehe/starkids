@@ -7,6 +7,7 @@ use App\Models\Api\ApiOutboxTask;
 use App\Models\Encounter\Encounter;
 use App\Models\Patient\Patient;
 use App\Models\Practitiont\Practitioner;
+use App\Models\Transaction\Transaction;
 use App\Models\User;
 use App\service\apiservice;
 use Illuminate\Contracts\View\View;
@@ -23,7 +24,7 @@ class AdminConsultationSatuSehatIndex extends Component
 
     public int $perPage = 10;
 
-    public string $tab = 'patient'; // patient, encounter, outbox
+    public string $tab = 'patient'; // patient, synced_patient, encounter, synced_encounter, outbox
 
     public string $outboxStatus = ''; // filter for outbox status
 
@@ -53,7 +54,7 @@ class AdminConsultationSatuSehatIndex extends Component
 
     public function changeTab(string $tab): void
     {
-        if (in_array($tab, ['patient', 'encounter', 'outbox'])) {
+        if (in_array($tab, ['patient', 'synced_patient', 'encounter', 'synced_encounter', 'outbox'])) {
             $this->tab = $tab;
             $this->resetPage();
             $this->search = '';
@@ -121,16 +122,50 @@ class AdminConsultationSatuSehatIndex extends Component
         AlertHelper::success('Berhasil', "Berhasil menambahkan {$queued} pasien ke antrian sinkronisasi.");
     }
 
-    public function queueEncounter(string $encounterId): void
+    protected function getOutboxModelIds(ApiOutboxTask $task): array
     {
-        $encounter = Encounter::with('transaction')->find($encounterId);
-        if (! $encounter || ! $encounter->transaction) {
+        $ids = $task->model_ids;
+        if (is_string($ids)) {
+            $decoded = json_decode($ids, true);
+            $ids = is_array($decoded) ? $decoded : [$ids];
+        }
+
+        return is_array($ids) ? $ids : [];
+    }
+
+    protected function getEncounterStatus(Transaction $transaction, ?Encounter $encounter = null): string
+    {
+        if ($encounter && ! empty($encounter->status) && ! in_array($encounter->status, ['unknown', 'planned'])) {
+            return $encounter->status;
+        }
+
+        $trxStatus = strtolower($transaction->status ?? '');
+
+        return match ($trxStatus) {
+            'completed', 'finished', 'done', 'pharmacy', 'paid', 'success' => 'finished',
+            'consultation', 'in_progress', 'process', 'in-progress' => 'in-progress',
+            'arrived', 'draft_consultation', 'waiting' => 'arrived',
+            'canceled', 'cancelled' => 'cancelled',
+            default => $encounter->status ?? 'planned',
+        };
+    }
+
+    public function queueEncounter(string $id): void
+    {
+        $encounter = Encounter::with('transaction')->find($id);
+        if ($encounter) {
+            $transaction = $encounter->transaction;
+        } else {
+            $transaction = Transaction::find($id);
+            $encounter = Encounter::where('transaction_id', $id)->first();
+        }
+
+        if (! $transaction) {
             AlertHelper::error('Gagal', 'Data kunjungan/transaksi tidak ditemukan.');
 
             return;
         }
 
-        $transaction = $encounter->transaction;
         $patient = Patient::where('user_id', $transaction->patient_id)->select('id')->first();
         $doctor = Practitioner::where('user_id', $transaction->doctor_id)->select('id')->first();
 
@@ -142,14 +177,14 @@ class AdminConsultationSatuSehatIndex extends Component
 
         $data = [
             'pending' => true,
-            'id' => $encounter->id,
+            'id' => $encounter?->id ?? null,
             'transaction_id' => $transaction->id,
             'company_id' => $transaction->company_id,
             'location_id' => $transaction->location_id,
             'patient_id' => $patient->id,
             'practitioner_id' => $doctor->id ?? null,
             'type' => 'outpatient',
-            'status' => 'planned',
+            'status' => $this->getEncounterStatus($transaction, $encounter),
             'class_code' => 'AMB',
         ];
 
@@ -163,47 +198,44 @@ class AdminConsultationSatuSehatIndex extends Component
 
     public function queueAllUnsyncedEncounters(): void
     {
-        $unsyncedEncounters = Encounter::whereHas('transaction', function ($query) {
-            $query->where('company_id', auth()->user()->company_id);
-        })
-            ->whereHas('transaction.patient.patient.OHPatient', function ($query) {
+        $unsyncedTransactions = Transaction::where('company_id', auth()->user()->company_id)
+            ->whereHas('patient.patient.OHPatient', function ($query) {
                 $query->whereNotNull('id_patient');
             })
             ->where(function ($query) {
-                $query->whereDoesntHave('OHEncounter')
-                    ->orWhereHas('OHEncounter', function ($sq) {
-                        $sq->whereNull('id_encounter');
+                $query->whereDoesntHave('encounter')
+                    ->orWhereHas('encounter', function ($eq) {
+                        $eq->whereDoesntHave('OHEncounter')
+                            ->orWhereHas('OHEncounter', function ($sq) {
+                                $sq->whereNull('id_encounter');
+                            });
                     });
             })
-            ->with('transaction')
+            ->with(['encounter', 'patient.patient'])
             ->take(100)
             ->get();
 
-        if ($unsyncedEncounters->isEmpty()) {
-            AlertHelper::info('Info', 'Semua kunjungan sudah tersinkronisasi.');
+        if ($unsyncedTransactions->isEmpty()) {
+            AlertHelper::info('Info', 'Semua kunjungan transaksi sudah tersinkronisasi.');
 
             return;
         }
 
         $queued = 0;
-        foreach ($unsyncedEncounters as $encounter) {
-            $transaction = $encounter->transaction;
-            if (! $transaction) {
-                continue;
-            }
+        foreach ($unsyncedTransactions as $transaction) {
             $patient = Patient::where('user_id', $transaction->patient_id)->select('id')->first();
             $doctor = Practitioner::where('user_id', $transaction->doctor_id)->select('id')->first();
 
             $data = [
                 'pending' => true,
-                'id' => $encounter->id,
+                'id' => $transaction->encounter?->id ?? null,
                 'transaction_id' => $transaction->id,
                 'company_id' => $transaction->company_id,
                 'location_id' => $transaction->location_id,
                 'patient_id' => $patient->id ?? null,
                 'practitioner_id' => $doctor->id ?? null,
                 'type' => 'outpatient',
-                'status' => 'planned',
+                'status' => $this->getEncounterStatus($transaction, $transaction->encounter),
                 'class_code' => 'AMB',
             ];
 
@@ -220,41 +252,35 @@ class AdminConsultationSatuSehatIndex extends Component
 
     public function queueAllSyncableEncounters(): void
     {
-        $encounters = Encounter::whereHas('transaction', function ($query) {
-            $query->where('company_id', auth()->user()->company_id);
-        })
-            ->whereHas('transaction.patient.patient.OHPatient', function ($query) {
+        $transactions = Transaction::where('company_id', auth()->user()->company_id)
+            ->whereHas('patient.patient.OHPatient', function ($query) {
                 $query->whereNotNull('id_patient');
             })
-            ->with('transaction')
+            ->with(['encounter', 'patient.patient'])
             ->take(100)
             ->get();
 
-        if ($encounters->isEmpty()) {
-            AlertHelper::info('Info', 'Tidak ada kunjungan yang dapat disinkronkan.');
+        if ($transactions->isEmpty()) {
+            AlertHelper::info('Info', 'Tidak ada kunjungan transaksi yang dapat disinkronkan.');
 
             return;
         }
 
         $queued = 0;
-        foreach ($encounters as $encounter) {
-            $transaction = $encounter->transaction;
-            if (! $transaction) {
-                continue;
-            }
+        foreach ($transactions as $transaction) {
             $patient = Patient::where('user_id', $transaction->patient_id)->select('id')->first();
             $doctor = Practitioner::where('user_id', $transaction->doctor_id)->select('id')->first();
 
             $data = [
                 'pending' => true,
-                'id' => $encounter->id,
+                'id' => $transaction->encounter?->id ?? null,
                 'transaction_id' => $transaction->id,
                 'company_id' => $transaction->company_id,
                 'location_id' => $transaction->location_id,
                 'patient_id' => $patient->id ?? null,
                 'practitioner_id' => $doctor->id ?? null,
                 'type' => 'outpatient',
-                'status' => 'planned',
+                'status' => $this->getEncounterStatus($transaction, $transaction->encounter),
                 'class_code' => 'AMB',
             ];
 
@@ -272,12 +298,34 @@ class AdminConsultationSatuSehatIndex extends Component
     public function retryFailedTasks(): void
     {
         $updated = ApiOutboxTask::where('status', 'failed')
+            ->orWhere('execution', '>', 3)
             ->update([
                 'status' => 'pending',
                 'execution' => 0,
             ]);
 
-        AlertHelper::success('Berhasil', "Berhasil menyetel ulang {$updated} antrian gagal kembali ke antrian aktif.");
+        AlertHelper::success('Berhasil', "Berhasil menyetel ulang {$updated} antrian kembali ke antrian aktif.");
+    }
+
+    public function retryTask(string $taskId): void
+    {
+        $task = ApiOutboxTask::find($taskId);
+        if ($task) {
+            $task->update([
+                'status' => 'pending',
+                'execution' => 0,
+            ]);
+            AlertHelper::success('Berhasil', 'Antrian berhasil disetel ulang ke status pending.');
+        }
+    }
+
+    public function deleteTask(string $taskId): void
+    {
+        $task = ApiOutboxTask::find($taskId);
+        if ($task) {
+            $task->delete();
+            AlertHelper::success('Berhasil', 'Antrian berhasil dihapus.');
+        }
     }
 
     public function clearSuccessTasks(): void
@@ -445,15 +493,59 @@ class AdminConsultationSatuSehatIndex extends Component
             if (! empty($ohPatientIds)) {
                 $tasks = ApiOutboxTask::where(function ($query) use ($ohPatientIds) {
                     foreach ($ohPatientIds as $id) {
-                        $query->orWhere('model_ids', 'ilike', '%"'.$id.'"%');
+                        $query->orWhereRaw('model_ids::text ILIKE ?', ['%'.$id.'%']);
                     }
                 })
-                    ->where('model_classes', 'ilike', '%OneHealthPatient%')
+                    ->whereRaw('model_classes::text ILIKE ?', ['%OneHealthPatient%'])
                     ->orderBy('created_at', 'asc')
                     ->get();
 
                 foreach ($tasks as $task) {
-                    foreach ($task->model_ids as $id) {
+                    foreach ($this->getOutboxModelIds($task) as $id) {
+                        if (in_array($id, $ohPatientIds)) {
+                            $outboxStatuses[$id] = $task;
+                        }
+                    }
+                }
+            }
+        } elseif ($this->tab === 'synced_patient') {
+            $dataList = User::query()
+                ->companyRole('Pasien', auth()->user()->company_id)
+                ->whereHas('patient', function ($q) {
+                    $q->whereHas('OHPatient', function ($sq) {
+                        $sq->whereNotNull('id_patient');
+                    });
+                })
+                ->when($this->search, function ($query) {
+                    $query->where('name', 'ilike', '%'.$this->search.'%')
+                        ->orWhereHas('userDetail', function ($q) {
+                            $q->where('identity_card', 'ilike', '%'.$this->search.'%');
+                        })
+                        ->orWhereHas('patient.OHPatient', function ($q) {
+                            $q->where('id_patient', 'ilike', '%'.$this->search.'%');
+                        });
+                })
+                ->with(['patient.OHPatient', 'userDetail'])
+                ->orderBy('created_at', 'desc')
+                ->paginate($this->perPage);
+
+            $ohPatientIds = collect($dataList->items())
+                ->map(fn ($user) => $user->patient?->OHPatient?->id)
+                ->filter()
+                ->toArray();
+
+            if (! empty($ohPatientIds)) {
+                $tasks = ApiOutboxTask::where(function ($query) use ($ohPatientIds) {
+                    foreach ($ohPatientIds as $id) {
+                        $query->orWhereRaw('model_ids::text ILIKE ?', ['%'.$id.'%']);
+                    }
+                })
+                    ->whereRaw('model_classes::text ILIKE ?', ['%OneHealthPatient%'])
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+                foreach ($tasks as $task) {
+                    foreach ($this->getOutboxModelIds($task) as $id) {
                         if (in_array($id, $ohPatientIds)) {
                             $outboxStatuses[$id] = $task;
                         }
@@ -461,14 +553,64 @@ class AdminConsultationSatuSehatIndex extends Component
                 }
             }
         } elseif ($this->tab === 'encounter') {
+            // Hanya transaksi yang pasiennya sudah tersinkron ke SatuSehat (ada id_patient)
+            $dataList = Transaction::query()
+                ->where('company_id', auth()->user()->company_id)
+                ->whereHas('patient.patient.OHPatient', function ($query) {
+                    $query->whereNotNull('id_patient');
+                })
+                ->when($this->search, function ($query) {
+                    $query->where(function ($q) {
+                        $q->where('code', 'ilike', '%'.$this->search.'%')
+                            ->orWhere('patient_name', 'ilike', '%'.$this->search.'%')
+                            ->orWhere('doctor_name', 'ilike', '%'.$this->search.'%');
+                    });
+                })
+                ->with([
+                    'patient.patient.OHPatient',
+                    'encounter.OHEncounter',
+                ])
+                ->orderBy('created_at', 'desc')
+                ->paginate($this->perPage);
+
+            $ohEncounterIds = collect($dataList->items())
+                ->map(fn ($trx) => $trx->encounter?->OHEncounter?->id)
+                ->filter()
+                ->toArray();
+
+            if (! empty($ohEncounterIds)) {
+                $tasks = ApiOutboxTask::where(function ($query) use ($ohEncounterIds) {
+                    foreach ($ohEncounterIds as $id) {
+                        $query->orWhereRaw('model_ids::text ILIKE ?', ['%'.$id.'%']);
+                    }
+                })
+                    ->whereRaw('model_classes::text ILIKE ?', ['%OneHealthEncounter%'])
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+                foreach ($tasks as $task) {
+                    foreach ($this->getOutboxModelIds($task) as $id) {
+                        if (in_array($id, $ohEncounterIds)) {
+                            $outboxStatuses[$id] = $task;
+                        }
+                    }
+                }
+            }
+        } elseif ($this->tab === 'synced_encounter') {
+            // Kunjungan dari pasien yang sudah punya id_patient di SatuSehat
             $dataList = Encounter::whereHas('transaction', function ($query) {
                 $query->where('company_id', auth()->user()->company_id);
             })
-
+                ->whereHas('transaction.patient.patient.OHPatient', function ($query) {
+                    $query->whereNotNull('id_patient');
+                })
                 ->when($this->search, function ($query) {
                     $query->whereHas('transaction', function ($q) {
                         $q->where('code', 'ilike', '%'.$this->search.'%')
-                            ->orWhere('patient_name', 'ilike', '%'.$this->search.'%');
+                            ->orWhere('patient_name', 'ilike', '%'.$this->search.'%')
+                            ->orWhere('doctor_name', 'ilike', '%'.$this->search.'%');
+                    })->orWhereHas('OHEncounter', function ($q) {
+                        $q->where('id_encounter', 'ilike', '%'.$this->search.'%');
                     });
                 })
                 ->with(['transaction.patient.patient.OHPatient', 'transaction.doctor', 'OHEncounter'])
@@ -483,15 +625,15 @@ class AdminConsultationSatuSehatIndex extends Component
             if (! empty($ohEncounterIds)) {
                 $tasks = ApiOutboxTask::where(function ($query) use ($ohEncounterIds) {
                     foreach ($ohEncounterIds as $id) {
-                        $query->orWhere('model_ids', 'ilike', '%"'.$id.'"%');
+                        $query->orWhereRaw('model_ids::text ILIKE ?', ['%'.$id.'%']);
                     }
                 })
-                    ->where('model_classes', 'ilike', '%OneHealthEncounter%')
+                    ->whereRaw('model_classes::text ILIKE ?', ['%OneHealthEncounter%'])
                     ->orderBy('created_at', 'asc')
                     ->get();
 
                 foreach ($tasks as $task) {
-                    foreach ($task->model_ids as $id) {
+                    foreach ($this->getOutboxModelIds($task) as $id) {
                         if (in_array($id, $ohEncounterIds)) {
                             $outboxStatuses[$id] = $task;
                         }
