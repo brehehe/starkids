@@ -1732,6 +1732,7 @@ namespace App\Models\Encounter{
  * @property-read \App\Models\Patient\Patient|null $patient
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Encounter\EncounterStatusHistory> $statusHistories
  * @property-read int|null $status_histories_count
+ * @property-read \App\Models\Transaction\Transaction|null $transaction
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Encounter newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Encounter newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Encounter onlyTrashed()
@@ -10898,6 +10899,7 @@ namespace App\Models\Transaction{
  * @property-read \App\Models\User|null $createdBy
  * @property-read \App\Models\Deposit\Deposit|null $deposit
  * @property-read \App\Models\User|null $doctor
+ * @property-read \App\Models\Encounter\Encounter|null $encounter
  * @property-read \App\Models\Insurance\Insurance|null $insurance
  * @property-read \App\Models\Location\Location|null $location
  * @property-read \App\Models\User|null $patient
