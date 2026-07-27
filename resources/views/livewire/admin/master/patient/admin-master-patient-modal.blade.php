@@ -90,8 +90,7 @@
                     @enderror
                 </div>
                 <div class="mb-4">
-                    <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span
-                            class="text-red-600">*</span></label>
+                    <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi</label>
                     <div wire:key="select-{{ rand() }}">
                         <select class="mt-1 form-control" x-data x-ref="input" x-init="$($refs.input).selectize({
                             dropdownParent: 'body',
@@ -113,8 +112,7 @@
                     @enderror
                 </div>
                 <div class="mb-4">
-                    <label for="city_code" class="block text-sm font-medium text-gray-700">Kota <span
-                            class="text-red-600">*</span></label>
+                    <label for="city_code" class="block text-sm font-medium text-gray-700">Kota</label>
                     <div wire:key="select-{{ rand() }}">
                         <select class="mt-1 form-control" x-data x-ref="input" x-init="$($refs.input).selectize({
                             dropdownParent: 'body',
@@ -136,8 +134,7 @@
                     @enderror
                 </div>
                 <div class="mb-4">
-                    <label for="district_code" class="block text-sm font-medium text-gray-700">Kecamatan <span
-                            class="text-red-600">*</span></label>
+                    <label for="district_code" class="block text-sm font-medium text-gray-700">Kecamatan</label>
                     <div wire:key="select-{{ rand() }}">
                         <select class="mt-1 form-control" x-data x-ref="input" x-init="$($refs.input).selectize({
                             dropdownParent: 'body',
@@ -159,8 +156,7 @@
                     @enderror
                 </div>
                 <div class="mb-4">
-                    <label for="sub_district_code" class="block text-sm font-medium text-gray-700">Kelurahan <span
-                            class="text-red-600">*</span></label>
+                    <label for="sub_district_code" class="block text-sm font-medium text-gray-700">Kelurahan</label>
                     <div wire:key="select-{{ rand() }}">
                         <select class="mt-1 form-control" x-data x-ref="input" x-init="$($refs.input).selectize({
                             dropdownParent: 'body',
@@ -182,8 +178,7 @@
                     @enderror
                 </div>
                 <div class="md:col-span-2 mb-4">
-                    <label for="address" class="block text-sm font-medium text-gray-700">Alamat <span
-                            class="text-red-600">*</span></label>
+                    <label for="address" class="block text-sm font-medium text-gray-700">Alamat</label>
                     <textarea id="address" wire:model.defer="address" placeholder="Contoh : Jl. Raya No. 123"
                         class="mt-1 form-control"></textarea>
                     @error('address')
@@ -191,8 +186,7 @@
                     @enderror
                 </div>
                 <div class="md:col-span-2 mb-4">
-                    <label for="postal_code" class="block text-sm font-medium text-gray-700">Kode Pos <span
-                            class="text-red-600">*</span></label>
+                    <label for="postal_code" class="block text-sm font-medium text-gray-700">Kode Pos</label>
                     <input id="postal_code" type="text" wire:model.defer="postal_code"
                         placeholder="Contoh : 12345" class="mt-1 form-control">
                     @error('postal_code')
@@ -200,8 +194,7 @@
                     @enderror
                 </div>
                 <div class="mb-4">
-                    <label for="rt_code" class="block text-sm font-medium text-gray-700">RT <span
-                            class="text-red-600">*</span></label>
+                    <label for="rt_code" class="block text-sm font-medium text-gray-700">RT</label>
                     <input id="rt_code" type="text" wire:model.defer="rt_code" placeholder="Contoh : 01"
                         class="mt-1 form-control">
                     @error('rt_code')
@@ -209,8 +202,7 @@
                     @enderror
                 </div>
                 <div class="mb-4">
-                    <label for="rw_code" class="block text-sm font-medium text-gray-700">RW <span
-                            class="text-red-600">*</span></label>
+                    <label for="rw_code" class="block text-sm font-medium text-gray-700">RW</label>
                     <input id="rw_code" type="text" wire:model.defer="rw_code" placeholder="Contoh : 02"
                         class="mt-1 form-control">
                     @error('rw_code')

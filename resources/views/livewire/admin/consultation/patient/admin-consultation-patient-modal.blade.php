@@ -177,8 +177,7 @@
                     @enderror
                 </div>
                 <div class="md:col-span-2 mb-4">
-                    <label for="address" class="block text-sm font-medium text-gray-700">Alamat <span
-                            class="text-red-600">*</span></label>
+                    <label for="address" class="block text-sm font-medium text-gray-700">Alamat</label>
                     <textarea id="address" wire:model.defer="address" placeholder="Contoh : Jl. Raya No. 123"
                         class="mt-1 form-control"></textarea>
                     @error('address')
