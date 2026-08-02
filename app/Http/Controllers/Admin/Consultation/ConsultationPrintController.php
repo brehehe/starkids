@@ -10,7 +10,7 @@ class ConsultationPrintController extends Controller
 {
     public function printReferral($transactionId)
     {
-        $transaction = Transaction::with(['patient.userDetail', 'doctor', 'company'])->findOrFail($transactionId);
+        $transaction = Transaction::with(['patient.userDetail', 'doctor', 'company.companyDetail'])->findOrFail($transactionId);
         $reference = TransactionReference::where('transaction_id', $transactionId)->first();
 
         // If no reference created yet, we can either return empty or error
@@ -31,7 +31,7 @@ class ConsultationPrintController extends Controller
         $transaction = Transaction::with([
             'patient.userDetail',
             'doctor',
-            'company',
+            'company.companyDetail',
             'transactionDetails' => function ($query) {
                 $query->where('type_transaction', 'action');
             },

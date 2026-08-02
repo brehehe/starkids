@@ -1461,7 +1461,7 @@ class AdminSalePosDetailIndex extends Component
     {
         $products = Product::search($this->searchProduct)
             ->select('id', 'sku_number', 'name', 'description', 'company_id')
-            ->with('company:id,name', 'productStock:id,product_id,quantity,quantity_lock,quantity_real', 'productPrice:id,product_id,price,recipe,price_discount')
+            ->with('company:id,name', 'productStock:id,product_id,quantity,quantity_lock,quantity_real', 'productPrice:id,product_id,price,recipe,price_discount', 'nearestExpiredDate')
             ->where('company_id', Auth::user()->company_id);
 
         $paymentMethod = PaymentMethod::where('company_id', Auth::user()->company_id);

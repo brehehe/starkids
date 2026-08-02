@@ -157,10 +157,11 @@
                             <thead>
                                 <tr class="bg-gray-50">
                                     <th class="py-3 px-4 text-center font-medium">No</th>
-                                    <th class="py-3 px-4 text-left font-medium">Nama Tindakan</th>
+                                    <th class="py-3 px-4 text-left font-medium">Nama Obat</th>
                                     <th class="py-3 px-4 text-left font-medium">Deskripsi</th>
                                     <th class="py-3 px-4 text-left font-medium">Harga</th>
                                     <th class="py-3 px-4 text-left font-medium">Stok</th>
+                                    <th class="py-3 px-4 text-left font-medium">Exp. Date</th>
                                     <th style="width: 10%" class="py-3 px-4 text-center font-medium">Aksi</th>
                                 </tr>
                             </thead>
@@ -174,6 +175,9 @@
                                             {{ number_format($medicine->productPrice?->price ?? 0, 0, ',', '.') }}</td>
                                         <td class="py-3 px-3">
                                             {{ $medicine?->productStock?->quantity ?? 0 }}
+                                        </td>
+                                        <td class="py-3 px-4">
+                                            {{ $medicine->nearestExpiredDate?->expired_date ? \Carbon\Carbon::parse($medicine->nearestExpiredDate->expired_date)->format('d/m/Y') : '-' }}
                                         </td>
                                         <td class="py-3 px-4">
                                             <button class="text-blue-600 hover:text-blue-800 mx-1"

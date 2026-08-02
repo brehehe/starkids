@@ -1945,7 +1945,7 @@ class AdminSalePosRecipeIndex extends Component
             // ->whereHas('productType', function ($query) {
             //     $query->where('name', 'Obat'); // atau 'Supporting Product' sesuai isi database
             // })
-            ->with('company:id,name', 'productStock:id,product_id,quantity,quantity_lock', 'productPrice:id,product_id,price,recipe', 'productType:id,name')
+            ->with('company:id,name', 'productStock:id,product_id,quantity,quantity_lock', 'productPrice:id,product_id,price,recipe', 'productType:id,name', 'nearestExpiredDate')
             ->where('company_id', Auth::user()->company_id);
         $paymentMethod = PaymentMethod::where('company_id', Auth::user()->company_id);
 

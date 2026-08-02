@@ -706,6 +706,7 @@ class AdminPharmacyConsultationDetailIndex extends Component
                 $q->select('id', 'product_id', 'price', 'recipe')
                     ->where('branch_id', $branchId);
             },
+            'nearestExpiredDate',
         ]);
 
         if ($isAction) {

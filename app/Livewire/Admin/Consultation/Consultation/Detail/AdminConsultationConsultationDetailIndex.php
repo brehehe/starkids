@@ -2332,6 +2332,7 @@ class AdminConsultationConsultationDetailIndex extends Component
             'productPrice' => function ($q) {
                 $q->select('id', 'product_id', 'price', 'recipe');
             },
+            'nearestExpiredDate',
         ]);
 
         if ($isAction) {

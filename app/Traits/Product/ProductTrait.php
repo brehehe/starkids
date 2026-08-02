@@ -62,7 +62,7 @@ trait ProductTrait
         $products = Product::search($this->searchProduct)
             ->where('is_non_stock', false)
             ->select('id', 'sku_number', 'name', 'description', 'company_id')
-            ->with('company:id,name', 'productStock:id,product_id,quantity', 'productPrice:id,product_id,price,recipe')
+            ->with('company:id,name', 'productStock:id,product_id,quantity', 'productPrice:id,product_id,price,recipe', 'nearestExpiredDate')
             ->where('company_id', Auth::user()->company_id);
 
         return $products->orderBy('name', 'asc')->paginate($this->perPageProduct, ['*'], 'pageProduct');
@@ -72,7 +72,7 @@ trait ProductTrait
     {
         $products = Product::search($this->searchProduct)
             ->select('id', 'sku_number', 'name', 'description', 'company_id')
-            ->with('company:id,name', 'productStock:id,product_id,quantity', 'productPrice:id,product_id,price,recipe')
+            ->with('company:id,name', 'productStock:id,product_id,quantity', 'productPrice:id,product_id,price,recipe', 'nearestExpiredDate')
             ->where('company_id', Auth::user()->company_id);
 
         return $products->orderBy('name', 'asc')->get();

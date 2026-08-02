@@ -41,6 +41,7 @@
                             <th class="py-3 px-4 text-left font-medium">Nama Produk</th>
                             <th class="py-3 px-4 text-left font-medium">Deskripsi</th>
                             <th class="py-3 px-4 text-left font-medium">Stok</th>
+                            <th class="py-3 px-4 text-left font-medium">Exp. Date</th>
                             <th class="py-3 px-4 text-left font-medium">Harga</th>
                             <th class="py-3 px-4 text-center font-medium">Aksi</th>
                         </tr>
@@ -53,6 +54,9 @@
                                 <td class="py-3 px-4">{{ $product->name }}</td>
                                 <td class="py-3 px-4">{{ $product->description ?? '-' }}</td>
                                 <td class="py-3 px-4">{{ $product->productStock?->quantity ?? 0 }}</td>
+                                <td class="py-3 px-4">
+                                    {{ $product->nearestExpiredDate?->expired_date ? \Carbon\Carbon::parse($product->nearestExpiredDate->expired_date)->format('d/m/Y') : '-' }}
+                                </td>
                                 <td class="py-3 px-4">Rp
                                     {{ number_format($product->productPrice?->price ?? 0, 0, ',', '.') }}</td>
                                 <td class="py-3 px-4 text-center">

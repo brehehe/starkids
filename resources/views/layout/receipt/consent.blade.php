@@ -8,9 +8,12 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Arial', sans-serif; font-size: 14px; line-height: 1.5; color: #000; background: #f5f5f5; padding: 20px; display: flex; justify-content: center; }
         .container { width: 210mm; min-height: 297mm; background: #fff; padding: 20mm; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); }
-        .header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
-        .company-name { font-size: 20px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
-        .company-address { font-size: 12px; }
+        .header { display: flex; align-items: center; gap: 15px; border-bottom: 3px solid #2563eb; padding-bottom: 12px; margin-bottom: 20px; text-align: left; }
+        .logo-box { flex-shrink: 0; }
+        .header-logo { max-height: 80px; width: auto; object-fit: contain; }
+        .company-info { flex-grow: 1; }
+        .company-name { font-size: 20px; font-weight: bold; color: #16a34a; margin-bottom: 3px; line-height: 1.2; text-transform: none; }
+        .company-address, .company-contact, .company-city { font-size: 13px; font-weight: bold; color: #000; line-height: 1.3; }
         .title { text-align: center; font-size: 16px; font-weight: bold; text-decoration: underline; margin-bottom: 20px; text-transform: uppercase;}
         .content-section { margin-bottom: 20px; }
         .row { display: flex; margin-bottom: 8px; align-items: flex-end; }
@@ -44,8 +47,26 @@
 
     <div class="container">
         <div class="header">
-            <div class="company-name">{{ $transaction->company->name ?? 'Klinik Mediction' }}</div>
-            <div class="company-address">{{ $transaction->company->address ?? 'Alamat Klinik' }} | Telp: {{ $transaction->company->phone ?? '-' }}</div>
+            <div class="logo-box">
+                @if (!empty($transaction->company?->logo))
+                    <img src="{{ asset('storage/' . $transaction->company->logo) }}" alt="Logo" class="header-logo">
+                @else
+                    <img src="{{ asset('asset/img/logo-starkids.png') }}" alt="Logo" class="header-logo">
+                @endif
+            </div>
+            <div class="company-info">
+                <div class="company-name">{{ $transaction->company->name ?? 'Klinik Utama Starkids Medical Center' }}</div>
+                @if(isset($transaction->company->companyDetail->address) || isset($transaction->company->address))
+                    <div class="company-address">{{ $transaction->company->companyDetail->address ?? $transaction->company->address }}</div>
+                @endif
+                <div class="company-contact">
+                    @if(!empty($transaction->company->phone)) Telp. {{ $transaction->company->phone }}. @endif
+                    @if(!empty($transaction->company->email)) Email: {{ $transaction->company->email }} @endif
+                </div>
+                @if(isset($transaction->company->companyDetail->city) || isset($transaction->company->companyDetail->postal_code))
+                    <div class="company-city">{{ trim(($transaction->company->companyDetail->city ?? '') . ' ' . ($transaction->company->companyDetail->postal_code ?? '')) }}</div>
+                @endif
+            </div>
         </div>
 
         <div class="title">LEMBAR PERSETUJUAN TINDAKAN MEDIS<br>(INFORMED CONSENT)</div>

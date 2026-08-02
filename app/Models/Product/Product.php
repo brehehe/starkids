@@ -116,6 +116,18 @@ class Product extends Model
         return $this->hasMany(ProductPackage::class);
     }
 
+    public function productExpiredDates()
+    {
+        return $this->hasMany(ProductExpiredDate::class);
+    }
+
+    public function nearestExpiredDate()
+    {
+        return $this->hasOne(ProductExpiredDate::class)
+            ->where('quantity', '>', 0)
+            ->orderBy('expired_date', 'asc');
+    }
+
     public function getNameSkuAttribute()
     {
         $sku_number = $this->sku_number ? $this->sku_number.' - ' : null;

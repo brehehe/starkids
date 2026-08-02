@@ -53,6 +53,7 @@
                                     <th>Nama Produk</th>
                                     <th>Deskripsi</th>
                                     <th>Stok</th>
+                                    <th>Exp. Date</th>
                                     <th>Harga</th>
                                     <th class="w-1 center">Aksi</th>
                                 </tr>
@@ -66,6 +67,7 @@
                                         <td>{{ $product->description ?? '-' }}</td>
                                         <td>{{ number_format($product->productStock->quantity_now ?? 0, 0, ',', '.') }}
                                         </td>
+                                        <td>{{ $product->nearestExpiredDate?->expired_date ? \Carbon\Carbon::parse($product->nearestExpiredDate->expired_date)->format('d/m/Y') : '-' }}</td>
                                         <td>Rp {{ number_format($product->productPrice?->price ?? 0, 0, ',', '.') }}
                                         </td>
                                         <td class="center">
