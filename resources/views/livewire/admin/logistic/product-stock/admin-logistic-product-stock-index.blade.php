@@ -121,6 +121,59 @@
                 </select>
             </div>
         </div>
+
+        <!-- Periode / Tanggal Filter Section -->
+        <div class="border-t border-gray-200 pt-4 mt-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-semibold text-gray-700">Filter Periode:</span>
+                    <label class="inline-flex items-center text-sm text-gray-700 cursor-pointer">
+                        <input type="radio" wire:model.live="filter_type" value="monthly" class="form-radio text-blue-600">
+                        <span class="ml-2">Per Bulan & Tahun</span>
+                    </label>
+                    <label class="inline-flex items-center text-sm text-gray-700 cursor-pointer">
+                        <input type="radio" wire:model.live="filter_type" value="custom" class="form-radio text-blue-600">
+                        <span class="ml-2">Custom Tanggal</span>
+                    </label>
+                </div>
+                <button wire:click="resetFilter" type="button" class="text-xs text-red-600 hover:text-red-800 font-medium underline flex items-center gap-1">
+                    <i class="fas fa-undo"></i> Reset Filter
+                </button>
+            </div>
+
+            @if ($filter_type === 'monthly')
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
+                        <select wire:model.live="month" class="form-control">
+                            <option value="">Semua Bulan</option>
+                            @foreach ($this->months as $key => $name)
+                                <option value="{{ $key }}">{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
+                        <select wire:model.live="year" class="form-control">
+                            @foreach ($this->years as $y)
+                                <option value="{{ $y }}">{{ $y }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            @else
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                        <input type="date" wire:model.live="start_date" class="form-control">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai</label>
+                        <input type="date" wire:model.live="end_date" class="form-control">
+                    </div>
+                </div>
+            @endif
+        </div>
     </div>
 
     <!-- Table Controls -->

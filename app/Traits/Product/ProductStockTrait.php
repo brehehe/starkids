@@ -35,6 +35,15 @@ trait ProductStockTrait
             $query->where('product_type_id', $this->product_type_id);
         }
 
+        if (method_exists($this, 'getDateRange')) {
+            [$startDate, $endDate] = $this->getDateRange();
+            if ($startDate && $endDate) {
+                $query->whereHas('productStockHistories', function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+                });
+            }
+        }
+
         return $query->orderBy('name', 'asc');
     }
 

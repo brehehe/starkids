@@ -31,25 +31,39 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="mb-4 md:col-span-2">
-                    <label for="identity_card" class="block text-sm font-medium text-gray-700">NIK <span
-                            class="text-red-600">*</span></label>
+                    <label for="identity_card" class="block text-sm font-medium text-gray-700">
+                        {{ $identity_card_mother ? 'NIK Ibu' : 'NIK' }} <span class="text-red-600">*</span>
+                    </label>
                     <input autocomplete="false" id="identity_card" type="text" wire:model.defer="identity_card"
-                        placeholder="Contoh : 1234567890123456" class="mt-1 form-control">
+                        placeholder="{{ $identity_card_mother ? 'Contoh : 1234567890123456 (NIK Ibu)' : 'Contoh : 1234567890123456' }}" class="mt-1 form-control">
                     @error('identity_card')
                         <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
                 <div class="mb-4 justify-between">
-                    <label for="identity_card_mother" class="block text-sm font-medium text-gray-700">Apakah Nik Ibu
-                        <span class="text-red-600">*</span></label>
+                    <label for="identity_card_mother" class="block text-sm font-medium text-gray-700">Apakah NIK Ibu?</label>
                     <div class="flex items-center mt-2" wire:key="{{ rand() }}">
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" wire:model="identity_card_mother" class="sr-only peer">
+                            <input type="checkbox" wire:model.live="identity_card_mother" class="sr-only peer">
                             <div
                                 class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
                             </div>
                         </label>
                     </div>
+                </div>
+            </div>
+
+            <!-- Info SATUSEHAT -->
+            <div class="mb-4 text-xs bg-blue-50 text-blue-800 border border-blue-200 rounded-lg p-3 flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 20.5C6.753 20.5 2.5 16.247 2.5 11S6.753 1.5 12 1.5 21.5 5.753 21.5 11 17.247 20.5 12 20.5z" />
+                </svg>
+                <div>
+                    <span class="font-semibold text-blue-900">Info SATUSEHAT Kemenkes (Pasien Anak / Bayi):</span>
+                    <ul class="list-disc list-inside mt-1 space-y-0.5 text-blue-700">
+                        <li><strong>Anak / Bayi Baru Lahir yang belum memiliki NIK di KK</strong>: Aktifkan opsi <em>"Apakah NIK Ibu?"</em> dan isi NIK Ibu Kandung.</li>
+                        <li><strong>Anak yang sudah terdaftar Memiliki NIK di KK</strong>: Diisi dengan NIK Anak tersebut.</li>
+                    </ul>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
