@@ -157,6 +157,8 @@ class AdminPharmacyTakeMedicineDetailIndex extends Component
         }
     }
 
+    public $is_processing = false;
+
     public function confirmSave()
     {
         return AlertHelper::confirmSave('save', 'Apakah Anda Yakin Mengkonfirmasi Pengambilan Obat?');
@@ -164,10 +166,16 @@ class AdminPharmacyTakeMedicineDetailIndex extends Component
 
     public function save()
     {
-        $transaction = Transaction::find($this->transaction_id);
-        if (! $transaction) {
+        if ($this->is_processing) {
             return;
         }
+
+        $transaction = Transaction::find($this->transaction_id);
+        if (! $transaction || in_array($transaction->status, ['take_medicine', 'completed', 'take_medicine_completed'])) {
+            return AlertHelper::warning('Peringatan', 'Pengambilan obat untuk transaksi ini sudah dikonfirmasi.');
+        }
+
+        $this->is_processing = true;
 
         $productService = new ProductService;
         $companyId = Auth::user()->company_id;

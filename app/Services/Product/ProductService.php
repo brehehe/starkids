@@ -12,6 +12,7 @@ use App\Models\Product\ProductStockHistory;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class ProductService.
@@ -143,6 +144,30 @@ class ProductService
         $product_import_stock_id = null,
         $dead_stock_id = null
     ) {
+        // Prevent duplicate stock out for the same transaction detail
+        if ($transaction_detail_id) {
+            $exists = ProductStockHistory::where('transaction_detail_id', $transaction_detail_id)
+                ->where('type', 'out')
+                ->exists();
+            if ($exists) {
+                Log::warning("Duplicate stock decrement prevented for transaction_detail_id: {$transaction_detail_id}");
+
+                return null;
+            }
+        }
+
+        // Prevent duplicate stock out for the same transaction recipe
+        if ($transaction_recipe_id) {
+            $exists = ProductStockHistory::where('transaction_recipe_id', $transaction_recipe_id)
+                ->where('type', 'out')
+                ->exists();
+            if ($exists) {
+                Log::warning("Duplicate stock decrement prevented for transaction_recipe_id: {$transaction_recipe_id}");
+
+                return null;
+            }
+        }
+
         $product = Product::find($product_id);
 
         $quantity = $quantity ? intval(str_replace('.', '', $quantity)) : 0;
