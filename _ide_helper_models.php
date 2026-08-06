@@ -8493,7 +8493,10 @@ namespace App\Models\Product{
  * @property numeric $incentive_doctor
  * @property-read \App\Models\Company\Company|null $company
  * @property-read mixed $name_sku
+ * @property-read \App\Models\Product\ProductExpiredDate|null $nearestExpiredDate
  * @property-read \App\Models\Product\ProductCategory|null $productCategory
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product\ProductExpiredDate> $productExpiredDates
+ * @property-read int|null $product_expired_dates_count
  * @property-read \App\Models\Product\ProductFactory|null $productFactory
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product\ProductPackage> $productPackages
  * @property-read int|null $product_packages_count

@@ -967,38 +967,16 @@ class AdminSalePosRecipeIndex extends Component
                             ])->save();
                         } else {
                             $detail->quantity = ceil($detail->quantity_real) ?? 1;
-                            if (! $productRecipe->is_non_stock) {
-                                // Simplified stock check
-                                if ($detail->quantity > $productStockRecipe->quantity) {
-                                    $detail->quantity_real = $productStockRecipe->quantity;
-                                    $detail->quantity = $productStockRecipe->quantity;
-                                    AlertHelper::error(
-                                        'Gagal',
-                                        "Stok produk '".($productRecipe?->name ?? 'Unknown').
-                                            "' tidak mencukupi. Tersedia: {$productStockRecipe->quantity}, Diminta: {$detail->quantity}."
-                                    );
-                                }
 
-                                $detail->fill([
-                                    'type' => $detail->type ?? 'single',
-                                    'dosage_doctor' => 0,
-                                    'dosage_drug' => 0,
-                                    'quantity_real' => $detail->quantity_real,
-                                    'quantity' => intval($detail->quantity_real),
-                                    'price' => $priceRecipe,
-                                    'sub_total_price' => $priceRecipe * $detail->quantity,
-                                ])->save();
-                            } else {
-                                $detail->fill([
-                                    'type' => $detail->type ?? 'single',
-                                    'dosage_doctor' => 0,
-                                    'dosage_drug' => 0,
-                                    'quantity_real' => $detail->quantity_real,
-                                    'quantity' => intval($detail->quantity_real),
-                                    'price' => $priceRecipe,
-                                    'sub_total_price' => $priceRecipe * $detail->quantity,
-                                ])->save();
-                            }
+                            $detail->fill([
+                                'type' => $detail->type ?? 'single',
+                                'dosage_doctor' => 0,
+                                'dosage_drug' => 0,
+                                'quantity_real' => $detail->quantity_real,
+                                'quantity' => intval($detail->quantity_real),
+                                'price' => $priceRecipe,
+                                'sub_total_price' => $priceRecipe * intval($detail->quantity_real),
+                            ])->save();
                         }
                     }
                 }
@@ -1008,7 +986,6 @@ class AdminSalePosRecipeIndex extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             AlertHelper::error('Gagal', 'Terjadi kesalahan saat memperbarui resep: '.$e->getMessage());
-            Log::error('Error updating transaction recipe: '.$e->getMessage());
         }
     }
 
@@ -1027,13 +1004,6 @@ class AdminSalePosRecipeIndex extends Component
 
         if ($quantity === 'decrement') {
 
-            if (! $productStock || $productStock->quantity <= 0) {
-                $transactionDetail->quantity = 1;
-                $transactionDetail->save();
-
-                return AlertHelper::error('Gagal', 'Stok produk tidak ditemukan atau stok kosong.');
-            }
-
             if ($transactionDetail->quantity <= 1) {
                 $transactionDetail->quantity = 1;
                 $transactionDetail->save();
@@ -1045,11 +1015,7 @@ class AdminSalePosRecipeIndex extends Component
         }
 
         if ($quantity === 'increment') {
-            if ($productStock->quantity <= $transactionDetail->quantity) {
-                $transactionDetail->quantity = $productStock->quantity;
-            } else {
-                $transactionDetail->increment('quantity');
-            }
+            $transactionDetail->increment('quantity');
         }
 
         $transactionDetail->sub_total_price = $transactionDetail->price * $transactionDetail->quantity;
