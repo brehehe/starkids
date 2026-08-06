@@ -966,38 +966,16 @@ class AdminSalePosRecipeIndexOld extends Component
                             ])->save();
                         } else {
                             $detail->quantity = ceil($detail->quantity_real) ?? 1;
-                            if (! $productRecipe->is_non_stock) {
-                                // Simplified stock check
-                                if ($detail->quantity > $productStockRecipe->quantity) {
-                                    $detail->quantity_real = $productStockRecipe->quantity;
-                                    $detail->quantity = $productStockRecipe->quantity;
-                                    AlertHelper::error(
-                                        'Gagal',
-                                        "Stok produk '".($productRecipe?->name ?? 'Unknown').
-                                            "' tidak mencukupi. Tersedia: {$productStockRecipe->quantity}, Diminta: {$detail->quantity}."
-                                    );
-                                }
 
-                                $detail->fill([
-                                    'type' => $detail->type ?? 'single',
-                                    'dosage_doctor' => 0,
-                                    'dosage_drug' => 0,
-                                    'quantity_real' => $detail->quantity_real,
-                                    'quantity' => $detail->quantity,
-                                    'price' => $priceRecipe,
-                                    'sub_total_price' => $priceRecipe * $detail->quantity,
-                                ])->save();
-                            } else {
-                                $detail->fill([
-                                    'type' => $detail->type ?? 'single',
-                                    'dosage_doctor' => 0,
-                                    'dosage_drug' => 0,
-                                    'quantity_real' => $detail->quantity_real,
-                                    'quantity' => $detail->quantity,
-                                    'price' => $priceRecipe,
-                                    'sub_total_price' => $priceRecipe * $detail->quantity,
-                                ])->save();
-                            }
+                            $detail->fill([
+                                'type' => $detail->type ?? 'single',
+                                'dosage_doctor' => 0,
+                                'dosage_drug' => 0,
+                                'quantity_real' => $detail->quantity_real,
+                                'quantity' => intval($detail->quantity_real),
+                                'price' => $priceRecipe,
+                                'sub_total_price' => $priceRecipe * intval($detail->quantity_real),
+                            ])->save();
                         }
                     }
                 }

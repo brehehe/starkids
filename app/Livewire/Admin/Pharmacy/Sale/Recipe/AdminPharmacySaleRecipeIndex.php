@@ -698,17 +698,7 @@ class AdminPharmacySaleRecipeIndex extends Component
                                 ->where('id', '!=', $transactionRecipe->id)
                                 ->sum('quantity');
 
-                            $availableStock = $productStock->quantity - $totalLocked + ($transactionRecipe->quantity ?? 0);
-
-                            if ($numeroRecipe > $availableStock) {
-                                $quantity = max(1, $availableStock);
-                                AlertHelper::error(
-                                    'Gagal',
-                                    "Stok produk '".($product?->name ?? 'Unknown')."' tidak mencukupi. Tersedia: {$availableStock}, Diminta: {$numeroRecipe}."
-                                );
-                            } else {
-                                $quantity = $numeroRecipe;
-                            }
+                            $quantity = $numeroRecipe;
                         }
 
                         // Use existing price if available, otherwise fetch from database
@@ -772,29 +762,7 @@ class AdminPharmacySaleRecipeIndex extends Component
 
                         if ($medicineType->is_single) {
                             // === SINGLE ===
-                            if ($productRecipe->is_non_stock) {
-                                $quantityRecipe = $numeroRecipe;
-                            } elseif (! $productStockRecipe) {
-                                $quantityRecipe = 1;
-                                AlertHelper::error('Gagal', "Stok produk '{$productRecipe->name}' tidak ditemukan.");
-                            } else {
-                                $totalLockedDetail = TransactionDetail::where('product_id', $productRecipe->id)
-                                    ->whereHas('transaction', fn ($q) => $q->whereIn('status', $this->validStatuses))
-                                    ->where('id', '!=', $detail->id)
-                                    ->sum('quantity');
-
-                                $availableStockDetail = $productStockRecipe->quantity - $totalLockedDetail + ($detail->quantity ?? 0);
-
-                                if ($numeroRecipe > $availableStockDetail) {
-                                    $quantityRecipe = max(1, $availableStockDetail);
-                                    AlertHelper::error(
-                                        'Gagal',
-                                        "Stok produk '{$productRecipe->name}' tidak mencukupi. Tersedia: {$availableStockDetail}, Diminta: {$numeroRecipe}."
-                                    );
-                                } else {
-                                    $quantityRecipe = $numeroRecipe;
-                                }
-                            }
+                            $quantityRecipe = $numeroRecipe;
 
                             $detail->fill([
                                 'type' => 'single',
@@ -827,30 +795,6 @@ class AdminPharmacySaleRecipeIndex extends Component
                             }
 
                             $detail->quantity = $numeroRecipe ? ceil($detail->quantity_real) : 0;
-
-                            if (! $productRecipe->is_non_stock) {
-                                if (! $productStockRecipe) {
-                                    $detail->quantity = 1;
-                                    AlertHelper::error('Gagal', "Stok produk '{$productRecipe->name}' tidak ditemukan.");
-                                } else {
-                                    $totalLockedDetail = TransactionDetail::where('product_id', $productRecipe->id)
-                                        ->whereHas('transaction', fn ($q) => $q->whereIn('status', $this->validStatuses))
-                                        ->where('id', '!=', $detail->id)
-                                        ->sum('quantity');
-
-                                    $availableStockDetail = $productStockRecipe->quantity - $totalLockedDetail + ($detail->quantity ?? 0);
-
-                                    if ($detail->quantity > $availableStockDetail) {
-                                        $detail->quantity = max(1, $availableStockDetail);
-                                        AlertHelper::error(
-                                            'Gagal',
-                                            "Stok produk '{$productRecipe->name}' tidak mencukupi. Tersedia: {$availableStockDetail}, Diminta: {$detail->quantity}."
-                                        );
-                                    }
-                                }
-                            } else {
-                                $detail->quantity_real = $detail->quantity;
-                            }
 
                             $detail->fill([
                                 'type' => $detail->type ?? 'single',
