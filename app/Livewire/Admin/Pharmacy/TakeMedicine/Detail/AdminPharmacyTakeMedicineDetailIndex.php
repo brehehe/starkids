@@ -171,7 +171,7 @@ class AdminPharmacyTakeMedicineDetailIndex extends Component
         }
 
         $transaction = Transaction::find($this->transaction_id);
-        if (! $transaction || in_array($transaction->status, ['take_medicine', 'completed', 'take_medicine_completed'])) {
+        if (! $transaction || in_array($transaction->status, ['completed', 'take_medicine_completed'])) {
             return AlertHelper::warning('Peringatan', 'Pengambilan obat untuk transaksi ini sudah dikonfirmasi.');
         }
 

@@ -136,6 +136,13 @@ class Product extends Model
         return $sku_number.$name;
     }
 
+    protected function casts(): array
+    {
+        return [
+            'is_non_stock' => 'boolean',
+        ];
+    }
+
     protected static function boot()
     {
         parent::boot();
