@@ -15,7 +15,7 @@ trait ProductStockTrait
     {
         $query = Product::search($this->search)
             ->select('id', 'sku_number', 'name', 'description', 'company_id', 'unit_id', 'maximum_stock', 'minimun_stock', 'safety_stock', 'product_category_id', 'product_factory_id', 'product_rack_id', 'product_type_id')
-            ->with('company:id,name', 'productStock:id,product_id,branch_id,quantity,quantity_lock,quantity_real,company_id', 'unit:id,name', 'productPrice:id,product_id,price,hpp_average,branch_id,company_id')
+            ->with('company:id,name', 'productStock:id,product_id,branch_id,quantity,quantity_lock,quantity_real,company_id', 'unit:id,name', 'productPrice:id,product_id,price,hpp_average,hpp_average_without_discount,branch_id,company_id')
             ->where('company_id', Auth::user()->company_id);
 
         // Apply filters

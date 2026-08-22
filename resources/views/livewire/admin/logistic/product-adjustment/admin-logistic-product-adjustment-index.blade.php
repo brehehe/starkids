@@ -282,7 +282,7 @@
     </div>
 
     <!-- Modal Histori Lengkap -->
-    <livewire:admin.components.product-price-history-modal />
+    @include('livewire.admin.components.product-price-history-modal')
 
     <!-- Notification & Modal Script -->
     <script>
