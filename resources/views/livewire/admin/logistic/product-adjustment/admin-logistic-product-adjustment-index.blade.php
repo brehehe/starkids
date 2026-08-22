@@ -6,7 +6,7 @@
             <p class="text-sm text-gray-500 mt-1">Sesuaikan stok, HNA bruto/netto, dan harga jual produk melalui modal penyesuaian.</p>
         </div>
         <div class="flex items-center gap-3">
-            <a href="{{ route('user.logistic.product-stock.index') }}" wire:navigate
+            <a href="{{ route('user.logistic.product-stock') }}" wire:navigate
                 class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm transition">
                 <i class="fas fa-arrow-left text-xs"></i>
                 Kembali ke Stok
