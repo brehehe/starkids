@@ -13,6 +13,7 @@ use App\Models\PurchaseRequisition\PurchaseRequisitionItem;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class RecalculateHppAverageCommand extends Command
 {
@@ -211,6 +212,23 @@ class RecalculateHppAverageCommand extends Command
             // -------------------------------------------------------------
             $this->info('Langkah 5: Menghitung Ulang HNA (HPP Rata-rata) per Produk...');
 
+            // Auto ensure columns exist in DB if not migrated yet
+            if (!Schema::hasColumn('product_prices', 'hpp_average_without_discount')) {
+                try {
+                    DB::statement('ALTER TABLE product_prices ADD COLUMN IF NOT EXISTS hpp_average_without_discount numeric(15,2) DEFAULT 0;');
+                } catch (\Exception $e) {
+                    // ignore
+                }
+            }
+            if (!Schema::hasColumn('product_selling_price_histories', 'margin')) {
+                try {
+                    DB::statement('ALTER TABLE product_selling_price_histories ADD COLUMN IF NOT EXISTS margin numeric(8,2) DEFAULT 0;');
+                } catch (\Exception $e) {
+                    // ignore
+                }
+            }
+            $hasGrossColumn = Schema::hasColumn('product_prices', 'hpp_average_without_discount');
+
             $query = Product::with(['productPrice', 'productCategory']);
 
             if ($productFilter) {
@@ -236,7 +254,7 @@ class RecalculateHppAverageCommand extends Command
 
                 // Cari riwayat aktif
                 $priceHistories = ProductPriceHistory::where('product_id', $product->id)->get();
-                $oldHppGross = (float) ($productPrice->hpp_average_without_discount ?? 0);
+                $oldHppGross = $hasGrossColumn ? (float) ($productPrice->hpp_average_without_discount ?? 0) : $oldHpp;
                 $sumQty = 0;
                 $sumSubTotalNet = 0;
                 $sumSubTotalGross = 0;
@@ -283,10 +301,12 @@ class RecalculateHppAverageCommand extends Command
 
                 $dataUpdated = false;
 
-                if (abs($oldHpp - $newHpp) > 0.01 || abs($oldHppGross - $newHppGross) > 0.01) {
+                if (abs($oldHpp - $newHpp) > 0.01 || ($hasGrossColumn && abs($oldHppGross - $newHppGross) > 0.01)) {
                     if (!$isDryRun) {
                         $productPrice->hpp_average = $newHpp;
-                        $productPrice->hpp_average_without_discount = $newHppGross;
+                        if ($hasGrossColumn) {
+                            $productPrice->hpp_average_without_discount = $newHppGross;
+                        }
                     }
                     $dataUpdated = true;
                 }
