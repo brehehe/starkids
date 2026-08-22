@@ -48,10 +48,39 @@ trait ProductPriceTrait
         $productPrices = $this->getProductPrices()->get();
 
         foreach ($productPrices as $productPrice) {
+            $oldPrice = (float) $productPrice->price;
+            $oldRecipe = (float) $productPrice->recipe;
+            $oldHna = (float) $productPrice->hpp_average;
+
+            $newPrice = (float) ($productPrice->price_generate > 0 ? $productPrice->price_generate : $productPrice->price);
+            $newRecipe = (float) ($productPrice->recipe_generate > 0 ? $productPrice->recipe_generate : $productPrice->recipe);
+
             $productPrice->update([
                 'is_updated' => true,
-                'price' => $productPrice->price_generate,
-                'recipe' => $productPrice->recipe_generate,
+                'price' => $newPrice,
+                'recipe' => $newRecipe,
+            ]);
+
+            $calculatedMargin = 0;
+            if ($oldHna > 0 && $newPrice > 0) {
+                $calculatedMargin = round((($newPrice - $oldHna) / $oldHna) * 100, 2);
+            }
+
+            \App\Models\Product\ProductSellingPriceHistory::create([
+                'product_id' => $productPrice->product_id,
+                'product_price_id' => $productPrice->id,
+                'branch_id' => $productPrice->branch_id,
+                'company_id' => $productPrice->company_id,
+                'user_id' => Auth::user()?->id,
+                'old_price' => $oldPrice,
+                'new_price' => $newPrice,
+                'old_recipe' => $oldRecipe,
+                'new_recipe' => $newRecipe,
+                'old_hpp_average' => $oldHna,
+                'new_hpp_average' => $productPrice->hpp_average,
+                'margin' => $calculatedMargin,
+                'source' => 'Generate Harga Jual (Farmasi)',
+                'notes' => 'Margin: +'.$calculatedMargin.'%',
             ]);
         }
     }

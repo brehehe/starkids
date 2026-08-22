@@ -9,9 +9,8 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ProductPriceHistory extends Model
+class ProductSellingPriceHistory extends Model
 {
-    //
     use HasUuids, SoftDeletes;
 
     protected $guarded = ['id'];
@@ -49,10 +48,5 @@ class ProductPriceHistory extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
-    }
-
-    public function purchaseOrderItem()
-    {
-        return $this->belongsTo(\App\Models\PurchaseOrder\PurchaseOrderItem::class, 'purchase_order_item_id');
     }
 }

@@ -321,7 +321,7 @@ class AdminLogisticDirectPurchaseIndex extends Component
     public function render()
     {
         $purchaseRequisitions = PurchaseRequisition::search($this->search)
-            ->select('id', 'number', 'status', 'company_id', 'grand_total', 'supplier_id', 'purchase_order_id')
+            ->select('id', 'number', 'status', 'company_id', 'grand_total', 'supplier_id', 'purchase_order_id', 'created_at', 'notes')
             ->with('company:id,name', 'supplier:id,name', 'purchaseOrder:id,number,status,grand_total')
             ->where('company_id', Auth::user()->company_id)
             ->where('type', 'direct');

@@ -144,7 +144,7 @@
                             <td>
                                 <input type="text"
                                     onkeyup="convertToRupiah(this)"
-                                    wire:model.lazy='details.{{ $index }}.quantity' class="form-control"
+                                    wire:model.live.debounce.300ms='details.{{ $index }}.quantity' class="form-control"
                                     placeholder="0" style="width: 175px;" />
                                 @error('details.' . $index . '.quantity')
                                     <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -156,7 +156,7 @@
                                         class="inline-flex items-center rounded-l-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">Rp</span>
                                     <input type="text"
                                         onkeyup="convertToRupiah(this);"
-                                        wire:model.lazy='details.{{ $index }}.hna'
+                                        wire:model.live.debounce.300ms='details.{{ $index }}.hna'
                                         class="form-control rounded-l-none" placeholder="0" />
                                 </div>
                             </td>
@@ -166,37 +166,37 @@
                                         class="inline-flex items-center rounded-l-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">Rp</span>
                                     <input type="text"
                                         onkeyup="convertToRupiah(this);"
-                                        wire:model.lazy='details.{{ $index }}.hna_ppn'
+                                        wire:model.live.debounce.300ms='details.{{ $index }}.hna_ppn'
                                         class="form-control rounded-l-none" placeholder="0" />
                                 </div>
                             </td>
                             <td>
                                 <div style="width: 175px;" class="mt-1 flex rounded-md shadow-sm">
-                                    <select wire:model.lazy='details.{{ $index }}.discount_type'
+                                    <select wire:model.live='details.{{ $index }}.discount_type'
                                         class="inline-flex items-center rounded-l-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
                                         <option value="rupiah">RP</option>
                                         <option value="percentage">%</option>
                                     </select>
-                                    @if ($details[$index]['discount_type'] == 'percentage')
+                                    @if (($details[$index]['discount_type'] ?? 'percentage') == 'percentage')
                                         <input type="number"
-                                            wire:model.lazy='details.{{ $index }}.discount_value'
+                                            wire:model.live.debounce.300ms='details.{{ $index }}.discount_value'
                                             placeholder="0" class="form-control rounded-l-none" />
                                     @else
                                         <input type="text"
                                             onkeyup="convertToRupiah(this);"
-                                            wire:model.lazy='details.{{ $index }}.discount_value'
+                                            wire:model.live.debounce.300ms='details.{{ $index }}.discount_value'
                                             class="form-control rounded-l-none" placeholder="0" />
                                     @endif
                                 </div>
                             </td>
                             <td>
-                                <div style="width: 200px;">
-                                    Rp {{ number_format($detail['sub_total'], 0, ',', '.') }}
+                                <div style="width: 175px;" class="font-semibold text-gray-700">
+                                    Rp {{ number_format(floatval(str_replace('.', '', $detail['discount'] ?? 0)), 0, ',', '.') }}
                                 </div>
                             </td>
                             <td>
-                                <div style="width: 200px;">
-                                    Rp {{ number_format($detail['total'], 0, ',', '.') }}
+                                <div style="width: 175px;" class="font-bold text-blue-700">
+                                    Rp {{ number_format(floatval(str_replace('.', '', $detail['total'] ?? 0)), 0, ',', '.') }}
                                 </div>
                             </td>
                             <td class="center">

@@ -122,6 +122,7 @@
                 <thead>
                     <tr>
                         <th class="w-1 center">No</th>
+                        <th>Tanggal</th>
                         <th>No SP</th>
                         <th>No Invoice</th>
                         <th>Supplier</th>
@@ -135,6 +136,12 @@
                     @forelse ($purchaseRequisitions as $index => $purchaseRequisition)
                         <tr>
                             <td class="w-1 center">{{ $purchaseRequisitions->firstItem() + $index }}</td>
+                            <td>
+                                <div>{{ $purchaseRequisition->created_at ? $purchaseRequisition->created_at->format('d/m/Y') : '-' }}</div>
+                                @if ($purchaseRequisition->created_at)
+                                    <div class="text-[11px] text-gray-400">{{ $purchaseRequisition->created_at->format('H:i') }}</div>
+                                @endif
+                            </td>
                             <td>{{ $purchaseRequisition->number }}</td>
                             <td>{{ $purchaseRequisition?->purchaseOrder?->number }}</td>
                             <td>{{ $purchaseRequisition->supplier->name ?? '-' }}</td>

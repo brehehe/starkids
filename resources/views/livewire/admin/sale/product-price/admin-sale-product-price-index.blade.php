@@ -144,39 +144,65 @@
                         <th>Harga</th>
                         <th>Harga Total</th>
                         {{-- <th>Harga Resep</th> --}}
-                        @if (Auth::user()->is_head)
-                            <th>Aksi</th>
-                        @endif
+                        <th class="w-1 center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($productPrices as $index => $productPrice)
-                        <tr>
+                        <tr class="hover:bg-gray-50/60 transition-colors">
                             <td class="center">{{ $productPrices->firstItem() + $index }}</td>
-                            <td>{{ $productPrice->product?->sku_number ?? '-' }}</td>
-                            <td>{{ $productPrice->product?->name ?? '-' }}</td>
+                            <td class="font-mono text-xs text-gray-600">{{ $productPrice->product?->sku_number ?? '-' }}</td>
+                            <td class="font-semibold text-gray-800">{{ $productPrice->product?->name ?? '-' }}</td>
                             <td>{{ $productPrice->product?->productType?->name ?? '-' }}</td>
                             <td>@number($productPrice?->product?->productStock?->quantity ?? 0)</td>
-                            <td>Rp @number($productPrice->hpp_average)</td>
+                            <td>
+                                <div class="font-bold text-emerald-700">Rp @number($productPrice->hpp_average)</div>
+                                @if (($productPrice->hpp_average_without_discount ?? 0) > 0 && abs(($productPrice->hpp_average_without_discount ?? 0) - $productPrice->hpp_average) > 0.01)
+                                    <div class="text-[10px] text-amber-800 font-medium" title="HNA Bruto (Tanpa Diskon)">
+                                        Bruto: Rp @number($productPrice->hpp_average_without_discount)
+                                    </div>
+                                @endif
+                            </td>
                             <td>Rp @number($productPrice->hpp_average * $productPrice?->product?->productStock?->quantity ?? 0)</td>
-                            <td>Rp @number($productPrice->price)</td>
-                            <td>Rp @number($productPrice->price * $productPrice?->product?->productStock?->quantity ?? 0)</td>
-                            {{-- <td>Rp @number($productPrice->recipe)</td> --}}
-                            @if (Auth::user()->is_head)
-                                <td class="center">
-                                    <div class="flex items-center">
+                            <td>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-bold text-blue-700">Rp @number($productPrice->price)</span>
+                                    @php
+                                        $effMargin = $productPrice->hpp_average > 0 ? round((($productPrice->price - $productPrice->hpp_average) / $productPrice->hpp_average) * 100, 1) : 0;
+                                    @endphp
+                                    @if ($productPrice->price > 0 && $productPrice->hpp_average > 0)
+                                        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded {{ $effMargin >= 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700' }}">
+                                            {{ $effMargin >= 0 ? '+' : '' }}{{ $effMargin }}%
+                                        </span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="font-semibold text-gray-700">Rp @number($productPrice->price * $productPrice?->product?->productStock?->quantity ?? 0)</td>
+                            <td class="center">
+                                <div class="flex items-center justify-center gap-1">
+                                    <!-- History Button -->
+                                    <button
+                                        class="btn btn-icon text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 transition-colors"
+                                        wire:click="showHistory('{{ $productPrice->product_id }}')"
+                                        title="Lihat Histori Harga & HNA">
+                                        <i class="fas fa-history text-sm"></i>
+                                    </button>
+
+                                    @if (Auth::user()->is_head)
+                                        <!-- Edit Button -->
                                         <button
-                                            class="btn btn-icon text-blue-600 hover:text-blue-800 transition-colors edit-btn"
-                                            wire:click="edit('{{ $productPrice->id }}')">
+                                            class="btn btn-icon text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors edit-btn"
+                                            wire:click="edit('{{ $productPrice->id }}')"
+                                            title="Ubah Harga Jual">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
                                                 viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
                                         </button>
-                                    </div>
-                                </td>
-                            @endif
+                                    @endif
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
@@ -197,10 +223,12 @@
                 </div>
                 <div>
                     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        {{ $productPrices->links('vendor.livewire.custom') }} <!-- Menampilkan pagination -->
+                        {{ $productPrices->links('vendor.livewire.custom') }}
                     </nav>
                 </div>
             </div>
         </div>
     </div>
+
+    @include('livewire.admin.components.product-price-history-modal')
 </div>

@@ -349,7 +349,7 @@ trait ProductTrait
 
         $productUnitQuantity = $product_unit_quantity ? $product_unit_quantity : $quantity * $productUnit->quantity;
 
-        $productUnitPrice = $price / $productUnitQuantity;
+        $productUnitPrice = $price;
 
         $productPrice = ProductPrice::where('product_id', $product_id)->where('company_id', Auth::user()->company_id)->where('branch_id', $this->getBranchOne()->id)->first();
 
@@ -388,7 +388,7 @@ trait ProductTrait
 
         $sumQuantity = $productPriceHistorys->sum('quantity');
         $sumSubTotalPrice = $productPriceHistorys->sum('sub_total_price');
-        $hppAverage = $sumSubTotalPrice / $sumQuantity;
+        $hppAverage = $sumQuantity > 0 ? $sumSubTotalPrice / $sumQuantity : $productUnitPrice;
 
         $productPrice->hpp_average = $hppAverage;
         $productPrice->save();

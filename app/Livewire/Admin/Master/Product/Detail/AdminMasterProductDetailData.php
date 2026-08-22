@@ -10,6 +10,7 @@ use App\Models\Master\CodeSystem\MedicationRequest\MasterMedicationRequestValueQ
 use App\Models\Medication\Medication;
 use App\Models\Product\Product;
 use App\Models\Product\ProductPrice;
+use App\Models\Product\ProductSellingPriceHistory;
 use App\Models\Product\ProductType;
 use App\Models\Unit\Unit;
 use App\service\apiservice;
@@ -293,6 +294,10 @@ class AdminMasterProductDetailData extends Component
 
             if ($this->is_non_stock) {
                 $branch = Branch::where('company_id', auth()->user()->company_id)->first();
+                $existingPrice = ProductPrice::where('product_id', $product->id)->first();
+                $oldPrice = (float) ($existingPrice?->price ?? 0);
+                $oldHna = (float) ($existingPrice?->hpp_average ?? 0);
+
                 ProductPrice::updateOrCreate(
                     ['product_id' => $product->id],
                     [
@@ -303,6 +308,30 @@ class AdminMasterProductDetailData extends Component
                         'company_id' => auth()->user()->company_id,
                     ]
                 );
+
+                if ($oldPrice != $this->selling_price || $oldHna != $this->hpp_average) {
+                    $calculatedMargin = 0;
+                    if ($this->hpp_average > 0 && $this->selling_price > 0) {
+                        $calculatedMargin = round((($this->selling_price - $this->hpp_average) / $this->hpp_average) * 100, 2);
+                    }
+
+                    ProductSellingPriceHistory::create([
+                        'product_id' => $product->id,
+                        'product_price_id' => $existingPrice?->id,
+                        'branch_id' => $branch?->id,
+                        'company_id' => auth()->user()->company_id,
+                        'user_id' => auth()->user()?->id,
+                        'old_price' => $oldPrice,
+                        'new_price' => $this->selling_price,
+                        'old_recipe' => 0,
+                        'new_recipe' => 0,
+                        'old_hpp_average' => $oldHna,
+                        'new_hpp_average' => $this->hpp_average,
+                        'margin' => $calculatedMargin,
+                        'source' => 'Master Produk',
+                        'notes' => 'Update produk non-stok (Margin: +'.$calculatedMargin.'%)',
+                    ]);
+                }
             }
 
             // $datas = [

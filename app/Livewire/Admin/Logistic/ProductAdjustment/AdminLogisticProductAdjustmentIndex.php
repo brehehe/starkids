@@ -5,9 +5,11 @@ namespace App\Livewire\Admin\Logistic\ProductAdjustment;
 use App\Models\Product\Product;
 use App\Models\Product\ProductPrice;
 use App\Models\Product\ProductPriceHistory;
+use App\Models\Product\ProductSellingPriceHistory;
 use App\Models\Product\ProductStock;
 use App\Models\Product\ProductStockHistory;
 use App\Traits\Branch\BranchTrait;
+use App\Traits\Product\ProductPriceHistoryTrait;
 use App\Traits\Product\ProductStockTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +18,7 @@ use Livewire\WithPagination;
 
 class AdminLogisticProductAdjustmentIndex extends Component
 {
-    use BranchTrait, ProductStockTrait, WithPagination;
+    use BranchTrait, ProductPriceHistoryTrait, ProductStockTrait, WithPagination;
 
     public $search = '';
 
@@ -28,13 +30,6 @@ class AdminLogisticProductAdjustmentIndex extends Component
     public $editingHnas = [];
 
     public $editingPrices = [];
-
-    // History modal properties
-    public $selectedProductId = null;
-
-    public $selectedProductName = '';
-
-    public $priceHistory = [];
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -104,7 +99,12 @@ class AdminLogisticProductAdjustmentIndex extends Component
             ], [
                 'hpp_average' => 0,
                 'price' => 0,
+                'recipe' => 0,
             ]);
+
+            $oldPrice = (float) $price->price;
+            $oldHna = (float) $price->hpp_average;
+            $oldRecipe = (float) ($price->recipe ?? 0);
 
             if ($newHna !== null) {
                 $price->hpp_average = $newHna;
@@ -116,14 +116,37 @@ class AdminLogisticProductAdjustmentIndex extends Component
             $price->is_updated = true;
             $price->save();
 
-            // Create Price History
+            // Record into ProductSellingPriceHistory
+            $calculatedMargin = 0;
+            if ($price->hpp_average > 0 && $price->price > 0) {
+                $calculatedMargin = round((($price->price - $price->hpp_average) / $price->hpp_average) * 100, 2);
+            }
+
+            ProductSellingPriceHistory::create([
+                'product_id' => $productId,
+                'product_price_id' => $price->id,
+                'branch_id' => $branch->id,
+                'company_id' => $user->company_id,
+                'user_id' => $user->id,
+                'old_price' => $oldPrice,
+                'new_price' => $price->price,
+                'old_recipe' => $oldRecipe,
+                'new_recipe' => $price->recipe ?? 0,
+                'old_hpp_average' => $oldHna,
+                'new_hpp_average' => $price->hpp_average,
+                'margin' => $calculatedMargin,
+                'source' => 'Perbaikan Stok & Harga',
+                'notes' => 'Penyesuaian manual (Margin: +'.$calculatedMargin.'%)',
+            ]);
+
+            // Create Price History for moving average
             ProductPriceHistory::create([
                 'product_id' => $productId,
                 'product_price_id' => $price->id,
                 'branch_id' => $branch->id,
                 'company_id' => $user->company_id,
                 'user_id' => $user->id,
-                'price' => $price->price,
+                'price' => $newHna ?? $price->hpp_average,
                 'hpp_average' => $price->hpp_average,
                 'quantity' => $newStock ?? ($product->productStock->quantity ?? 0),
                 'sub_total_price' => ($newHna ?? $price->hpp_average) * ($newStock ?? ($product->productStock->quantity ?? 0)),
@@ -137,24 +160,6 @@ class AdminLogisticProductAdjustmentIndex extends Component
         unset($this->editingStocks[$productId]);
         unset($this->editingHnas[$productId]);
         unset($this->editingPrices[$productId]);
-    }
-
-    /**
-     * Show history for a product
-     */
-    public function showHistory($productId)
-    {
-        $product = Product::findOrFail($productId);
-        $this->selectedProductId = $productId;
-        $this->selectedProductName = $product->name;
-
-        $this->priceHistory = ProductPriceHistory::with('user')
-            ->where('product_id', $productId)
-            ->where('company_id', Auth::user()->company_id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $this->dispatch('open-modal', ['id' => 'history-modal']);
     }
 
     public function render()

@@ -30,6 +30,11 @@ class PurchaseOrderItem extends Model
         return $this->belongsTo(ProductUnit::class);
     }
 
+    public function purchaseRequisitionItem()
+    {
+        return $this->belongsTo(\App\Models\PurchaseRequisition\PurchaseRequisitionItem::class, 'purchase_requisition_item_id');
+    }
+
     protected static function boot()
     {
         parent::boot();

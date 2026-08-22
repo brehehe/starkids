@@ -17,6 +17,7 @@ class ProductPrice extends Model
 
     protected $casts = [
         'hpp_average' => 'decimal:2',
+        'hpp_average_without_discount' => 'decimal:2',
         'hpp_average_generate' => 'decimal:2',
         'price_generate' => 'decimal:2',
         'price' => 'decimal:2',

@@ -95,6 +95,7 @@ class AdminLogisticDirectPurchaseDetailIndex extends Component
                     'total' => $item?->purchaseOrderItem?->total,
                 ];
             }
+            $this->updatedDetails();
         }
     }
 
@@ -508,6 +509,9 @@ class AdminLogisticDirectPurchaseDetailIndex extends Component
                 ]);
             }
 
+            $netTotal = max(0, $sub_total - $discount);
+            $netUnitPrice = $quantity > 0 ? ($netTotal / $quantity) : $price;
+
             $purchaseOrderItem = PurchaseOrderItem::updateOrCreate(
                 ['purchase_requisition_item_id' => $purchase_requisition_item->id],
                 [
@@ -526,16 +530,23 @@ class AdminLogisticDirectPurchaseDetailIndex extends Component
                     'discount' => $discount,
                     'discount_type' => $discount_type,
                     'discount_value' => $discount_value,
-                    'total' => $total,
+                    'total' => $netTotal,
                     'company_id' => Auth::user()->company_id,
                 ]
             );
 
-            $this->getProductIncrement($purchaseOrderItem->product_id, $purchaseOrderItem->product_unit_id, $detail['expired_dates'] ?? [], $quantity, $price, $purchaseOrderItem->id, null, $quantity);
-            $this->createProductPrice($purchaseOrderItem->product_id, $purchaseOrderItem->product_unit_id, $price, $quantity, $quantity, $purchaseOrderItem->id);
+            $this->getProductIncrement($purchaseOrderItem->product_id, $purchaseOrderItem->product_unit_id, $detail['expired_dates'] ?? [], $quantity, $netUnitPrice, $purchaseOrderItem->id, null, $quantity);
+            $this->createProductPrice($purchaseOrderItem->product_id, $purchaseOrderItem->product_unit_id, $netUnitPrice, $quantity, $quantity, $purchaseOrderItem->id);
         }
 
+        $calculatedGrandTotal = array_sum(array_column($this->details, 'total'));
+        $purchase_requisition->grand_total = $calculatedGrandTotal;
         $purchase_requisition->save();
+
+        if (isset($purchaseOrder)) {
+            $purchaseOrder->grand_total = $calculatedGrandTotal;
+            $purchaseOrder->save();
+        }
     }
 
     public function render()
@@ -696,7 +707,7 @@ class AdminLogisticDirectPurchaseDetailIndex extends Component
 
         $sumQuantity = $productPriceHistorys->sum('quantity');
         $sumSubTotalPrice = $productPriceHistorys->sum('sub_total_price');
-        $hppAverage = $sumSubTotalPrice / $sumQuantity;
+        $hppAverage = $sumQuantity > 0 ? $sumSubTotalPrice / $sumQuantity : $productUnitPrice;
 
         $productPrice->hpp_average = $hppAverage;
         $productPrice->save();

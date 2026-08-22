@@ -32,13 +32,16 @@ trait PurchaseOrderTrait
 
         $quantity_arrival = $quantity_arrival ? intval(Str::replace('.', '', $this->quantity_arrival)) : 0;
 
-        $price = $this->price ? intval(Str::replace('.', '', $this->price)) : 0;
+        $sub_total = $this->sub_total ? intval(Str::replace('.', '', $this->sub_total)) : 0;
+        $discount = $this->discount ? intval(Str::replace('.', '', $this->discount)) : 0;
+        $netTotal = max(0, $sub_total - $discount);
+        $netUnitPrice = $quantity_arrival > 0 ? ($netTotal / $quantity_arrival) : $price;
 
         $purchaseOrderItem = $this->purchase_order_item;
 
-        $this->getProductIncrement($purchaseOrderItem->product_id, $purchaseOrderItem->product_unit_id, $this->batch_numbers, $quantity_arrival, $price, $purchaseOrderItem->id, null, $purchaseOrderItem->product_unit_quantity);
+        $this->getProductIncrement($purchaseOrderItem->product_id, $purchaseOrderItem->product_unit_id, $this->batch_numbers, $quantity_arrival, $netUnitPrice, $purchaseOrderItem->id, null, $purchaseOrderItem->product_unit_quantity);
 
-        $this->createProductPrice($purchaseOrderItem->product_id, $purchaseOrderItem->product_unit_id, $price, $quantity_arrival, $purchaseOrderItem->product_unit_quantity);
+        $this->createProductPrice($purchaseOrderItem->product_id, $purchaseOrderItem->product_unit_id, $netUnitPrice, $quantity_arrival, $purchaseOrderItem->product_unit_quantity);
 
         $purchaseOrderItem->price = $this->price ? intval(Str::replace('.', '', $this->price)) : 0;
         $purchaseOrderItem->hna = $this->hna ? intval(Str::replace('.', '', $this->hna)) : 0;

@@ -6,6 +6,7 @@ use App\Helpers\AlertHelper;
 use App\Models\Branch\Branch;
 use App\Models\Product\Product;
 use App\Models\Product\ProductPrice;
+use App\Models\Product\ProductSellingPriceHistory;
 use App\Models\Product\ProductType;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -99,6 +100,13 @@ class AdminMasterServiceIndex extends Component
             ]
         );
 
+        $newHna = intval(Str::replace('.', '', $this->hpp_average));
+        $newPrice = intval(Str::replace('.', '', $this->price));
+
+        $existingPrice = ProductPrice::where('product_id', $product->id)->first();
+        $oldPrice = (float) ($existingPrice?->price ?? 0);
+        $oldHna = (float) ($existingPrice?->hpp_average ?? 0);
+
         ProductPrice::updateOrCreate(
             [
                 'product_id' => $product->id,
@@ -106,11 +114,35 @@ class AdminMasterServiceIndex extends Component
                 'branch_id' => Branch::where('company_id', auth()->user()->company_id)->first()->id ?? null,
             ],
             [
-                'hpp_average' => intval(Str::replace('.', '', $this->hpp_average)),
-                'price' => intval(Str::replace('.', '', $this->price)),
+                'hpp_average' => $newHna,
+                'price' => $newPrice,
                 'is_updated' => true,
             ]
         );
+
+        if ($oldPrice != $newPrice || $oldHna != $newHna) {
+            $calculatedMargin = 0;
+            if ($newHna > 0 && $newPrice > 0) {
+                $calculatedMargin = round((($newPrice - $newHna) / $newHna) * 100, 2);
+            }
+
+            ProductSellingPriceHistory::create([
+                'product_id' => $product->id,
+                'product_price_id' => $existingPrice?->id,
+                'branch_id' => Branch::where('company_id', auth()->user()->company_id)->first()->id ?? null,
+                'company_id' => auth()->user()->company_id,
+                'user_id' => auth()->user()?->id,
+                'old_price' => $oldPrice,
+                'new_price' => $newPrice,
+                'old_recipe' => 0,
+                'new_recipe' => 0,
+                'old_hpp_average' => $oldHna,
+                'new_hpp_average' => $newHna,
+                'margin' => $calculatedMargin,
+                'source' => 'Master Jasa/Layanan',
+                'notes' => 'Update tarif jasa (Margin: +'.$calculatedMargin.'%)',
+            ]);
+        }
 
         $this->closeModal('modal');
 

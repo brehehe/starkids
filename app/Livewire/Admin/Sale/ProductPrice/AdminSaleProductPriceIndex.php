@@ -7,7 +7,9 @@ use App\Models\Product\ProductCategory;
 use App\Models\Product\ProductFactory;
 use App\Models\Product\ProductPrice;
 use App\Models\Product\ProductRack;
+use App\Models\Product\ProductSellingPriceHistory;
 use App\Models\Product\ProductType;
+use App\Traits\Product\ProductPriceHistoryTrait;
 use App\Traits\Product\ProductPriceTrait;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -15,7 +17,7 @@ use Livewire\WithPagination;
 
 class AdminSaleProductPriceIndex extends Component
 {
-    use ProductPriceTrait, WithPagination;
+    use ProductPriceHistoryTrait, ProductPriceTrait, WithPagination;
 
     protected $queryString = [
         // 'page' => ['except' => 1], // Ini akan menghapus ?page=1 dari URL
@@ -81,6 +83,10 @@ class AdminSaleProductPriceIndex extends Component
             ->toArray();
     }
 
+    public $margin_normal = 0;
+
+    public $hpp_average_without_discount = 0;
+
     public function updatingSearch()
     {
         $this->resetPage();
@@ -88,21 +94,48 @@ class AdminSaleProductPriceIndex extends Component
 
     public function edit($id)
     {
-        $productPrice = ProductPrice::find($id);
+        $productPrice = ProductPrice::with('product.productCategory')->find($id);
         if ($productPrice) {
             $this->data_id = $productPrice->id;
-            $this->data_name = $productPrice->product->name;
-            $this->hpp_average = number_format($productPrice->hpp_average, 0, ',', '.');
-            $this->price = number_format($productPrice->price, 0, ',', '.');
+            $this->data_name = $productPrice->product?->name;
+            $rawHna = (float) $productPrice->hpp_average;
+            $rawHnaGross = (float) ($productPrice->hpp_average_without_discount ?: $productPrice->hpp_average);
+            $rawPrice = (float) $productPrice->price;
+            $this->hpp_average = number_format($rawHna, 0, ',', '.');
+            $this->hpp_average_without_discount = number_format($rawHnaGross, 0, ',', '.');
+            $this->price = number_format($rawPrice, 0, ',', '.');
             $this->recipe = number_format($productPrice->recipe, 0, ',', '.');
+
+            if ($rawHna > 0 && $rawPrice > 0) {
+                $this->margin_normal = round((($rawPrice - $rawHna) / $rawHna) * 100, 2);
+            } else {
+                $this->margin_normal = $productPrice->product?->normal ?: ($productPrice->product?->productCategory?->normal ?? 0);
+            }
         }
         $this->dispatch('open-modal', ['id' => 'modal']);
     }
 
     public function closeModal()
     {
-        $this->reset(['data_id', 'data_name', 'hpp_average', 'price', 'recipe']);
+        $this->reset(['data_id', 'data_name', 'hpp_average', 'hpp_average_without_discount', 'price', 'recipe', 'margin_normal']);
         $this->dispatch('close-modal', ['id' => 'modal']);
+    }
+
+    public function updatedMarginNormal()
+    {
+        $this->margin_normal = $this->margin_normal < 0 ? 0 : $this->margin_normal;
+        $rawHna = $this->hpp_average ? floatval(Str::replace('.', '', $this->hpp_average)) : 0;
+        $calculated = $rawHna + ($rawHna * (floatval($this->margin_normal) / 100));
+        $this->price = number_format($calculated, 0, ',', '.');
+    }
+
+    public function updatedPrice()
+    {
+        $rawPrice = $this->price ? floatval(Str::replace('.', '', $this->price)) : 0;
+        $rawHna = $this->hpp_average ? floatval(Str::replace('.', '', $this->hpp_average)) : 0;
+        if ($rawHna > 0 && $rawPrice >= $rawHna) {
+            $this->margin_normal = round((($rawPrice - $rawHna) / $rawHna) * 100, 2);
+        }
     }
 
     public function save()
@@ -126,15 +159,41 @@ class AdminSaleProductPriceIndex extends Component
             return AlertHelper::error('Gagal', 'Harga tidak boleh lebih kecil dari HPP.');
         }
 
+        $calculatedMargin = 0;
+        if ($hpp_average > 0 && $price > 0) {
+            $calculatedMargin = round((($price - $hpp_average) / $hpp_average) * 100, 2);
+        }
+
         $recipe = 0;
 
         $productPrice = ProductPrice::find($this->data_id);
         if ($productPrice) {
+            $oldPrice = (float) $productPrice->price;
+            $oldRecipe = (float) $productPrice->recipe;
+            $oldHna = (float) $productPrice->hpp_average;
+
             $productPrice->update([
                 'is_updated' => true,
                 'hpp_average' => $hpp_average,
                 'price' => $price,
                 'recipe' => $recipe,
+            ]);
+
+            ProductSellingPriceHistory::create([
+                'product_id' => $productPrice->product_id,
+                'product_price_id' => $productPrice->id,
+                'branch_id' => $productPrice->branch_id,
+                'company_id' => $productPrice->company_id,
+                'user_id' => auth()->user()?->id,
+                'old_price' => $oldPrice,
+                'new_price' => $price,
+                'old_recipe' => $oldRecipe,
+                'new_recipe' => $recipe,
+                'old_hpp_average' => $oldHna,
+                'new_hpp_average' => $hpp_average,
+                'margin' => $calculatedMargin,
+                'source' => 'Master Harga Jual (Daftar Harga)',
+                'notes' => 'Margin: +'.$calculatedMargin.'%',
             ]);
         }
 
