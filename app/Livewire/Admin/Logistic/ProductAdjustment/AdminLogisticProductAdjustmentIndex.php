@@ -72,13 +72,13 @@ class AdminLogisticProductAdjustmentIndex extends Component
         $this->selectedAdjustmentProductId = $product->id;
         $this->productName = $product->name;
         $this->productSku = $product->sku_number ?: 'NO-SKU';
-        $this->productUnit = $product->unit->name ?? '-';
-        $this->currentStock = (float) ($product->productStock->quantity ?? 0);
-        $this->adjustedStock = (float) ($product->productStock->quantity ?? 0);
+        $this->productUnit = $product->unit?->name ?? '-';
+        $this->currentStock = (float) ($product->productStock?->quantity ?? 0);
+        $this->adjustedStock = (float) ($product->productStock?->quantity ?? 0);
 
-        $rawHna = (float) ($product->productPrice->hpp_average ?? 0);
-        $rawHnaGross = (float) ($product->productPrice->hpp_average_without_discount ?: ($product->productPrice->hpp_average ?? 0));
-        $rawPrice = (float) ($product->productPrice->price ?? 0);
+        $rawHna = (float) ($product->productPrice?->hpp_average ?? 0);
+        $rawHnaGross = (float) ($product->productPrice?->hpp_average_without_discount ?: ($product->productPrice?->hpp_average ?? 0));
+        $rawPrice = (float) ($product->productPrice?->price ?? 0);
 
         $this->adjustedHna = number_format($rawHna, 0, ',', '.');
         $this->adjustedHnaGross = number_format($rawHnaGross, 0, ',', '.');

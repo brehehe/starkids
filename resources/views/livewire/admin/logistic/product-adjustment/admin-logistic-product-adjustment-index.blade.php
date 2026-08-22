@@ -76,17 +76,17 @@
                                 </span>
                             </td>
                             <td class="text-right py-4 font-bold text-emerald-700 whitespace-nowrap">
-                                Rp @number($product->productPrice->hpp_average ?? 0)
+                                Rp @number($product->productPrice?->hpp_average ?? 0)
                             </td>
                             <td class="text-right py-4 font-medium text-amber-800 whitespace-nowrap">
-                                Rp @number($product->productPrice->hpp_average_without_discount ?: ($product->productPrice->hpp_average ?? 0))
+                                Rp @number($product->productPrice?->hpp_average_without_discount ?: ($product->productPrice?->hpp_average ?? 0))
                             </td>
                             <td class="text-right py-4 whitespace-nowrap">
                                 <div class="flex items-center justify-end gap-1.5">
-                                    <span class="font-bold text-blue-700">Rp @number($product->productPrice->price ?? 0)</span>
+                                    <span class="font-bold text-blue-700">Rp @number($product->productPrice?->price ?? 0)</span>
                                     @php
-                                        $currHna = (float) ($product->productPrice->hpp_average ?? 0);
-                                        $currPrice = (float) ($product->productPrice->price ?? 0);
+                                        $currHna = (float) ($product->productPrice?->hpp_average ?? 0);
+                                        $currPrice = (float) ($product->productPrice?->price ?? 0);
                                         $effMargin = $currHna > 0 ? round((($currPrice - $currHna) / $currHna) * 100, 1) : 0;
                                     @endphp
                                     @if ($currPrice > 0 && $currHna > 0)

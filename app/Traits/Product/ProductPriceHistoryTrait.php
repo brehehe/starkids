@@ -38,12 +38,12 @@ trait ProductPriceHistoryTrait
 
         if ($product) {
             $this->selectedProductName = $product->name;
-            $this->selectedProductHna = $product->productPrice->hpp_average ?? 0;
-            $this->selectedProductHnaGross = $product->productPrice->hpp_average_without_discount ?? ($product->productPrice->hpp_average ?? 0);
-            $this->selectedProductPrice = $product->productPrice->price ?? 0;
-            $this->selectedProductRecipe = $product->productPrice->recipe ?? 0;
-            $this->selectedProductStock = $product->productStock->quantity ?? 0;
-            $this->selectedProductUnit = $product->unit->name ?? '-';
+            $this->selectedProductHna = $product->productPrice?->hpp_average ?? 0;
+            $this->selectedProductHnaGross = $product->productPrice?->hpp_average_without_discount ?? ($product->productPrice?->hpp_average ?? 0);
+            $this->selectedProductPrice = $product->productPrice?->price ?? 0;
+            $this->selectedProductRecipe = $product->productPrice?->recipe ?? 0;
+            $this->selectedProductStock = $product->productStock?->quantity ?? 0;
+            $this->selectedProductUnit = $product->unit?->name ?? '-';
 
             $companyId = Auth::user()?->company_id;
 
