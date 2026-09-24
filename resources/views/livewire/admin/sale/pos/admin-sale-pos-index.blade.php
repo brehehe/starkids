@@ -107,6 +107,7 @@
                 <table class="w-full text-sm">
                     <thead class="sticky top-0 bg-white border-b-2">
                         <tr class="bg-gray-50">
+                            <th class="py-3 px-4 text-left font-medium">Num</th>
                             <th class="py-3 px-4 text-left font-medium">No. Transaksi</th>
                             <th class="py-3 px-4 text-left font-medium">Tanggal</th>
                             <th class="py-3 px-4 text-left font-medium">Pelanggan</th>
@@ -120,6 +121,7 @@
                         @forelse ($transactions as $index => $transaction)
                             <tr wire:key="transaction-row-{{ $transaction->id }}-{{ $loop->index }}"
                                 class="border-b hover:bg-gray-50 transition-colors">
+                                <td class="py-3 px-4">{{ $transaction->id }}</td>
                                 <td class="py-3 px-4">{{ $transaction->code }}</td>
                                 <td class="py-3 px-4">{{ $transaction->created_at->format('Y-m-d') }}</td>
                                 <td class="py-3 px-4">{{ $transaction->patient_name ?? 'Unknown' }}</td>
