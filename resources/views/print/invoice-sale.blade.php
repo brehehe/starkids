@@ -144,11 +144,11 @@
 
          if (!writableChar) throw new Error("Tidak menemukan characteristic 'write' di printer!");
 
-         // ESC/POS: atur font kecil (~10px) + line spacing rapat
+         // ESC/POS: atur font kecil (~10px) + line spacing
          let encoder = new TextEncoder();
-         let escposInit = new Uint8Array([0x1B, 0x5]); // init printer
+         let escposInit = new Uint8Array([0x1B, 0x40]); // init printer (ESC @)
          let escposFontB = new Uint8Array([0x1B, 0x4D, 0x01]); // font B (kecil)
-         let escposLineSpacing = new Uint8Array([0x1B, 0x33, 0x12]); // rapat, hampir tanpa margin atas
+         let escposLineSpacing = new Uint8Array([0x1B, 0x33, 0x18]); // line spacing 24 dots (aman, rapi, tidak numpuk)
          let escposCut = new Uint8Array([0x1D, 0x56, 0x00]); // cut
 
          let body = encoder.encode(invoiceText);
@@ -168,12 +168,26 @@
          offset += body.length;
          fullData.set(escposCut, offset);
 
-         // Kirim chunk 512 byte
-         const chunkSize = 512;
+         // Kirim per chunk kecil (64 byte) dengan pacing untuk mencegah buffer overflow printer BLE
+         const chunkSize = 64;
          for (let i = 0; i < fullData.length; i += chunkSize) {
              let chunk = fullData.slice(i, i + chunkSize);
-             await writableChar.writeValue(chunk);
-             await new Promise(r => setTimeout(r, 50));
+             if (writableChar.properties.write && typeof writableChar.writeValueWithResponse === 'function') {
+                 try {
+                     await writableChar.writeValueWithResponse(chunk);
+                 } catch (e) {
+                     if (typeof writableChar.writeValueWithoutResponse === 'function') {
+                         await writableChar.writeValueWithoutResponse(chunk);
+                     } else {
+                         await writableChar.writeValue(chunk);
+                     }
+                 }
+             } else if (typeof writableChar.writeValueWithoutResponse === 'function') {
+                 await writableChar.writeValueWithoutResponse(chunk);
+             } else {
+                 await writableChar.writeValue(chunk);
+             }
+             await new Promise(r => setTimeout(r, 35));
          }
 
          alert("✅ Invoice berhasil dikirim ke printer via Web Bluetooth!");

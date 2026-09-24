@@ -510,7 +510,7 @@
                     let encoder = new TextEncoder();
                     let escposInit = new Uint8Array([0x1B, 0x40]); // reset
                     let escposFontB = new Uint8Array([0x1B, 0x4D, 0x01]); // font B
-                    let escposLineSpacing = new Uint8Array([0x1B, 0x33, 0x12]);
+                    let escposLineSpacing = new Uint8Array([0x1B, 0x33, 0x18]); // line spacing 24 dots (aman, rapi, tidak numpuk)
                     let escposCut = new Uint8Array([0x1D, 0x56, 0x00]); // cut
                     let openDrawer = new Uint8Array([0x1B, 0x70, 0x01, 0x25, 0x32]); // ✅ open cash drawer
 
@@ -543,11 +543,26 @@
                         offset += openDrawer.length;
                     }
 
-                    const chunkSize = 512;
+                    // Kirim per chunk kecil (64 byte) dengan pacing untuk mencegah buffer overflow printer BLE
+                    const chunkSize = 64;
                     for (let i = 0; i < fullData.length; i += chunkSize) {
                         let chunk = fullData.slice(i, i + chunkSize);
-                        await writableChar.writeValue(chunk);
-                        await new Promise(r => setTimeout(r, 50));
+                        if (writableChar.properties.write && typeof writableChar.writeValueWithResponse === 'function') {
+                            try {
+                                await writableChar.writeValueWithResponse(chunk);
+                            } catch (e) {
+                                if (typeof writableChar.writeValueWithoutResponse === 'function') {
+                                    await writableChar.writeValueWithoutResponse(chunk);
+                                } else {
+                                    await writableChar.writeValue(chunk);
+                                }
+                            }
+                        } else if (typeof writableChar.writeValueWithoutResponse === 'function') {
+                            await writableChar.writeValueWithoutResponse(chunk);
+                        } else {
+                            await writableChar.writeValue(chunk);
+                        }
+                        await new Promise(r => setTimeout(r, 35));
                     }
 
                     alert("✅ Invoice berhasil dicetak" + (CASH_DRAWER_ENABLED ? " & cash drawer terbuka!" : "!"));
