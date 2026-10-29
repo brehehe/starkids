@@ -27,3 +27,9 @@ frankenphp
 frankenphp-worker.php
 
 *.sql
+# Laravel runtime files
+/storage/logs/*.log
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/bootstrap/cache/*.php
