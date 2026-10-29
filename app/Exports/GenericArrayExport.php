@@ -88,3 +88,4 @@ class GenericArrayExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
         return [];
     }
 }
+
