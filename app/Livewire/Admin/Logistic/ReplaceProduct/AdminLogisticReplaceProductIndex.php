@@ -7,6 +7,7 @@ use App\Imports\ProductImport;
 use App\Models\Product\Product;
 use App\Models\Product\ProductStock;
 use App\Traits\Product\ProductStockTrait;
+use App\Traits\Report\HasReportExportTrait;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -16,7 +17,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class AdminLogisticReplaceProductIndex extends Component
 {
-    use ProductStockTrait, WithFileUploads, WithPagination;
+    use HasReportExportTrait, ProductStockTrait, WithFileUploads, WithPagination;
 
     protected $queryString = [
         // 'page' => ['except' => 1], // Ini akan menghapus ?page=1 dari URL
@@ -157,6 +158,71 @@ class AdminLogisticReplaceProductIndex extends Component
 
             return;
         }
+    }
+
+    public function exportExcel()
+    {
+        $products = $this->getProductStocksQuery()->get();
+        $headings = ['No', 'SKU Number', 'Nama Produk', 'HNA', 'Quantity', 'Satuan', 'Total Persediaan'];
+        $rows = [];
+
+        foreach ($products as $idx => $product) {
+            $qty = (float) ($product->productStock->quantity ?? 0);
+            $hna = (float) ($product->productPrice->hpp_average ?? 0);
+            $total = $qty * $hna;
+
+            $rows[] = [
+                $idx + 1,
+                $product->sku_number ?? '-',
+                $product->name ?? '-',
+                $hna,
+                $qty,
+                $product->unit->name ?? '-',
+                $total,
+            ];
+        }
+
+        return $this->exportExcelResponse('logistic_sesuaikan_produk', $headings, $rows, 'Sesuaikan Produk');
+    }
+
+    public function exportPDF()
+    {
+        $products = $this->getProductStocksQuery()->get();
+        $columns = [
+            ['label' => 'No', 'align' => 'center', 'width' => '30px'],
+            ['label' => 'SKU Number', 'align' => 'left', 'width' => '90px'],
+            ['label' => 'Nama Produk', 'align' => 'left'],
+            ['label' => 'HNA', 'align' => 'right', 'width' => '85px'],
+            ['label' => 'Quantity', 'align' => 'right', 'width' => '65px'],
+            ['label' => 'Satuan', 'align' => 'center', 'width' => '50px'],
+            ['label' => 'Total Persediaan', 'align' => 'right', 'width' => '100px'],
+        ];
+
+        $rows = [];
+        $totalQty = 0;
+        $totalVal = 0;
+
+        foreach ($products as $idx => $product) {
+            $qty = (float) ($product->productStock->quantity ?? 0);
+            $hna = (float) ($product->productPrice->hpp_average ?? 0);
+            $total = $qty * $hna;
+            $totalQty += $qty;
+            $totalVal += $total;
+
+            $rows[] = [
+                $idx + 1,
+                e($product->sku_number ?? '-'),
+                e($product->name ?? '-'),
+                'Rp '.number_format($hna),
+                number_format($qty),
+                e($product->unit->name ?? '-'),
+                'Rp '.number_format($total),
+            ];
+        }
+
+        $totals = ['Total', '', '', '', number_format($totalQty), '', 'Rp '.number_format($totalVal)];
+
+        return $this->exportPDFResponse('logistic_sesuaikan_produk', 'Laporan Penyesuaian Produk Logistik', $columns, $rows, 'portrait', $totals);
     }
 
     public function render()

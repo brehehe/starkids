@@ -5,6 +5,9 @@
                 <h1 class="text-2xl font-bold text-[#1E3A8A]">Laporan Stok Keluar</h1>
                 {{-- <p class="text-gray-600">Kelola produk yang tersedia di toko Anda dengan mudah.</p> --}}
             </div>
+            <div>
+                <x-export-buttons />
+            </div>
         </div>
     </div>
 

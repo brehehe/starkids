@@ -46,14 +46,7 @@
             <p class="text-sm text-gray-500">Laporan Komprehensif Aktivitas Klinik Per Bulan</p>
         </div>
         <div class="flex gap-3 items-center">
-            <div class="flex gap-2">
-                <button onclick="exportExcelFull()" class="inline-flex items-center px-4 py-2.5 bg-green-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-900 focus:outline-none focus:border-green-900 focus:ring ring-green-300 disabled:opacity-25 transition ease-in-out duration-150">
-                    <i class="bi bi-file-earmark-excel text-lg me-2"></i> Export Excel
-                </button>
-                <!-- <button onclick="exportPdfFull()" class="inline-flex items-center px-4 py-2.5 bg-red-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:border-red-900 focus:ring ring-red-300 disabled:opacity-25 transition ease-in-out duration-150">
-                    <i class="bi bi-file-earmark-pdf text-lg me-2"></i> Export PDF
-                </button> -->
-            </div>
+            <x-export-buttons />
 
             <div class="h-8 w-px bg-gray-300 mx-1"></div>
 

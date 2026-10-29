@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\User\UserCompanyRole;
 use App\Models\User\UserDetail;
 use App\Services\Promotion\PromotionQuantityService;
+use App\Traits\Report\HasReportExportTrait;
 use Carbon\Carbon;
 use Http;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,7 @@ use Livewire\WithPagination;
 
 class AdminSalePosIndex extends Component
 {
-    use WithPagination;
+    use HasReportExportTrait, WithPagination;
 
     protected $queryString = [
         'page' => ['except' => 1], // Ini akan menghapus ?page=1 dari URL
@@ -581,6 +582,98 @@ class AdminSalePosIndex extends Component
             ]);
             AlertHelper::error('Gagal', 'Terjadi kesalahan saat menutup kasir.');
         }
+    }
+
+    public function exportExcel()
+    {
+        $transactions = Transaction::query()
+            ->select(['id', 'code', 'created_at', 'status', 'type', 'patient_name', 'doctor_name', 'grand_total_price'])
+            ->where('company_id', Auth::user()->company_id)
+            ->whereIn('status', ['draft', 'process', 'take_medicine', 'completed', 'canceled'])
+            ->when($this->search, fn ($q) => $q->where('code', 'ilike', '%'.trim($this->search).'%'))
+            ->when($this->status, fn ($q) => $q->where('status', $this->status))
+            ->when($this->type_transaction, fn ($q) => $q->where('type', $this->type_transaction))
+            ->when($this->date, fn ($q) => $q->whereDate('created_at', $this->date))
+            ->when($this->patient_company_role_transaction_id, fn ($q) => $q->where('patient_company_role_id', $this->patient_company_role_transaction_id))
+            ->latest('created_at')
+            ->get();
+
+        $headings = ['No', 'No. Transaksi', 'Tanggal', 'Pelanggan', 'Jenis', 'Grand Total', 'Status'];
+        $rows = [];
+
+        foreach ($transactions as $idx => $t) {
+            $typeLabel = match ($t->type) {
+                'non-resep' => 'Non-Resep',
+                'resep' => 'Resep',
+                default => 'Konsultasi',
+            };
+
+            $rows[] = [
+                $idx + 1,
+                $t->code ?? '-',
+                $t->created_at ? $t->created_at->format('d/m/Y H:i') : '-',
+                $t->patient_name ?? 'Umum',
+                $typeLabel,
+                $t->grand_total_price ?? 0,
+                ucfirst($t->status ?? '-'),
+            ];
+        }
+
+        return $this->exportExcelResponse('transaksi_pos', $headings, $rows, 'POS Transaksi');
+    }
+
+    public function exportPDF()
+    {
+        $transactions = Transaction::query()
+            ->select(['id', 'code', 'created_at', 'status', 'type', 'patient_name', 'doctor_name', 'grand_total_price'])
+            ->where('company_id', Auth::user()->company_id)
+            ->whereIn('status', ['draft', 'process', 'take_medicine', 'completed', 'canceled'])
+            ->when($this->search, fn ($q) => $q->where('code', 'ilike', '%'.trim($this->search).'%'))
+            ->when($this->status, fn ($q) => $q->where('status', $this->status))
+            ->when($this->type_transaction, fn ($q) => $q->where('type', $this->type_transaction))
+            ->when($this->date, fn ($q) => $q->whereDate('created_at', $this->date))
+            ->when($this->patient_company_role_transaction_id, fn ($q) => $q->where('patient_company_role_id', $this->patient_company_role_transaction_id))
+            ->latest('created_at')
+            ->get();
+
+        $columns = [
+            ['label' => 'No', 'align' => 'center', 'width' => '30px'],
+            ['label' => 'No. Transaksi', 'align' => 'left', 'width' => '95px'],
+            ['label' => 'Tanggal', 'align' => 'center', 'width' => '85px'],
+            ['label' => 'Pelanggan', 'align' => 'left'],
+            ['label' => 'Jenis', 'align' => 'center', 'width' => '70px'],
+            ['label' => 'Total', 'align' => 'right', 'width' => '85px'],
+            ['label' => 'Status', 'align' => 'center', 'width' => '65px'],
+        ];
+
+        $rows = [];
+        $totalSum = 0;
+
+        foreach ($transactions as $idx => $t) {
+            $total = (float) ($t->grand_total_price ?? 0);
+            $totalSum += $total;
+
+            $typeLabel = match ($t->type) {
+                'non-resep' => 'Non-Resep',
+                'resep' => 'Resep',
+                default => 'Konsultasi',
+            };
+
+            $rows[] = [
+                $idx + 1,
+                e($t->code ?? '-'),
+                $t->created_at ? $t->created_at->format('d/m/Y H:i') : '-',
+                e($t->patient_name ?? 'Umum'),
+                $typeLabel,
+                'Rp '.number_format($total),
+                ucfirst($t->status ?? '-'),
+            ];
+        }
+
+        $totals = ['Total', '', '', '', '', 'Rp '.number_format($totalSum), ''];
+        $period = $this->date ? date('d/m/Y', strtotime($this->date)) : null;
+
+        return $this->exportPDFResponse('transaksi_pos', 'Laporan Transaksi Kasir POS', $columns, $rows, 'portrait', $totals, $period);
     }
 
     public function render()

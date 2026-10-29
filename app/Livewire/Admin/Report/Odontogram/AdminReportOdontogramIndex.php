@@ -4,12 +4,13 @@ namespace App\Livewire\Admin\Report\Odontogram;
 
 use App\Models\Transaction\TransactionDetail;
 use App\Models\User;
+use App\Traits\Report\HasReportExportTrait;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class AdminReportOdontogramIndex extends Component
 {
-    use WithPagination;
+    use HasReportExportTrait, WithPagination;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -93,10 +94,10 @@ class AdminReportOdontogramIndex extends Component
             ->section('content');
     }
 
-    public function getHistoryOdontograms()
+    public function getHistoryOdontogramsQuery()
     {
         if (! $this->patient_id) {
-            return collect();
+            return TransactionDetail::whereRaw('1 = 0');
         }
 
         return TransactionDetail::whereHas('transaction', function ($query) {
@@ -104,7 +105,71 @@ class AdminReportOdontogramIndex extends Component
         })
             ->whereNotNull('odontogram_code')
             ->with(['transaction.doctor', 'product'])
-            ->orderBy('created_at', 'desc')
-            ->paginate($this->perPage);
+            ->orderBy('created_at', 'desc');
+    }
+
+    public function exportExcel()
+    {
+        $patient = $this->patient_id ? User::find($this->patient_id) : null;
+        $items = $this->getHistoryOdontogramsQuery()->get();
+
+        $headings = ['No', 'Tanggal', 'Dokter', 'Kode Gigi', 'Kondisi / Tindakan', 'Keterangan'];
+        $rows = [];
+
+        foreach ($items as $idx => $item) {
+            $rows[] = [
+                $idx + 1,
+                $item->created_at ? $item->created_at->format('d/m/Y H:i') : '-',
+                $item->transaction->doctor->name ?? '-',
+                $item->odontogram_code ?? '-',
+                $item->product->name ?? ($item->name ?? '-'),
+                $item->description ?? '-',
+            ];
+        }
+
+        $filename = 'laporan_odontogram_'.($patient ? str_replace(' ', '_', $patient->name) : 'semua');
+
+        return $this->exportExcelResponse($filename, $headings, $rows, 'Odontogram');
+    }
+
+    public function exportPDF()
+    {
+        $patient = $this->patient_id ? User::find($this->patient_id) : null;
+        $items = $this->getHistoryOdontogramsQuery()->get();
+
+        $columns = [
+            ['label' => 'No', 'align' => 'center', 'width' => '30px'],
+            ['label' => 'Tanggal', 'align' => 'center', 'width' => '90px'],
+            ['label' => 'Dokter', 'align' => 'left', 'width' => '110px'],
+            ['label' => 'Kode Gigi', 'align' => 'center', 'width' => '65px'],
+            ['label' => 'Kondisi / Tindakan', 'align' => 'left'],
+            ['label' => 'Keterangan', 'align' => 'left'],
+        ];
+
+        $rows = [];
+        foreach ($items as $idx => $item) {
+            $rows[] = [
+                $idx + 1,
+                $item->created_at ? $item->created_at->format('d/m/Y H:i') : '-',
+                e($item->transaction->doctor->name ?? '-'),
+                e($item->odontogram_code ?? '-'),
+                e($item->product->name ?? ($item->name ?? '-')),
+                e($item->description ?? '-'),
+            ];
+        }
+
+        $period = $patient ? 'Pasien: '.$patient->name.' ('.$patient->phone.')' : 'Semua Pasien';
+        $filename = 'laporan_odontogram_'.($patient ? str_replace(' ', '_', $patient->name) : 'semua');
+
+        return $this->exportPDFResponse($filename, 'Laporan Odontogram Gigi', $columns, $rows, 'portrait', null, $period);
+    }
+
+    public function getHistoryOdontograms()
+    {
+        if (! $this->patient_id) {
+            return collect();
+        }
+
+        return $this->getHistoryOdontogramsQuery()->paginate($this->perPage);
     }
 }

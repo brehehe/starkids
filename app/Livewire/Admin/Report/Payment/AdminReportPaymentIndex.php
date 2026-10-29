@@ -4,13 +4,15 @@ namespace App\Livewire\Admin\Report\Payment;
 
 use App\Models\PaymentMethod\PaymentMethod;
 use App\Models\Transaction\Transaction;
+use App\Traits\Report\HasReportExportTrait;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class AdminReportPaymentIndex extends Component
 {
-    use WithPagination;
+    use HasReportExportTrait, WithPagination;
 
     protected $queryString = [
         // 'page' => ['except' => 1], // Ini akan menghapus ?page=1 dari URL
@@ -117,6 +119,111 @@ class AdminReportPaymentIndex extends Component
             ->orderBy('payment_methods.name')
             ->get()
             ->toArray();
+    }
+
+    protected function getFilteredTransactionsQuery()
+    {
+        $transactionPayments = Transaction::with(['transactionPayments', 'transactionPayments.paymentMethod'])
+            ->search($this->search)
+            ->where('company_id', auth()->user()->company_id)
+            ->where('status', 'completed')
+            ->orderBy('created_at', 'desc');
+
+        if ($this->start_date && $this->end_date) {
+            $transactionPayments->whereBetween('created_at', [
+                $this->start_date.' 00:00:00',
+                $this->end_date.' 23:59:59',
+            ]);
+        }
+
+        if ($this->type) {
+            $transactionPayments->where('type', $this->type);
+        }
+
+        return $transactionPayments;
+    }
+
+    public function exportExcel()
+    {
+        $paymentMethods = PaymentMethod::select('id', 'name')->orderBy('name')->get();
+        $transactions = $this->getFilteredTransactionsQuery()->get();
+
+        $headings = array_merge(['No', 'Kode Transaksi', 'Tanggal', 'Tipe'], $paymentMethods->pluck('name')->toArray(), ['Total Bayar']);
+        $rows = [];
+
+        foreach ($transactions as $idx => $t) {
+            $row = [
+                $idx + 1,
+                $t->code ?? '-',
+                $t->created_at ? $t->created_at->format('d/m/Y') : '-',
+                Str::title(Str::replace('-', ' ', $t->type)),
+            ];
+
+            $sumRow = 0;
+            foreach ($paymentMethods as $pm) {
+                $pay = $t->transactionPayments->where('payment_method_id', $pm->id)->first();
+                $amt = (float) ($pay?->payment_amount ?? 0);
+                $sumRow += $amt;
+                $row[] = $amt;
+            }
+            $row[] = $sumRow;
+            $rows[] = $row;
+        }
+
+        return $this->exportExcelResponse('laporan_terima_bayar', $headings, $rows, 'Terima Bayar');
+    }
+
+    public function exportPDF()
+    {
+        $paymentMethods = PaymentMethod::select('id', 'name')->orderBy('name')->get();
+        $transactions = $this->getFilteredTransactionsQuery()->get();
+
+        $columns = [
+            ['label' => 'No', 'align' => 'center', 'width' => '30px'],
+            ['label' => 'Kode', 'align' => 'left', 'width' => '85px'],
+            ['label' => 'Tanggal', 'align' => 'center', 'width' => '70px'],
+            ['label' => 'Tipe', 'align' => 'center', 'width' => '70px'],
+        ];
+
+        foreach ($paymentMethods as $pm) {
+            $columns[] = ['label' => $pm->name, 'align' => 'right'];
+        }
+        $columns[] = ['label' => 'Total', 'align' => 'right', 'width' => '85px'];
+
+        $rows = [];
+        $colSums = array_fill(0, count($paymentMethods), 0);
+        $totalAll = 0;
+
+        foreach ($transactions as $idx => $t) {
+            $row = [
+                $idx + 1,
+                e($t->code ?? '-'),
+                $t->created_at ? $t->created_at->format('d/m/Y') : '-',
+                Str::title(Str::replace('-', ' ', $t->type)),
+            ];
+
+            $sumRow = 0;
+            foreach ($paymentMethods as $pmIdx => $pm) {
+                $pay = $t->transactionPayments->where('payment_method_id', $pm->id)->first();
+                $amt = (float) ($pay?->payment_amount ?? 0);
+                $sumRow += $amt;
+                $colSums[$pmIdx] += $amt;
+                $row[] = 'Rp '.number_format($amt);
+            }
+            $totalAll += $sumRow;
+            $row[] = 'Rp '.number_format($sumRow);
+            $rows[] = $row;
+        }
+
+        $totals = ['Total', '', '', ''];
+        foreach ($colSums as $cs) {
+            $totals[] = 'Rp '.number_format($cs);
+        }
+        $totals[] = 'Rp '.number_format($totalAll);
+
+        $period = ($this->start_date && $this->end_date) ? date('d/m/Y', strtotime($this->start_date)).' - '.date('d/m/Y', strtotime($this->end_date)) : null;
+
+        return $this->exportPDFResponse('laporan_terima_bayar', 'Laporan Pembayaran (Terima Bayar)', $columns, $rows, 'landscape', $totals, $period);
     }
 
     public function render()

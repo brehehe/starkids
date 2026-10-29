@@ -55,7 +55,7 @@ trait ProductStockTrait
         return $this->getProductStocksQuery()->paginate($this->perPage);
     }
 
-    public function getProductStockHistorys($type)
+    public function getProductStockHistorysQuery($type)
     {
         $productStockHistorys = ProductStockHistory::search(trim($this->search))
             ->with('product:id,name,sku_number,unit_id', 'user:id,name', 'branch:id,name', 'company:id,name', 'product.unit:id,name')
@@ -75,6 +75,11 @@ trait ProductStockTrait
             $productStockHistorys->where('product_id', $this->product_id);
         }
 
-        return $productStockHistorys->paginate($this->perPage);
+        return $productStockHistorys;
+    }
+
+    public function getProductStockHistorys($type)
+    {
+        return $this->getProductStockHistorysQuery($type)->paginate($this->perPage);
     }
 }

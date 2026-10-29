@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\Report\DoctorPatient;
 
 use App\Models\Transaction\Transaction;
 use App\Models\User;
+use App\Traits\Report\HasReportExportTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -12,7 +13,7 @@ use Session;
 
 class AdminReportDoctorPatientIndex extends Component
 {
-    use WithPagination;
+    use HasReportExportTrait, WithPagination;
 
     public $doctor_id;
 
@@ -68,6 +69,72 @@ class AdminReportDoctorPatientIndex extends Component
     public function closeModal(): void
     {
         $this->showModal = false;
+    }
+
+    protected function getFilteredQuery()
+    {
+        return Transaction::query()
+            ->whereNotNull('doctor_id')
+            ->whereNotNull('patient_id')
+            ->where('status', 'completed')
+            ->when($this->doctor_id, function ($query) {
+                $query->where('doctor_id', $this->doctor_id);
+            })
+            ->with(['doctor:id,name', 'patient:id,name'])
+            ->select('doctor_id', 'patient_id', DB::raw('count(*) as total_visits'), DB::raw('MAX(date) as last_visit'))
+            ->groupBy('doctor_id', 'patient_id')
+            ->orderBy('doctor_id');
+    }
+
+    public function exportExcel()
+    {
+        $items = $this->getFilteredQuery()->get();
+        $headings = ['No', 'Nama Dokter', 'Nama Pasien', 'Jumlah Kunjungan', 'Kunjungan Terakhir'];
+        $rows = [];
+
+        foreach ($items as $idx => $item) {
+            $rows[] = [
+                $idx + 1,
+                $item->doctor->name ?? '-',
+                $item->patient->name ?? '-',
+                $item->total_visits ?? 0,
+                $item->last_visit ? Carbon::parse($item->last_visit)->format('d/m/Y') : '-',
+            ];
+        }
+
+        return $this->exportExcelResponse('laporan_pasien_per_dokter', $headings, $rows, 'Pasien per Dokter');
+    }
+
+    public function exportPDF()
+    {
+        $items = $this->getFilteredQuery()->get();
+        $columns = [
+            ['label' => 'No', 'align' => 'center', 'width' => '30px'],
+            ['label' => 'Nama Dokter', 'align' => 'left'],
+            ['label' => 'Nama Pasien', 'align' => 'left'],
+            ['label' => 'Total Kunjungan', 'align' => 'center', 'width' => '100px'],
+            ['label' => 'Kunjungan Terakhir', 'align' => 'center', 'width' => '110px'],
+        ];
+
+        $rows = [];
+        $totalVisits = 0;
+
+        foreach ($items as $idx => $item) {
+            $visits = (int) ($item->total_visits ?? 0);
+            $totalVisits += $visits;
+
+            $rows[] = [
+                $idx + 1,
+                e($item->doctor->name ?? '-'),
+                e($item->patient->name ?? '-'),
+                number_format($visits).' Kali',
+                $item->last_visit ? Carbon::parse($item->last_visit)->locale('id')->isoFormat('D MMMM Y') : '-',
+            ];
+        }
+
+        $totals = ['Total', '', '', number_format($totalVisits).' Kali', ''];
+
+        return $this->exportPDFResponse('laporan_pasien_per_dokter', 'Laporan Pasien per Dokter', $columns, $rows, 'portrait', $totals);
     }
 
     public function render()

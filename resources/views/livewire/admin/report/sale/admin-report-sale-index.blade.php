@@ -4,6 +4,9 @@
             <div>
                 <h1 class="text-2xl font-bold text-[#1E3A8A]">Penjualan</h1>
             </div>
+            <div>
+                <x-export-buttons />
+            </div>
         </div>
     </div>
     <div class="space-y-6 mb-6">

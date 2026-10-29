@@ -4,6 +4,9 @@
             <div>
                 <h1 class="text-2xl font-bold text-[#1E3A8A]">Stok Produk</h1>
             </div>
+            <div>
+                <x-export-buttons />
+            </div>
         </div>
     </div>
 

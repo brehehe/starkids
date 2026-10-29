@@ -4,11 +4,12 @@
             <div>
                 <h1 class="text-2xl font-bold text-[#1E3A8A]">Stock Opname</h1>
             </div>
-            <div>
+            <div class="flex items-center gap-2">
+                <x-export-buttons />
                 <button wire:click="createOpname()" class="btn btn-primary">
                     <!-- Font Awesome File Icon -->
                     <i class="fa-solid fa-file-lines text-xl me-1"></i>
-                    Buat Stock Opame
+                    Buat Stock Opname
                 </button>
             </div>
         </div>

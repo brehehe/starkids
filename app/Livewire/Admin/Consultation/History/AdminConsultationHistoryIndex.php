@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Consultation\History;
 use App\Helpers\AlertHelper;
 use App\Models\Location\Location;
 use App\Models\Transaction\Transaction;
+use App\Traits\Report\HasReportExportTrait;
 use App\Traits\Transaction\ReversesTransactionStock;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,7 @@ use Session;
 
 class AdminConsultationHistoryIndex extends Component
 {
+    use HasReportExportTrait;
     use ReversesTransactionStock;
     use WithPagination;
 
@@ -183,12 +185,11 @@ class AdminConsultationHistoryIndex extends Component
         }
     }
 
-    public function render()
+    protected function getFilteredQuery()
     {
         $transactions = Transaction::search($this->search)
             ->with(['patient.userDetail', 'patient.patient.OHPatient', 'doctor', 'controlDoctor'])
             ->where('consultation', 'yes')
-            // ->whereNotIn('status', ['draft_consultation', 'call_consultation', 'confirmation_call', 'consultation'])
             ->orderBy('created_at', 'desc')
             ->where('company_id', auth()->user()->company_id);
 
@@ -215,6 +216,118 @@ class AdminConsultationHistoryIndex extends Component
         if ($this->location_id) {
             $transactions->where('location_id', $this->location_id);
         }
+
+        return $transactions;
+    }
+
+    public function exportExcel()
+    {
+        $statusLabels = [
+            'waiting_consultation' => 'Menunggu Konsultasi',
+            'draft_consultation' => 'Draft Konsultasi',
+            'call_consultation' => 'Panggil Konsultasi',
+            'confirmation_call' => 'Konfirmasi Panggilan',
+            'consultation' => 'Konsultasi',
+            'pharmacy' => 'Farmasi',
+            'call_pharmacy' => 'Panggil Farmasi',
+            'sale_pharmacy' => 'Penjualan Farmasi',
+            'draft' => 'Draft',
+            'process' => 'Proses',
+            'take_medicine' => 'Pengambilan Obat',
+            'completed' => 'Selesai',
+            'canceled' => 'Dibatalkan',
+        ];
+
+        $items = $this->getFilteredQuery()->get();
+        $headings = ['No', 'No. Antrian', 'Tgl Daftar', 'Asuransi', 'Pasien', 'No. IHS', 'No. HP', 'Dokter', 'Poli', 'Status'];
+        $rows = [];
+
+        foreach ($items as $idx => $t) {
+            $ihs = $t->patient?->patient?->OHPatient?->id_patient
+                ?? $t->patient?->patient?->ihs_number
+                ?? $t->patient?->userDetail?->ihs_number
+                ?? '-';
+
+            $rows[] = [
+                $idx + 1,
+                $t->code_consultation ?? '-',
+                $t->created_at ? Carbon::parse($t->created_at)->locale('id')->isoFormat('D MMMM Y HH:mm') : '-',
+                $t->is_insurance ? 'Ya' : 'Tidak',
+                $t->patient_name ?? '-',
+                $ihs,
+                $t->patient?->phone ?? '-',
+                $t->doctor?->name ?? '-',
+                $t->location_name ?? '-',
+                $statusLabels[$t->status] ?? $t->status,
+            ];
+        }
+
+        return $this->exportExcelResponse('history_konsultasi', $headings, $rows, 'Konsultasi');
+    }
+
+    public function exportPDF()
+    {
+        $statusLabels = [
+            'waiting_consultation' => 'Menunggu Konsultasi',
+            'draft_consultation' => 'Draft Konsultasi',
+            'call_consultation' => 'Panggil Konsultasi',
+            'confirmation_call' => 'Konfirmasi Panggilan',
+            'consultation' => 'Konsultasi',
+            'pharmacy' => 'Farmasi',
+            'call_pharmacy' => 'Panggil Farmasi',
+            'sale_pharmacy' => 'Penjualan Farmasi',
+            'draft' => 'Draft',
+            'process' => 'Proses',
+            'take_medicine' => 'Pengambilan Obat',
+            'completed' => 'Selesai',
+            'canceled' => 'Dibatalkan',
+        ];
+
+        $items = $this->getFilteredQuery()->get();
+        $columns = [
+            ['label' => 'No', 'align' => 'center', 'width' => '25px'],
+            ['label' => 'No. Antrian', 'align' => 'center', 'width' => '75px'],
+            ['label' => 'Tgl Daftar', 'align' => 'center', 'width' => '95px'],
+            ['label' => 'Asuransi', 'align' => 'center', 'width' => '45px'],
+            ['label' => 'Pasien', 'align' => 'left'],
+            ['label' => 'No. IHS', 'align' => 'center', 'width' => '75px'],
+            ['label' => 'No. HP', 'align' => 'center', 'width' => '75px'],
+            ['label' => 'Dokter', 'align' => 'left', 'width' => '85px'],
+            ['label' => 'Poli', 'align' => 'left', 'width' => '75px'],
+            ['label' => 'Status', 'align' => 'center', 'width' => '75px'],
+        ];
+        $rows = [];
+
+        foreach ($items as $idx => $t) {
+            $ihs = $t->patient?->patient?->OHPatient?->id_patient
+                ?? $t->patient?->patient?->ihs_number
+                ?? $t->patient?->userDetail?->ihs_number
+                ?? '-';
+
+            $rows[] = [
+                $idx + 1,
+                $t->code_consultation ?? '-',
+                $t->created_at ? Carbon::parse($t->created_at)->locale('id')->isoFormat('D MMMM Y HH:mm') : '-',
+                $t->is_insurance ? 'Ya' : 'Tidak',
+                $t->patient_name ?? '-',
+                $ihs,
+                $t->patient?->phone ?? '-',
+                $t->doctor?->name ?? '-',
+                $t->location_name ?? '-',
+                $statusLabels[$t->status] ?? $t->status,
+            ];
+        }
+
+        $period = ($this->start_date || $this->end_date)
+            ? (($this->start_date ?: 'Awal').' s/d '.($this->end_date ?: 'Sekarang'))
+            : null;
+
+        return $this->exportPDFResponse('history_konsultasi', 'History Konsultasi Pasien', $columns, $rows, 'landscape', null, $period);
+    }
+
+    public function render()
+    {
+        $transactions = $this->getFilteredQuery();
 
         return view(
             'livewire.admin.consultation.history.admin-consultation-history-index',

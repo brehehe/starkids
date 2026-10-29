@@ -11,13 +11,14 @@ use App\Models\Product\ProductSellingPriceHistory;
 use App\Models\Product\ProductType;
 use App\Traits\Product\ProductPriceHistoryTrait;
 use App\Traits\Product\ProductPriceTrait;
+use App\Traits\Report\HasReportExportTrait;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class AdminSaleProductPriceIndex extends Component
 {
-    use ProductPriceHistoryTrait, ProductPriceTrait, WithPagination;
+    use HasReportExportTrait, ProductPriceHistoryTrait, ProductPriceTrait, WithPagination;
 
     protected $queryString = [
         // 'page' => ['except' => 1], // Ini akan menghapus ?page=1 dari URL
@@ -200,6 +201,113 @@ class AdminSaleProductPriceIndex extends Component
         $this->closeModal();
 
         return AlertHelper::success('Berhasil', 'Harga produk berhasil diperbarui.');
+    }
+
+    protected function getFilteredQuery()
+    {
+        $query = $this->getProductPriceUpdates();
+
+        if ($this->product_category_id) {
+            $query->whereHas('product', function ($q) {
+                $q->where('product_category_id', $this->product_category_id);
+            });
+        }
+
+        if ($this->product_factory_id) {
+            $query->whereHas('product', function ($q) {
+                $q->where('product_factory_id', $this->product_factory_id);
+            });
+        }
+
+        if ($this->product_rack_id) {
+            $query->whereHas('product', function ($q) {
+                $q->where('product_rack_id', $this->product_rack_id);
+            });
+        }
+
+        if ($this->product_type_id) {
+            $query->whereHas('product', function ($q) {
+                $q->where('product_type_id', $this->product_type_id);
+            });
+        }
+
+        return $query;
+    }
+
+    public function exportExcel()
+    {
+        $items = $this->getFilteredQuery()->get();
+        $headings = ['No', 'SKU Number', 'Nama Produk', 'Tipe Produk', 'Stok', 'HNA', 'HNA Total', 'Harga Jual', 'Harga Total'];
+        $rows = [];
+
+        foreach ($items as $idx => $item) {
+            $qty = (float) ($item->product?->productStock?->quantity ?? 0);
+            $hna = (float) ($item->hpp_average ?? 0);
+            $price = (float) ($item->price ?? 0);
+
+            $rows[] = [
+                $idx + 1,
+                $item->product?->sku_number ?? '-',
+                $item->product?->name ?? '-',
+                $item->product?->productType?->name ?? '-',
+                $qty,
+                $hna,
+                $hna * $qty,
+                $price,
+                $price * $qty,
+            ];
+        }
+
+        return $this->exportExcelResponse('laporan_harga_produk', $headings, $rows, 'Harga Produk');
+    }
+
+    public function exportPDF()
+    {
+        $items = $this->getFilteredQuery()->get();
+        $columns = [
+            ['label' => 'No', 'align' => 'center', 'width' => '30px'],
+            ['label' => 'SKU', 'align' => 'left', 'width' => '75px'],
+            ['label' => 'Nama Produk', 'align' => 'left'],
+            ['label' => 'Tipe', 'align' => 'center', 'width' => '65px'],
+            ['label' => 'Stok', 'align' => 'right', 'width' => '45px'],
+            ['label' => 'HNA', 'align' => 'right', 'width' => '75px'],
+            ['label' => 'HNA Total', 'align' => 'right', 'width' => '85px'],
+            ['label' => 'Harga Jual', 'align' => 'right', 'width' => '75px'],
+            ['label' => 'Harga Total', 'align' => 'right', 'width' => '85px'],
+        ];
+
+        $rows = [];
+        $totalQty = 0;
+        $totalHna = 0;
+        $totalPrice = 0;
+
+        foreach ($items as $idx => $item) {
+            $qty = (float) ($item->product?->productStock?->quantity ?? 0);
+            $hna = (float) ($item->hpp_average ?? 0);
+            $price = (float) ($item->price ?? 0);
+            $hnaTot = $hna * $qty;
+            $priceTot = $price * $qty;
+
+            $totalQty += $qty;
+            $totalHna += $hnaTot;
+            $totalPrice += $priceTot;
+
+            $rows[] = [
+                $idx + 1,
+                e($item->product?->sku_number ?? '-'),
+                e($item->product?->name ?? '-'),
+                e($item->product?->productType?->name ?? '-'),
+                number_format($qty),
+                'Rp '.number_format($hna),
+                'Rp '.number_format($hnaTot),
+                'Rp '.number_format($price),
+                'Rp '.number_format($priceTot),
+            ];
+        }
+
+        $totals = ['Total', '', '', '', number_format($totalQty), '', 'Rp '.number_format($totalHna), '', 'Rp '.number_format($totalPrice)];
+
+        return $this->exportPDFResponse('laporan_harga_produk', 'Laporan Harga Produk & Stok', $columns, $rows, 'landscape', $totals);
     }
 
     public function render()

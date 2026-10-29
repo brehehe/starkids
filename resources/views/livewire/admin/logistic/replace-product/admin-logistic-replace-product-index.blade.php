@@ -7,7 +7,8 @@
                 <h1 class="text-2xl font-bold text-[#1E3A8A]">Sesuaikan Produk</h1>
                 {{-- <p class="text-gray-600">Kelola produk yang tersedia di toko Anda dengan mudah.</p> --}}
             </div>
-            <div>
+            <div class="flex items-center gap-2">
+                <x-export-buttons />
                 <a href="{{ asset('import/product.xlsx') }}" download="template-produk.xlsx"
                     class="btn btn-warning inline-flex items-center">
                     <i class="fa-solid fa-download"></i>

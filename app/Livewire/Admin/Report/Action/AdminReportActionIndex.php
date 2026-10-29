@@ -5,13 +5,15 @@ namespace App\Livewire\Admin\Report\Action;
 use App\Models\Product\Product;
 use App\Models\Transaction\TransactionDetail;
 use App\Models\User;
+use App\Traits\Report\HasReportExportTrait;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class AdminReportActionIndex extends Component
 {
-    use WithPagination;
+    use HasReportExportTrait, WithPagination;
 
     public $nurse_id;
 
@@ -55,6 +57,78 @@ class AdminReportActionIndex extends Component
             ->get();
     }
 
+    protected function getFilteredQuery()
+    {
+        return TransactionDetail::query()
+            ->whereNull('transaction_recipe_id')
+            ->whereNull('odontogram_code')
+            ->when($this->nurse_id, function ($query) {
+                $query->where('nurse_id', $this->nurse_id);
+            })
+            ->when($this->doctor_id, function ($query) {
+                $query->where('doctor_id', $this->doctor_id);
+            })
+            ->when($this->product_id, function ($query) {
+                $query->where('product_id', $this->product_id);
+            })
+            ->with(['product:id,sku_number,name,description,company_id', 'nurse:id,name', 'doctor:id,name', 'transaction:id,code,created_at'])
+            ->orderBy('created_at', 'desc');
+    }
+
+    public function exportExcel()
+    {
+        $items = $this->getFilteredQuery()->get();
+        $headings = ['No', 'Tanggal', 'Kode Transaksi', 'Tindakan / Produk', 'Perawat', 'Dokter', 'Harga'];
+        $rows = [];
+
+        foreach ($items as $idx => $detail) {
+            $rows[] = [
+                $idx + 1,
+                $detail->transaction && $detail->transaction->created_at ? Carbon::parse($detail->transaction->created_at)->locale('id')->isoFormat('D MMMM Y HH:mm') : '-',
+                $detail->transaction->code ?? '-',
+                $detail->product->name ?? $detail->name ?? '-',
+                $detail->nurse->name ?? '-',
+                $detail->doctor->name ?? '-',
+                (float) $detail->sub_total_price,
+            ];
+        }
+
+        return $this->exportExcelResponse('laporan_tindakan', $headings, $rows, 'Tindakan');
+    }
+
+    public function exportPDF()
+    {
+        $items = $this->getFilteredQuery()->get();
+        $columns = [
+            ['label' => 'No', 'align' => 'center', 'width' => '30px'],
+            ['label' => 'Tanggal', 'align' => 'center', 'width' => '110px'],
+            ['label' => 'Kode Transaksi', 'align' => 'center', 'width' => '100px'],
+            ['label' => 'Tindakan / Produk', 'align' => 'left'],
+            ['label' => 'Perawat', 'align' => 'left', 'width' => '100px'],
+            ['label' => 'Dokter', 'align' => 'left', 'width' => '100px'],
+            ['label' => 'Harga', 'align' => 'right', 'width' => '90px'],
+        ];
+        $rows = [];
+        $totalHarga = 0;
+
+        foreach ($items as $idx => $detail) {
+            $totalHarga += (float) $detail->sub_total_price;
+            $rows[] = [
+                $idx + 1,
+                $detail->transaction && $detail->transaction->created_at ? Carbon::parse($detail->transaction->created_at)->locale('id')->isoFormat('D MMMM Y HH:mm') : '-',
+                $detail->transaction->code ?? '-',
+                $detail->product->name ?? $detail->name ?? '-',
+                $detail->nurse->name ?? '-',
+                $detail->doctor->name ?? '-',
+                number_format($detail->sub_total_price, 0, ',', '.'),
+            ];
+        }
+
+        $totals = ['Total', '', '', '', '', '', number_format($totalHarga, 0, ',', '.')];
+
+        return $this->exportPDFResponse('laporan_tindakan', 'Laporan Tindakan', $columns, $rows, 'landscape', $totals);
+    }
+
     public function render()
     {
         $baseQuery = TransactionDetail::query()
@@ -71,9 +145,7 @@ class AdminReportActionIndex extends Component
             });
 
         // 1. Pagination Details
-        $details = (clone $baseQuery)
-            ->with(['product:id,sku_number,name,description,company_id', 'nurse:id,name', 'doctor:id,name', 'transaction:id,code,created_at'])
-            ->orderBy('created_at', 'desc')
+        $details = $this->getFilteredQuery()
             ->paginate($this->perPage);
 
         // 2. Chart Quantity

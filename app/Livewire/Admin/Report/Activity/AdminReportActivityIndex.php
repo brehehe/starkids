@@ -2,15 +2,22 @@
 
 namespace App\Livewire\Admin\Report\Activity;
 
+use App\Exports\ActivityReportExport;
 use App\Models\Company\Company;
 use App\Models\Transaction\Transaction;
 use App\Models\Transaction\TransactionIcd10;
+use App\Traits\Report\HasReportExportTrait;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AdminReportActivityIndex extends Component
 {
+    use HasReportExportTrait;
+
     public $selectedMonth;
 
     public $year;
@@ -623,6 +630,149 @@ class AdminReportActivityIndex extends Component
             ->values();
 
         return $data;
+    }
+
+    public function exportExcel()
+    {
+        $clinicVisits = $this->getClinicVisitData();
+        $visitRows = [];
+        foreach ($clinicVisits as $idx => $v) {
+            $totalVisit = ($v['new_l'] ?? 0) + ($v['new_p'] ?? 0) + ($v['old_l'] ?? 0) + ($v['old_p'] ?? 0);
+            $visitRows[] = [
+                $idx + 1,
+                $v['name'] ?? '-',
+                ($v['new_l'] ?? 0) + ($v['old_l'] ?? 0),
+                ($v['new_p'] ?? 0) + ($v['old_p'] ?? 0),
+                $totalVisit,
+            ];
+        }
+
+        $topPain = $this->getTopPainData();
+        $topPainRows = [];
+        foreach ($topPain->take(10) as $idx => $tp) {
+            $topPainRows[] = [
+                $idx + 1,
+                $tp['icd10_code'] ?? '-',
+                $tp['icd10_name'] ?? '-',
+                $tp['total_male'] ?? 0,
+                $tp['total_female'] ?? 0,
+                $tp['total_cases'] ?? 0,
+            ];
+        }
+
+        $allPain = $this->getPainData();
+        $morbiditasRows = [];
+        foreach ($allPain as $idx => $row) {
+            $ag = $row['age_groups'];
+            $morbiditasRows[] = [
+                $idx + 1,
+                $row['icd10_code'] ?? '-',
+                $row['icd10_name'] ?? '-',
+                $ag['0-7_days']['male'] ?? 0, $ag['0-7_days']['female'] ?? 0,
+                $ag['8-28_days']['male'] ?? 0, $ag['8-28_days']['female'] ?? 0,
+                $ag['1-11_months']['male'] ?? 0, $ag['1-11_months']['female'] ?? 0,
+                $ag['1-4_years']['male'] ?? 0, $ag['1-4_years']['female'] ?? 0,
+                $ag['5-9_years']['male'] ?? 0, $ag['5-9_years']['female'] ?? 0,
+                $ag['10-14_years']['male'] ?? 0, $ag['10-14_years']['female'] ?? 0,
+                $ag['15-19_years']['male'] ?? 0, $ag['15-19_years']['female'] ?? 0,
+                $ag['above_59_years']['male'] ?? 0, $ag['above_59_years']['female'] ?? 0,
+                $row['total_male'] ?? 0,
+                $row['total_female'] ?? 0,
+                $row['grand_total'] ?? 0,
+            ];
+        }
+
+        $monthLabel = $this->months[$this->selectedMonth] ?? $this->selectedMonth;
+        $export = new ActivityReportExport(
+            $visitRows,
+            $topPainRows,
+            $morbiditasRows,
+            $monthLabel
+        );
+
+        $filename = 'laporan_aktivitas_klinik_'.$monthLabel.'_'.$this->year.'_'.now()->format('Ymd_His').'.xlsx';
+
+        return response()->streamDownload(function () use ($export) {
+            echo Excel::raw($export, \Maatwebsite\Excel\Excel::XLSX);
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    public function exportPDF()
+    {
+        $company = Auth::user()?->company ?? Company::with('companyDetail')->first();
+        $clinicVisits = $this->getClinicVisitData();
+        $visitRows = [];
+        foreach ($clinicVisits as $idx => $v) {
+            $totalVisit = ($v['new_l'] ?? 0) + ($v['new_p'] ?? 0) + ($v['old_l'] ?? 0) + ($v['old_p'] ?? 0);
+            $visitRows[] = [
+                $idx + 1,
+                $v['name'] ?? '-',
+                ($v['new_l'] ?? 0) + ($v['old_l'] ?? 0),
+                ($v['new_p'] ?? 0) + ($v['old_p'] ?? 0),
+                $totalVisit,
+            ];
+        }
+
+        $topPain = $this->getTopPainData();
+        $topPainRows = [];
+        foreach ($topPain->take(10) as $idx => $tp) {
+            $topPainRows[] = [
+                $idx + 1,
+                $tp['icd10_code'] ?? '-',
+                $tp['icd10_name'] ?? '-',
+                $tp['total_male'] ?? 0,
+                $tp['total_female'] ?? 0,
+                $tp['total_cases'] ?? 0,
+            ];
+        }
+
+        $allPain = $this->getPainData();
+        $morbiditasRows = [];
+        foreach ($allPain as $idx => $row) {
+            $ag = $row['age_groups'];
+            $morbiditasRows[] = [
+                $idx + 1,
+                $row['icd10_code'] ?? '-',
+                $row['icd10_name'] ?? '-',
+                $ag['0-7_days']['male'] ?? 0, $ag['0-7_days']['female'] ?? 0,
+                $ag['8-28_days']['male'] ?? 0, $ag['8-28_days']['female'] ?? 0,
+                $ag['1-11_months']['male'] ?? 0, $ag['1-11_months']['female'] ?? 0,
+                $ag['1-4_years']['male'] ?? 0, $ag['1-4_years']['female'] ?? 0,
+                $ag['5-9_years']['male'] ?? 0, $ag['5-9_years']['female'] ?? 0,
+                $ag['10-14_years']['male'] ?? 0, $ag['10-14_years']['female'] ?? 0,
+                $ag['15-19_years']['male'] ?? 0, $ag['15-19_years']['female'] ?? 0,
+                $ag['above_59_years']['male'] ?? 0, $ag['above_59_years']['female'] ?? 0,
+                $row['total_male'] ?? 0,
+                $row['total_female'] ?? 0,
+                $row['grand_total'] ?? 0,
+            ];
+        }
+
+        $monthLabel = $this->months[$this->selectedMonth] ?? $this->selectedMonth;
+        $period = $monthLabel.' '.$this->year;
+
+        $pdf = Pdf::loadView('pdf.activity-report', [
+            'company' => $company,
+            'clinicVisitRows' => $visitRows,
+            'topPainRows' => $topPainRows,
+            'morbiditasRows' => $morbiditasRows,
+            'period' => $period,
+            'generated_at' => now()->translatedFormat('d F Y H:i'),
+        ])->setPaper('a4', 'landscape');
+
+        $canvas = $pdf->getDomPDF()->getCanvas();
+        $font = $pdf->getDomPDF()->getFontMetrics()->getFont('Helvetica', 'normal');
+        $canvas->page_text(380, 565, 'Halaman {PAGE_NUM} dari {PAGE_COUNT}', $font, 8, [0.45, 0.45, 0.45]);
+
+        $filename = 'laporan_aktivitas_klinik_'.$monthLabel.'_'.$this->year.'_'.now()->format('Ymd_His').'.pdf';
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, $filename, [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 
     public function render()

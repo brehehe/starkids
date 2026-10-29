@@ -34,6 +34,7 @@
                             <span>Print</span>
                         </button> --}}
                         {{-- <button onclick="choosePrinter()">🔍 Pilih Printer Bluetooth</button> --}}
+                        <x-export-buttons />
                         <button wire:click='openModal()'
                             class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-2">
                             <i class="fas fa-plus"></i>

@@ -2,7 +2,10 @@
     <div class="mb-4">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-[#1E3A8A]">Stock Opname</h1>
+                <h1 class="text-2xl font-bold text-[#1E3A8A]">Stock Opname Produk</h1>
+            </div>
+            <div>
+                <x-export-buttons />
             </div>
         </div>
     </div>

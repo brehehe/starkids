@@ -4,7 +4,8 @@
             <div>
                 <h1 class="text-2xl font-bold text-[#1E3A8A]">History Konsultasi</h1>
             </div>
-            <div>
+            <div class="flex items-center gap-2">
+                <x-export-buttons />
                 <button wire:click="clearFilters()" class="btn btn-primary">
                     <i class="fas fa-redo"></i> Reset Filter
                 </button>

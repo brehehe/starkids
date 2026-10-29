@@ -143,10 +143,16 @@
         <div class="bg-purple-500 text-white p-6 rounded-lg shadow">
             <h5 class="text-lg font-semibold">Export</h5>
             <div class="flex gap-2 mt-2">
-                <button wire:click="exportExcel"
-                    class="bg-white text-purple-500 px-3 py-1 rounded text-sm font-medium">Excel</button>
-                <button wire:click="exportPDF"
-                    class="bg-white text-purple-500 px-3 py-1 rounded text-sm font-medium">PDF</button>
+                <button wire:click="exportExcel" wire:loading.attr="disabled" wire:target="exportExcel"
+                    class="bg-white text-purple-700 hover:bg-purple-50 px-3 py-1 rounded text-sm font-medium flex items-center gap-1">
+                    <span wire:loading.remove wire:target="exportExcel"><i class="fa-solid fa-file-excel mr-1"></i>Excel</span>
+                    <span wire:loading wire:target="exportExcel"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Loading...</span>
+                </button>
+                <button wire:click="exportPDF" wire:loading.attr="disabled" wire:target="exportPDF"
+                    class="bg-white text-purple-700 hover:bg-purple-50 px-3 py-1 rounded text-sm font-medium flex items-center gap-1">
+                    <span wire:loading.remove wire:target="exportPDF"><i class="fa-solid fa-file-pdf mr-1"></i>PDF</span>
+                    <span wire:loading wire:target="exportPDF"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Loading...</span>
+                </button>
             </div>
         </div>
     </div>

@@ -4,6 +4,9 @@
             <div>
                 <h1 class="text-2xl font-bold text-[#1E3A8A]">Laporan Dead Stock</h1>
             </div>
+            <div>
+                <x-export-buttons />
+            </div>
         </div>
     </div>
     <div class="bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-lg border border-gray-100 mb-6">

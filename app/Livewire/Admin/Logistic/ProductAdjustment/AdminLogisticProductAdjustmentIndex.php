@@ -11,6 +11,7 @@ use App\Models\Product\ProductStockHistory;
 use App\Traits\Branch\BranchTrait;
 use App\Traits\Product\ProductPriceHistoryTrait;
 use App\Traits\Product\ProductStockTrait;
+use App\Traits\Report\HasReportExportTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,7 @@ use Livewire\WithPagination;
 
 class AdminLogisticProductAdjustmentIndex extends Component
 {
-    use BranchTrait, ProductPriceHistoryTrait, ProductStockTrait, WithPagination;
+    use BranchTrait, HasReportExportTrait, ProductPriceHistoryTrait, ProductStockTrait, WithPagination;
 
     public $search = '';
 
@@ -66,6 +67,7 @@ class AdminLogisticProductAdjustmentIndex extends Component
 
         if (! $product) {
             $this->dispatch('notify', ['type' => 'error', 'message' => 'Produk tidak ditemukan']);
+
             return;
         }
 
@@ -271,6 +273,73 @@ class AdminLogisticProductAdjustmentIndex extends Component
             Log::error('Gagal simpan adjustment: '.$e->getMessage());
             $this->dispatch('notify', ['type' => 'error', 'message' => 'Gagal menyimpan penyesuaian: '.$e->getMessage()]);
         }
+    }
+
+    public function exportExcel()
+    {
+        $products = $this->getProductStocksQuery()->get();
+        $headings = ['No', 'SKU Number', 'Nama Produk', 'Satuan', 'Stok Saat Ini', 'HNA Netto (Dgn Diskon)', 'HNA Bruto (Tanpa Diskon)', 'Harga Jual Aktif'];
+        $rows = [];
+
+        foreach ($products as $idx => $product) {
+            $hnaNetto = (float) ($product->productPrice?->hpp_average ?? 0);
+            $hnaBruto = (float) ($product->productPrice?->hpp_average_without_discount ?: $hnaNetto);
+            $price = (float) ($product->productPrice?->price ?? 0);
+
+            $rows[] = [
+                $idx + 1,
+                $product->sku_number ?? '-',
+                $product->name ?? '-',
+                $product->unit->name ?? '-',
+                $product->productStock->quantity ?? 0,
+                $hnaNetto,
+                $hnaBruto,
+                $price,
+            ];
+        }
+
+        return $this->exportExcelResponse('penyesuaian_stok_dan_harga', $headings, $rows, 'Penyesuaian');
+    }
+
+    public function exportPDF()
+    {
+        $products = $this->getProductStocksQuery()->get();
+        $columns = [
+            ['label' => 'No', 'align' => 'center', 'width' => '30px'],
+            ['label' => 'SKU', 'align' => 'left', 'width' => '75px'],
+            ['label' => 'Nama Produk', 'align' => 'left'],
+            ['label' => 'Satuan', 'align' => 'center', 'width' => '50px'],
+            ['label' => 'Stok', 'align' => 'right', 'width' => '55px'],
+            ['label' => 'HNA Netto', 'align' => 'right', 'width' => '80px'],
+            ['label' => 'HNA Bruto', 'align' => 'right', 'width' => '80px'],
+            ['label' => 'Harga Jual', 'align' => 'right', 'width' => '80px'],
+        ];
+
+        $rows = [];
+        $totalQty = 0;
+
+        foreach ($products as $idx => $product) {
+            $qty = (float) ($product->productStock->quantity ?? 0);
+            $totalQty += $qty;
+            $hnaNetto = (float) ($product->productPrice?->hpp_average ?? 0);
+            $hnaBruto = (float) ($product->productPrice?->hpp_average_without_discount ?: $hnaNetto);
+            $price = (float) ($product->productPrice?->price ?? 0);
+
+            $rows[] = [
+                $idx + 1,
+                e($product->sku_number ?? '-'),
+                e($product->name ?? '-'),
+                e($product->unit->name ?? '-'),
+                number_format($qty),
+                'Rp '.number_format($hnaNetto),
+                'Rp '.number_format($hnaBruto),
+                'Rp '.number_format($price),
+            ];
+        }
+
+        $totals = ['Total', '', '', '', number_format($totalQty), '', '', ''];
+
+        return $this->exportPDFResponse('penyesuaian_stok_dan_harga', 'Laporan Penyesuaian Stok & Harga Logistik', $columns, $rows, 'landscape', $totals);
     }
 
     public function render()

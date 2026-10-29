@@ -4,14 +4,15 @@ namespace App\Livewire\Admin\Report\Incentive;
 
 use App\Models\User;
 use App\Models\User\UserIncentive;
-use Illuminate\Support\Collection;
+use App\Traits\Report\HasReportExportTrait;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class AdminReportIncentiveIndex extends Component
 {
-    use WithPagination;
+    use HasReportExportTrait, WithPagination;
 
     public $user_id;
 
@@ -72,25 +73,59 @@ class AdminReportIncentiveIndex extends Component
 
     public function exportExcel()
     {
-        $userIncentive = $this->getFilteredQuery();
+        $items = $this->getFilteredQuery()->get();
+        $headings = ['No', 'Nama Pegawai', 'Insentif', 'Tipe', 'Deskripsi', 'Tanggal'];
+        $rows = [];
 
-        $filename = 'incentive_report_'.$this->year.'_'.sprintf('%02d', $this->month).'.xlsx';
+        foreach ($items as $idx => $item) {
+            $rows[] = [
+                $idx + 1,
+                $item->user->name ?? '-',
+                $item->amount ?? 0,
+                Str::title($item->status ?? '-'),
+                $item->description ?? '-',
+                $item->created_at ? $item->created_at->format('d/m/Y') : '-',
+            ];
+        }
 
-        // Return collection for export - you'll need to implement IncentiveExport class
-        return $userIncentive->get();
+        $period = ($this->getMonths[$this->month - 1]['name'] ?? '').' '.$this->year;
+
+        return $this->exportExcelResponse('laporan_insentif_'.$this->year.'_'.$this->month, $headings, $rows, 'Insentif');
     }
 
     public function exportPDF()
     {
-        $userIncentive = $this->getFilteredQuery();
-        $data = [
-            'userIncentives' => $userIncentive->get(),
-            'statistics' => $this->getStatistics(),
-            'period' => $this->getMonths[$this->month - 1]['name'].' '.$this->year,
+        $items = $this->getFilteredQuery()->get();
+        $columns = [
+            ['label' => 'No', 'align' => 'center', 'width' => '30px'],
+            ['label' => 'Nama Pegawai', 'align' => 'left'],
+            ['label' => 'Insentif', 'align' => 'right', 'width' => '90px'],
+            ['label' => 'Tipe', 'align' => 'center', 'width' => '80px'],
+            ['label' => 'Deskripsi', 'align' => 'left'],
+            ['label' => 'Tanggal', 'align' => 'center', 'width' => '75px'],
         ];
 
-        // Return data for PDF - you'll need to implement PDF generation
-        return $data;
+        $rows = [];
+        $totalAmount = 0;
+
+        foreach ($items as $idx => $item) {
+            $amount = (float) ($item->amount ?? 0);
+            $totalAmount += $amount;
+
+            $rows[] = [
+                $idx + 1,
+                e($item->user->name ?? '-'),
+                'Rp '.number_format($amount),
+                Str::title($item->status ?? '-'),
+                e($item->description ?? '-'),
+                $item->created_at ? $item->created_at->format('d/m/Y') : '-',
+            ];
+        }
+
+        $totals = ['Total', '', 'Rp '.number_format($totalAmount), '', '', ''];
+        $period = ($this->getMonths[$this->month - 1]['name'] ?? '').' '.$this->year;
+
+        return $this->exportPDFResponse('laporan_insentif_'.$this->year.'_'.$this->month, 'Laporan Insentif Pegawai', $columns, $rows, 'portrait', $totals, $period);
     }
 
     private function getFilteredQuery()
