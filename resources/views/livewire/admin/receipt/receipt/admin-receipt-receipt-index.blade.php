@@ -1,30 +1,31 @@
 <div>
     @php
         Config::set('terbilang.locale', 'id');
+        $company = $transaction?->company ?? Auth::user()?->company;
     @endphp
     <div class="kwitansi-container">
-        <img src="{{ Auth::user()->company->logo ? asset('storage/' . Auth::user()->company->logo) : asset('asset/img/logo.png') }}"
+        <img src="{{ $company?->logo ? asset('storage/' . $company->logo) : asset('asset/img/logo.png') }}"
             class="watermark">
         <div class="content">
             <!-- Header -->
             <div class="header">
                 <div class="logo-section">
                     <div class="logo-placeholder">
-                        <img src="{{ Auth::user()->company->logo ? asset('storage/' . Auth::user()->company->logo) : asset('asset/img/logo.png') }}"
-                            style="width: 60mm; height: 20mm;">
+                        <img src="{{ $company?->logo ? asset('storage/' . $company->logo) : asset('asset/img/logo.png') }}"
+                            style="width: 60mm; height: 20mm; object-fit: contain;">
                     </div>
                 </div>
 
                 <div class="title-section">
                     <div class="kwitansi-title">KWITANSI PEMBAYARAN</div>
                     <div class="company-subtitle">
-                        {{config('app.name')}}
+                        {{ $company?->name ?? config('app.name') }}
                     </div>
                     <div class="company-subtitle">
-                        {{ Auth::user()->company->companyDetail->address ?? '-' }}
+                        {{ $company?->companyDetail?->address ?? '-' }}
                     </div>
                     <div class="company-subtitle">
-                        No Telepon: {{ Auth::user()->company->phone ?? '-' }}
+                        No Telepon: {{ $company?->phone ?? '-' }}
                     </div>
                 </div>
 

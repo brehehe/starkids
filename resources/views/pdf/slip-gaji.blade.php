@@ -116,11 +116,11 @@
 <body>
 
     <div class="header">
-        @if($payroll->company->logo_url)
+        @if(!empty($payroll->company?->logo_url))
             <img src="{{ public_path('storage/'.$payroll->company->logo_url) }}" alt="Logo" style="max-height: 50px; margin-bottom: 10px;">
         @endif
         <h1>SLIP GAJI</h1>
-        <p><strong>{{ $payroll->company->name ?? 'Perusahaan' }}</strong></p>
+        <p><strong>{{ $payroll->company?->name ?? 'Perusahaan' }}</strong></p>
     </div>
 
     <table class="info-table">
@@ -190,7 +190,7 @@
         <div class="signature-box">
             <div>Mengetahui,</div>
             <div style="font-size: 10px; margin-top: 5px; color: #999;">HR / Keuangan</div>
-            <div class="signature-line">{{ $payroll->company->name ?? 'Manajemen' }}</div>
+            <div class="signature-line">{{ $payroll->company?->name ?? 'Manajemen' }}</div>
         </div>
     </div>
 

@@ -1,11 +1,16 @@
 <div id="invoice">
+    @php
+        $company = $transaction?->company ?? Auth::user()?->company;
+    @endphp
     <div class="logo-section">
-        <div class="store-name">{{ Auth::user()->company->name }}</div>
+        <div class="store-name">{{ $company?->name ?? config('app.name') }}</div>
         <div class="store-info">
-            {{ Auth::user()->company->companyDetail->address }}<br>
-            {{ Auth::user()->company->companyDetail->city }},
-            {{ Auth::user()->company->companyDetail->province }}<br>
-            Telp: {{ Auth::user()->company->phone }}
+            {{ $company?->companyDetail?->address ?? '-' }}<br>
+            {{ $company?->companyDetail?->city ?? '-' }},
+            {{ $company?->companyDetail?->province ?? '-' }}<br>
+            @if ($company?->phone)
+                Telp: {{ $company->phone }}
+            @endif
         </div>
     </div>
     <!-- Info Section -->

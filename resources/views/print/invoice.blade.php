@@ -1,102 +1,3 @@
-<style>
-    body {
-        margin: 0;
-        padding: 10px;
-        background-color: #f3f4f6;
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 12px;
-        color: #000;
-    }
-    #invoice {
-        max-width: 320px;
-        margin: 0 auto;
-        background: #fff;
-        padding: 15px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        box-sizing: border-box;
-    }
-    .logo-section {
-        text-align: center;
-        margin-bottom: 12px;
-    }
-    .store-name {
-        font-size: 15px;
-        font-weight: bold;
-    }
-    .store-info {
-        font-size: 11px;
-    }
-    .info-section {
-        border-top: 1px dashed #000;
-        border-bottom: 1px dashed #000;
-        padding: 6px 0;
-        margin-bottom: 8px;
-    }
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 2px;
-    }
-    .transaction-section {
-        margin-bottom: 8px;
-    }
-    .section-title {
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 6px;
-    }
-    .transaction-item {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 4px;
-        align-items: flex-start;
-    }
-    .transaction-item.sub-item {
-        padding-left: 8px;
-        font-size: 11px;
-    }
-    .item-name {
-        flex: 1;
-        padding-right: 8px;
-        word-break: break-word;
-    }
-    .item-total {
-        white-space: nowrap;
-        text-align: right;
-    }
-    .summary-section {
-        border-top: 1px dashed #000;
-        border-bottom: 1px dashed #000;
-        padding: 6px 0;
-        margin-bottom: 12px;
-    }
-    .summary-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 3px;
-    }
-    .summary-row.total {
-        font-weight: bold;
-        font-size: 13px;
-    }
-    .footer {
-        text-align: center;
-        font-size: 11px;
-        line-height: 1.4;
-    }
-    @media print {
-        body {
-            background: none;
-            padding: 0;
-        }
-        #invoice {
-            max-width: 100%;
-            box-shadow: none;
-            padding: 0;
-        }
-    }
-</style>
-
 <div id="invoice">
     <div class="logo-section">
         <div class="store-name">{{ Auth::user()->company->name }}</div>
@@ -183,13 +84,30 @@
                         <span class="item-name">
                             {{ $recipe?->notes && trim($recipe->notes) !== '' ? $recipe->notes : '.............................' }}
                         </span>
-                        <span class="item-total">{{ number_format($recipe->price_service_one + $recipe->price_service_other + $recipe->sub_total_price + $recipe->transactionDetail->sum('sub_total_price'), 0, ',', '.') }}</span>
+                        <span class="item-total">
+                            {{ number_format(
+                                $recipe->price_service_one +
+                                    $recipe->price_service_other +
+                                    $recipe->sub_total_price +
+                                    $recipe->transactionDetail->sum('sub_total_price'),
+                                0,
+                                ',',
+                                '.',
+                            ) }}
+                        </span>
                     </div>
                 @else
                     @foreach ($recipe->transactionDetail as $i => $detail)
                         <div class="transaction-item">
                             <span class="item-name">{{ $detail->product->name ?? $detail->name }}</span>
-                            <span class="item-total">{{ number_format($recipe->price_service_one + $recipe->price_service_other + $recipe->sub_total_price + $detail->sub_total_price, 0, ',', '.') }}</span>
+                            <span class="item-total">
+                                {{ number_format(
+                                    $recipe->price_service_one + $recipe->price_service_other + $recipe->sub_total_price + $detail->sub_total_price,
+                                    0,
+                                    ',',
+                                    '.',
+                                ) }}
+                            </span>
                         </div>
                     @endforeach
                 @endif

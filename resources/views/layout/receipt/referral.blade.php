@@ -43,24 +43,27 @@
 
     <div class="container">
         <div class="header">
+            @php
+                $company = $transaction?->company ?? Auth::user()?->company;
+            @endphp
             <div class="logo-box">
-                @if (!empty($transaction->company?->logo))
-                    <img src="{{ asset('storage/' . $transaction->company->logo) }}" alt="Logo" class="header-logo">
+                @if (!empty($company?->logo))
+                    <img src="{{ asset('storage/' . $company->logo) }}" alt="Logo" class="header-logo">
                 @else
                     <img src="{{ asset('asset/img/logo-starkids.png') }}" alt="Logo" class="header-logo">
                 @endif
             </div>
             <div class="company-info">
-                <div class="company-name">{{ $transaction->company->name ?? 'Klinik Utama Starkids Medical Center' }}</div>
-                @if(isset($transaction->company->companyDetail->address) || isset($transaction->company->address))
-                    <div class="company-address">{{ $transaction->company->companyDetail->address ?? $transaction->company->address }}</div>
+                <div class="company-name">{{ $company?->name ?? 'Klinik Utama Starkids Medical Center' }}</div>
+                @if(isset($company?->companyDetail?->address) || isset($company?->address))
+                    <div class="company-address">{{ $company?->companyDetail?->address ?? $company?->address }}</div>
                 @endif
                 <div class="company-contact">
-                    @if(!empty($transaction->company->phone)) Telp. {{ $transaction->company->phone }}. @endif
-                    @if(!empty($transaction->company->email)) Email: {{ $transaction->company->email }} @endif
+                    @if(!empty($company?->phone)) Telp. {{ $company->phone }}. @endif
+                    @if(!empty($company?->email)) Email: {{ $company->email }} @endif
                 </div>
-                @if(isset($transaction->company->companyDetail->city) || isset($transaction->company->companyDetail->postal_code))
-                    <div class="company-city">{{ trim(($transaction->company->companyDetail->city ?? '') . ' ' . ($transaction->company->companyDetail->postal_code ?? '')) }}</div>
+                @if(isset($company?->companyDetail?->city) || isset($company?->companyDetail?->postal_code))
+                    <div class="company-city">{{ trim(($company?->companyDetail?->city ?? '') . ' ' . ($company?->companyDetail?->postal_code ?? '')) }}</div>
                 @endif
             </div>
         </div>

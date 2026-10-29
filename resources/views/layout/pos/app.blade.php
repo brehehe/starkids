@@ -15,12 +15,11 @@
         integrity="sha512-Ars0BmSwpsUJnWMw+KoUKGKunT7+T8NGK0ORRKj+HT8naZzLSIQoOSIIM3oyaJljgLxFi0xImI5oZkAWEFARSA=="
         crossorigin="anonymous" referrerpolicy="no-referrer">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    @if (Auth::user())
-        @if (Auth::user()->company->icon)
-            <link rel="icon" href="{{ asset('storage/' . Auth::user()->company->icon) }}">
-        @else
-            <link rel="icon" href="{{ asset('asset/img/icon.webp') }}">
-        @endif
+    @php
+        $companyIcon = Auth::user()?->company?->icon;
+    @endphp
+    @if ($companyIcon)
+        <link rel="icon" href="{{ asset('storage/' . $companyIcon) }}">
     @else
         <link rel="icon" href="{{ asset('asset/img/icon.webp') }}">
     @endif

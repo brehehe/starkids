@@ -2,7 +2,7 @@
 @php
     use App\Models\Cash\Cash;
     $cash = Cash::where('user_id', Auth::id())
-        ->where('company_id', Auth::user()->company_id)
+        ->where('company_id', Auth::user()?->company_id)
         ->where('is_active', true)
         ->first();
 @endphp
@@ -43,7 +43,7 @@
             </div>
             <div class="text-sm text-gray-600">
                 <i class="far fa-user mr-1"></i>
-                <span id="currentUser">{{ Auth::user()->name }}</span>
+                <span id="currentUser">{{ Auth::user()?->name ?? 'User' }}</span>
             </div>
         </div>
     </div>

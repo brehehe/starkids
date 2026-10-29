@@ -136,11 +136,27 @@
                                         @endif
                                     @endif
 
-                                    <button onclick="printInvoiceFromPage('{{ $transaction->id }}','total')"
-                                        class="btn btn-icon text-red-600 hover:text-red-800 transition-colors"
-                                        title="Cetak Invoice Total">
-                                        <i class="fas fa-file-invoice-dollar"></i>
-                                    </button>
+                                    <!-- Grup Cetak Thermal -->
+                                    <span class="inline-flex items-center bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200 text-xs shadow-xs" title="Cetak Thermal (Roll 80mm)">
+                                        <span class="text-[10px] font-bold mr-1 text-emerald-700">Thermal:</span>
+                                        <button onclick="printInvoiceFromPage('{{ $transaction->id }}','total')"
+                                            class="text-emerald-700 hover:text-emerald-950 mx-0.5" title="Bluetooth Thermal Total">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                        <button onclick="printInvoiceThermal('{{ $transaction->id }}','total')"
+                                            class="text-teal-700 hover:text-teal-950 mx-0.5" title="Struk Thermal Total (Browser)">
+                                            <i class="fas fa-file-alt"></i>
+                                        </button>
+                                    </span>
+
+                                    <!-- Grup Cetak Kertas A5 (Bukan Thermal) -->
+                                    <span class="inline-flex items-center bg-blue-50 text-blue-800 px-1.5 py-0.5 rounded border border-blue-200 text-xs shadow-xs" title="Cetak Kertas A5 (Bukan Thermal / Printer Biasa)">
+                                        <span class="text-[10px] font-bold mr-1 text-blue-700">A5:</span>
+                                        <button onclick="printInvoiceA5('{{ $transaction->id }}','total')"
+                                            class="text-indigo-600 hover:text-indigo-900 mx-0.5" title="Cetak Kertas A5 Total (Bukan Thermal)">
+                                            <i class="fas fa-file-invoice-dollar"></i>
+                                        </button>
+                                    </span>
                                 </div>
                             </td>
                         </tr>
@@ -267,16 +283,90 @@
         // 🔑 flag dari backend (true / false)
         const CASH_DRAWER_ENABLED = @json($cashDrawer ?? false);
 
-        // 🔹 Format kiri-kanan
+        // 🧾 Cetak Thermal Browser (Struk Roll 80mm)
+        function printInvoiceThermal(transactionId, type = 'total') {
+            let url = (type === 'total')
+                ? `/print/invoice-total/${transactionId}?autoprint=1&format=thermal`
+                : `/print/invoice/${transactionId}?autoprint=1&format=thermal`;
+
+            openPendingPrintDialog(url);
+        }
+
+        // 📄 Cetak Kertas A5 (Bukan Thermal / Printer Standar)
+        function printInvoiceA5(transactionId, type = 'total') {
+            let savedPad = 'normal';
+            try {
+                savedPad = localStorage.getItem('mediction_invoice_padding') || 'normal';
+            } catch(e){}
+
+            let url = (type === 'total')
+                ? `/print/invoice-total-a5/${transactionId}?autoprint=1&pad=${savedPad}`
+                : `/print/invoice-a5/${transactionId}?autoprint=1&pad=${savedPad}`;
+
+            openPendingPrintDialog(url);
+        }
+
+        // 🖨️ Cetak Browser (Fallback kompatibilitas)
+        function printInvoiceBrowser(transactionId, type = 'total', format = null) {
+            if (format === 'a5') {
+                printInvoiceA5(transactionId, type);
+            } else if (format === 'thermal') {
+                printInvoiceThermal(transactionId, type);
+            } else {
+                let savedPaper = 'thermal';
+                try {
+                    savedPaper = localStorage.getItem('mediction_invoice_paper_mode') || 'thermal';
+                } catch(e){}
+                if (savedPaper === 'a5') {
+                    printInvoiceA5(transactionId, type);
+                } else {
+                    printInvoiceThermal(transactionId, type);
+                }
+            }
+        }
+
+        function openPendingPrintDialog(url) {
+            let iframe = document.getElementById('pending_print_iframe');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                iframe.id = 'pending_print_iframe';
+                iframe.style.position = 'fixed';
+                iframe.style.right = '0';
+                iframe.style.bottom = '0';
+                iframe.style.width = '0';
+                iframe.style.height = '0';
+                iframe.style.border = '0';
+                iframe.style.visibility = 'hidden';
+                document.body.appendChild(iframe);
+            }
+
+            iframe.onload = function() {
+                try {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                } catch (e) {
+                    window.open(url, '_blank');
+                }
+            };
+            iframe.src = url;
+        }
+
+        // 🔹 Format kiri-kanan (Dijamin tidak melebihi width, aman dari trailing space)
         function formatLine(left, right, width = PAPER_WIDTH) {
-            left = left.toString();
-            right = right.toString();
+            left = (left ?? "").toString().replace(/[\r\n\t]+/g, " ").trim();
+            right = (right ?? "").toString().replace(/[\r\n\t]+/g, " ").trim();
+
+            let maxLeft = width - right.length - 1;
+            if (maxLeft < 1) maxLeft = 1;
+            if (left.length > maxLeft) {
+                left = left.substring(0, maxLeft);
+            }
             let space = width - left.length - right.length;
             if (space < 1) space = 1;
             return left + " ".repeat(space) + right;
         }
 
-        // 🔹 Rata tengah
+        // 🔹 Rata tengah (Gunakan LF murni '\n' untuk ESC/POS)
         function centerText(text, width = PAPER_WIDTH) {
             let lines = wrapText(text, width);
             return lines.map(line => {
@@ -291,13 +381,13 @@
             return wrapText(text, width).join("\n");
         }
 
-        // 🔹 Wrap text sesuai width
+        // 🔹 Wrap text sesuai width (Aman dari spasi berlebih)
         function wrapText(text, width = PAPER_WIDTH) {
             let result = [];
-            let remaining = text.trim();
+            let remaining = (text ?? "").toString().replace(/[\r\n\t]+/g, " ").trim();
             while (remaining.length > width) {
                 result.push(remaining.substring(0, width));
-                remaining = remaining.substring(width);
+                remaining = remaining.substring(width).trim();
             }
             if (remaining.length > 0) result.push(remaining);
             return result;
@@ -323,12 +413,15 @@
                 let doc = parser.parseFromString(html, "text/html");
 
                 // --- Logo Section ---
-                let storeName = doc.querySelector(".store-name")?.innerText.trim() ?? "{{config('app.name')}}";
+                let storeName = doc.querySelector(".store-name")?.innerText?.trim() ?? "{{config('app.name')}}";
                 let storeInfoLines = doc.querySelectorAll(".store-info-line");
 
                 let logoText = centerText(storeName) + "\n";
                 storeInfoLines.forEach(line => {
-                    logoText += centerText(line.innerText.trim()) + "\n";
+                    let lineStr = line.innerText?.trim();
+                    if (lineStr) {
+                        logoText += centerText(lineStr) + "\n";
+                    }
                 });
                 logoText += "=".repeat(PAPER_WIDTH) + "\n";
 
@@ -336,8 +429,8 @@
                 let infoRows = doc.querySelectorAll(".info-section .info-row");
                 let infoText = "";
                 infoRows.forEach(row => {
-                    let label = row.querySelector(".label, .info-label")?.innerText.trim() ?? "";
-                    let value = row.querySelector(".value, .info-value")?.innerText.trim() ?? "";
+                    let label = (row.querySelector(".label, .info-label")?.innerText || row.querySelector(".label, .info-label")?.textContent || "").replace(/[\r\n\t]+/g, " ").trim();
+                    let value = (row.querySelector(".value, .info-value")?.innerText || row.querySelector(".value, .info-value")?.textContent || "").replace(/[\r\n\t]+/g, " ").trim();
                     if (label && value) {
                         infoText += formatLine(label, value) + "\n";
                     }
@@ -348,23 +441,25 @@
                 let itemsText = "";
                 let items = doc.querySelectorAll(".transaction-item");
                 items.forEach(div => {
-                    let name = div.querySelector(".item-name")?.innerText.trim() || "";
-                    let total = div.querySelector(".item-total")?.innerText.trim() || "";
+                    let name = (div.querySelector(".item-name")?.innerText || div.querySelector(".item-name")?.textContent || "").replace(/[\r\n\t]+/g, " ").trim();
+                    let total = (div.querySelector(".item-total")?.innerText || div.querySelector(".item-total")?.textContent || "").replace(/[\r\n\t]+/g, " ").trim();
 
                     if (name) {
-                        let maxNameLength = PAPER_WIDTH - total.length - 2;
-                        if (name.length > maxNameLength) {
-                            // Baris pertama
-                            let firstLine = name.substring(0, maxNameLength);
-                            itemsText += formatLine(firstLine, total) + "\n";
-
-                            // Baris sisa
-                            let remaining = name.substring(maxNameLength);
-                            wrapText(remaining, PAPER_WIDTH).forEach(line => {
-                                itemsText += leftText(line) + "\n";
-                            });
+                        if (!total) {
+                            itemsText += leftText(name, PAPER_WIDTH) + "\n";
                         } else {
-                            itemsText += formatLine(name, total) + "\n";
+                            let maxNameLength = PAPER_WIDTH - total.length - 2;
+                            if (name.length > maxNameLength && maxNameLength > 5) {
+                                let firstLine = name.substring(0, maxNameLength).trim();
+                                itemsText += formatLine(firstLine, total, PAPER_WIDTH) + "\n";
+
+                                let remaining = name.substring(maxNameLength).trim();
+                                wrapText(remaining, PAPER_WIDTH).forEach(line => {
+                                    itemsText += leftText(line, PAPER_WIDTH) + "\n";
+                                });
+                            } else {
+                                itemsText += formatLine(name, total, PAPER_WIDTH) + "\n";
+                            }
                         }
                     }
                 });
@@ -373,8 +468,8 @@
                 let summaryRows = doc.querySelectorAll(".summary-section .summary-row");
                 let summaryText = "\n" + "-".repeat(PAPER_WIDTH) + "\n";
                 summaryRows.forEach(row => {
-                    let label = row.querySelector(".label")?.innerText.trim() ?? "";
-                    let value = row.querySelector(".value")?.innerText.trim() ?? "";
+                    let label = (row.querySelector(".label")?.innerText || row.querySelector(".label")?.textContent || "").replace(/[\r\n\t]+/g, " ").trim();
+                    let value = (row.querySelector(".value")?.innerText || row.querySelector(".value")?.textContent || "").replace(/[\r\n\t]+/g, " ").trim();
 
                     if (label && value) {
                         if (label.toUpperCase() === "TOTAL" || label.toUpperCase() === "GRAND TOTAL") {
@@ -391,13 +486,16 @@
                 let footerLines = doc.querySelectorAll(".footer-line");
                 let footerText = "\n" + "-".repeat(PAPER_WIDTH) + "\n";
                 footerLines.forEach(line => {
-                    footerText += centerText(line.innerText.trim()) + "\n";
+                    let footerStr = line.innerText?.trim();
+                    if (footerStr) {
+                        footerText += centerText(footerStr) + "\n";
+                    }
                 });
                 footerText += "\n";
 
                 let printEnd = "\n\n\n\n\n";
 
-                // ✅ Satukan semua
+                // ✅ Satukan semua dengan LF ('\n') murni
                 let invoiceText = logoText + infoText + itemsText + summaryText + footerText + printEnd;
 
                 // 2. Deteksi platform
@@ -456,16 +554,16 @@
                 if (!writableChar) throw new Error("Tidak menemukan characteristic 'write' di printer!");
 
                 let encoder = new TextEncoder();
-                let escposInit = new Uint8Array([0x1B, 0x40]); // reset
-                let escposFontB = new Uint8Array([0x1B, 0x4D, 0x01]); // font B
-                let escposLineSpacing = new Uint8Array([0x1B, 0x33, 0x18]); // line spacing 24 dots (aman, rapi, tidak numpuk)
+                let escposInit = new Uint8Array([0x1B, 0x40]); // reset (ESC @)
+                let escposFont = new Uint8Array([0x1B, 0x4D, 0x00]); // font A (ESC M 0: standard 48 kolom pada 80mm, jelas dan rapi)
+                let escposLineSpacing = new Uint8Array([0x1B, 0x32]); // default line spacing standard 1/6 inch (~30 dots) (ESC 2)
                 let escposCut = new Uint8Array([0x1D, 0x56, 0x00]); // cut
                 let openDrawer = new Uint8Array([0x1B, 0x70, 0x01, 0x25, 0x32]); // ✅ open cash drawer
 
                 // Hitung total panjang buffer sesuai flag drawer
                 let fullData = new Uint8Array(
                     escposInit.length +
-                    escposFontB.length +
+                    escposFont.length +
                     escposLineSpacing.length +
                     encoder.encode(invoiceText).length +
                     escposCut.length +
@@ -475,8 +573,8 @@
                 let offset = 0;
                 fullData.set(escposInit, offset);
                 offset += escposInit.length;
-                fullData.set(escposFontB, offset);
-                offset += escposFontB.length;
+                fullData.set(escposFont, offset);
+                offset += escposFont.length;
                 fullData.set(escposLineSpacing, offset);
                 offset += escposLineSpacing.length;
                 let body = encoder.encode(invoiceText);
@@ -491,8 +589,8 @@
                     offset += openDrawer.length;
                 }
 
-                // Kirim per chunk kecil (64 byte) dengan pacing untuk mencegah buffer overflow printer BLE
-                const chunkSize = 64;
+                // Kirim per chunk kecil (48 byte) dengan pacing untuk mencegah buffer overflow printer BLE
+                const chunkSize = 48;
                 for (let i = 0; i < fullData.length; i += chunkSize) {
                     let chunk = fullData.slice(i, i + chunkSize);
                     if (writableChar.properties.write && typeof writableChar.writeValueWithResponse === 'function') {
@@ -510,7 +608,7 @@
                     } else {
                         await writableChar.writeValue(chunk);
                     }
-                    await new Promise(r => setTimeout(r, 35));
+                    await new Promise(r => setTimeout(r, 40));
                 }
 
                 alert("✅ Invoice berhasil dicetak" + (CASH_DRAWER_ENABLED ? " & cash drawer terbuka!" : "!"));

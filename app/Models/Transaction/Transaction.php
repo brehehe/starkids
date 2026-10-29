@@ -153,12 +153,12 @@ class Transaction extends Model
         static::creating(function ($modelCreate) {
             $lastOrder = static::max('order');
             $modelCreate->order = $lastOrder ? $lastOrder + 1 : 1;
-            $modelCreate->company_id = $modelCreate->company_id ?? auth()->user()->company_id;
-            $modelCreate->branch_id = Branch::where('company_id', auth()->user()->company_id)->first()->id;
+            $modelCreate->company_id = $modelCreate->company_id ?? auth()->user()?->company_id;
+            $modelCreate->branch_id = $modelCreate->branch_id ?? Branch::where('company_id', $modelCreate->company_id)->first()?->id;
             $modelCreate->date = $modelCreate->date ?? now();
-            $modelCreate->created_by = auth()->user()->id;
+            $modelCreate->created_by = $modelCreate->created_by ?? auth()->user()?->id;
             $modelCreate->date = $modelCreate->date ?? date('Y-m-d');
-            $modelCreate->user_type_id = $modelCreate->user_type_id ? $modelCreate->user_type_id : ($modelCreate->patient ? $modelCreate->patient->user_type_id : UserType::where('name', 'Umum')->first()->id); // Default to 'member' if not set
+            $modelCreate->user_type_id = $modelCreate->user_type_id ? $modelCreate->user_type_id : ($modelCreate->patient ? $modelCreate->patient->user_type_id : UserType::where('name', 'Umum')->first()?->id); // Default to 'member' if not set
         });
 
         static::saved(function ($modelUpdate) {

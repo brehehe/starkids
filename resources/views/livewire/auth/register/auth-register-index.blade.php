@@ -4,7 +4,10 @@
 
         <!-- Logo & Title -->
         <div class="flex flex-col items-center mb-6">
-            <img src="{{ Auth::user()->company->logo ? asset('storage/' . Auth::user()->company->logo) : asset('asset/img/logo.png') }}"
+            @php
+                $companyLogo = Auth::user()?->company?->logo;
+            @endphp
+            <img src="{{ $companyLogo ? asset('storage/' . $companyLogo) : asset('asset/img/logo.png') }}"
                 alt="{{config('app.name')}} Logo" class="h-12 drop-shadow-md">
             <h1 class="text-2xl font-bold text-[#1E3A8A]">Buat Akun Anda</h1>
             <p class="text-gray-600 text-sm">Daftar untuk mengakses dashboard Anda</p>

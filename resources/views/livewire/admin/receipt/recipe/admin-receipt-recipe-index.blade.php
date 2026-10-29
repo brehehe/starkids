@@ -8,11 +8,19 @@
         </div>
 
         <div class="content">
+            @php
+                $company = $company ?? ($transaction?->company ?? Auth::user()?->company);
+            @endphp
             <!-- Header -->
             <div class="header">
                 <div class="logo-section">
-                    <img src="{{ asset('storage/' . Auth::user()->company->logo) }}"
-                        style="width: 175px; height: 75px; margin-left: 50px;" alt="Logo">
+                    @if ($company?->logo)
+                        <img src="{{ asset('storage/' . $company->logo) }}"
+                            style="width: 175px; height: 75px; margin-left: 50px; object-fit: contain;" alt="Logo">
+                    @else
+                        <img src="{{ asset('asset/img/logo.png') }}"
+                            style="width: 175px; height: 75px; margin-left: 50px; object-fit: contain;" alt="Logo">
+                    @endif
                 </div>
 
                 <div class="title-section">
@@ -43,13 +51,13 @@
                 <div class="doctor-card">
                     <div class="doctor-title">Poli/Klinik</div>
                     <div class="doctor-details">
-                        <div><strong>{{ $transaction?->location?->name }}</strong></div>
-                        <div>{{config('app.name')}}</div>
-                        <div>{{ Auth::user()->company->companyDetail->address }}</div>
-                        <div>{{ Auth::user()->company->companyDetail->city }},
-                            {{ Auth::user()->company->companyDetail->postal_code }}
+                        <div><strong>{{ $transaction?->location?->name ?? ($company?->name ?? config('app.name')) }}</strong></div>
+                        <div>{{ $company?->name ?? config('app.name') }}</div>
+                        <div>{{ $company?->companyDetail?->address ?? '-' }}</div>
+                        <div>{{ $company?->companyDetail?->city ?? '-' }},
+                            {{ $company?->companyDetail?->postal_code ?? '' }}
                         </div>
-                        <div>Telp: {{ Auth::user()->company->phone }}</div>
+                        <div>Telp: {{ $company?->phone ?? '-' }}</div>
                     </div>
                 </div>
             </div>
@@ -61,35 +69,40 @@
                     <div class="patient-row">
                         <div class="patient-label">Nama</div>
                         <div class="patient-colon">:</div>
-                        <div class="patient-value">{{ $transaction->patient?->name ?? '-' }}</div>
+                        <div class="patient-value">{{ $transaction->patient?->name ?? ($transaction->patient_name ?? '-') }}</div>
                     </div>
                     <div class="patient-row">
                         <div class="patient-label">Umur</div>
                         <div class="patient-colon">:</div>
                         <div class="patient-value">
                             @php
-                                $birthDate = Carbon\Carbon::parse($transaction?->patient?->userDetail?->birth_date);
-                                $now = Carbon\Carbon::now();
-
-                                $years = $birthDate->diff($now)->y;
-                                $months = $birthDate->diff($now)->m;
-                                $days = $birthDate->diff($now)->d;
+                                $birthDateStr = $transaction?->patient?->userDetail?->birth_date;
+                                if ($birthDateStr) {
+                                    $birthDate = Carbon\Carbon::parse($birthDateStr);
+                                    $now = Carbon\Carbon::now();
+                                    $years = $birthDate->diff($now)->y;
+                                    $months = $birthDate->diff($now)->m;
+                                    $days = $birthDate->diff($now)->d;
+                                    $ageString = "{$years} tahun {$months} bulan {$days} hari";
+                                } else {
+                                    $ageString = '-';
+                                }
                             @endphp
 
-                            {{ $years }} tahun {{ $months }} bulan {{ $days }} hari
+                            {{ $ageString }}
                         </div>
                     </div>
                     <div class="patient-row">
                         <div class="patient-label">Jenis Kelamin</div>
                         <div class="patient-colon">:</div>
                         <div class="patient-value">
-                            {{ $transaction->patient?->userDetail->administrative_gender == 'male' ? 'Laki - Laki' : 'Perempuan' ?? '-' }}
+                            {{ ($transaction->patient?->userDetail?->administrative_gender == 'male' ? 'Laki - Laki' : ($transaction->patient?->userDetail?->administrative_gender == 'female' ? 'Perempuan' : '-')) }}
                         </div>
                     </div>
                     <div class="patient-row">
                         <div class="patient-label">Alamat</div>
                         <div class="patient-colon">:</div>
-                        <div class="patient-value">{{ $transaction->patient?->userDetail->address ?? '-' }}</div>
+                        <div class="patient-value">{{ $transaction->patient?->userDetail?->address ?? '-' }}</div>
                     </div>
                     <div class="patient-row">
                         <div class="patient-label">No. Telepon</div>

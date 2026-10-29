@@ -7,7 +7,7 @@
                     class="p-2 rounded-xl text-[#1E3A8A] hover:bg-[#C3D4EC]/20 transition-all duration-200 cursor-pointer">
                     <i class="fas fa-bars text-lg"></i>
                 </button>
-                <img src="{{ Auth::user()?->company?->logo ? asset('storage/' . Auth::user()->company->logo) : asset('asset/img/logo.png') }}"
+                <img src="{{ Auth::user()?->company?->logo ? asset('storage/' . Auth::user()->company?->logo) : asset('asset/img/logo.png') }}"
                     alt="{{ config('app.name') }} Logo" class="h-7 w-auto">
             </div>
 
@@ -225,7 +225,7 @@
                                 {{ auth()->user()->name ?? 'Admin User' }}
                             </p>
                             <p class="text-xs text-gray-500 truncate max-w-[150px] lg:max-w-none">
-                                {{ Auth::user()->companyRoles()->where('company_id', Auth::user()->company_id)->first()->role->name ?? 'No Role' }}
+                                {{ Auth::user()->companyRoles()->where('company_id', Auth::user()->company_id)->first()?->role?->name ?? 'No Role' }}
                             </p>
                         </div>
                         <i class="fas fa-chevron-down text-gray-400 hidden sm:block"></i>
@@ -237,7 +237,7 @@
                         <div class="sm:hidden p-3 border-b border-gray-100">
                             <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name ?? 'Admin User' }}</p>
                             <p class="text-xs text-gray-500">
-                                {{ Auth::user()->companyRoles()->where('company_id', Auth::user()->company_id)->first()->role->name ?? 'No Role' }}
+                                {{ Auth::user()->companyRoles()->where('company_id', Auth::user()->company_id)->first()?->role?->name ?? 'No Role' }}
                             </p>
                         </div>
                         <div class="p-2">

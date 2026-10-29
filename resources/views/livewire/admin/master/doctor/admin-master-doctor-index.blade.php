@@ -56,16 +56,12 @@
                             <td class="center">{{ $users->firstItem() + $index }}</td>
                             <td>{{ $user->name ?? '-' }}</td>
                             <td>
-                                @if ($user->companyRoles()->where('company_id', Auth::user()->company_id)->first()->role->name)
-                                    {{ $user->companyRoles()->where('company_id', Auth::user()->company_id)->first()->role->name }}
-                                @else
-                                    Tidak Ada Role
-                                @endif
+                                {{ $user->companyRoles()->where('company_id', Auth::user()?->company_id)->first()?->role?->name ?? 'Tidak Ada Role' }}
                             </td>
                             {{-- <td>{{ $user->username ?? '-' }}</td> --}}
                             {{-- <td>{{ $user->email ?? '-' }}</td> --}}
                             <td>{{ $user->phone ?? '-' }}</td>
-                            <td>{{ $user->company->name ?? '-' }}</td>
+                            <td>{{ $user->company?->name ?? '-' }}</td>
                             <td>{{ $user?->userDetail?->referral_percentage ?? 0}}%</td>
                             <td class="center">
                                 <div class="flex items-center">

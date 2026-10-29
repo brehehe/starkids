@@ -43,4 +43,18 @@ class PrintController extends Controller
 
         return view('print.invoice-total', compact('transaction', 'transaction_id', 'transactionService', 'transactionDetailNonService', 'transactionRecipes'));
     }
+
+    public function invoiceA5(string $id)
+    {
+        request()->merge(['format' => 'a5', 'paper' => 'a5']);
+
+        return $this->invoice($id);
+    }
+
+    public function invoiceTotalA5(string $id)
+    {
+        request()->merge(['format' => 'a5', 'paper' => 'a5']);
+
+        return $this->invoiceTotal($id);
+    }
 }

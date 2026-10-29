@@ -1,13 +1,14 @@
 @php
     Config::set('terbilang.locale', 'id');
+    $company = $transaction?->company ?? Auth::user()?->company;
 @endphp
 <div class="content">
     <div class="header">
         <div class="logo">
-            @if(Auth::user()->company->logo)
-                <img src="{{ asset('storage/' . Auth::user()->company->logo) }}" alt="Logo" style="height: 50px;">
+            @if($company?->logo)
+                <img src="{{ asset('storage/' . $company->logo) }}" alt="Logo" style="height: 50px;">
             @else
-                {{ Auth::user()->company->name }}
+                {{ $company?->name ?? config('app.name') }}
             @endif
         </div>
         <div class="title">
@@ -140,7 +141,7 @@
             <p>({{ $transaction->patient_name ?? '................................' }})</p>
         </div>
         <div>
-            <p>{{ Auth::user()->company->city ?? 'Indonesia' }}, {{ date('d/m/Y') }}</p>
+            <p>{{ $company?->companyDetail?->city ?? ($company?->city ?? 'Indonesia') }}, {{ date('d/m/Y') }}</p>
             <p>Petugas Klinik</p>
             <div class="signature-box"></div>
             <p>({{ Auth::user()->name }})</p>

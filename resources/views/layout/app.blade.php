@@ -19,12 +19,11 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        @if (Auth::user())
-            @if (Auth::user()?->company?->icon)
-                <link rel="icon" href="{{ asset('storage/' . Auth::user()->company->icon) }}">
-            @else
-                <link rel="icon" href="{{ asset('asset/img/icon.webp') }}">
-            @endif
+        @php
+            $companyIcon = Auth::user()?->company?->icon;
+        @endphp
+        @if ($companyIcon)
+            <link rel="icon" href="{{ asset('storage/' . $companyIcon) }}">
         @else
             <link rel="icon" href="{{ asset('asset/img/icon.webp') }}">
         @endif

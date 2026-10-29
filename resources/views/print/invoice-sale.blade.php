@@ -1,9 +1,37 @@
- <button onclick="printInvoiceFromPage()" class="text-green-600 hover:text-green-800 mx-1" title="Cetak">
-     <i class="fas fa-print"></i> Cetak
+ <button onclick="printInvoiceFromPage()" class="text-green-600 hover:text-green-800 mx-1" title="Cetak Thermal Bluetooth">
+     <i class="fas fa-print"></i> Cetak Bluetooth
+ </button>
+ <button onclick="printInvoiceBrowser()" class="text-purple-600 hover:text-purple-800 mx-1" title="Cetak Browser (window.print)">
+     <i class="fas fa-file-invoice"></i> Cetak Browser
  </button>
 
  <script>
      const PAPER_WIDTH = 48; // 80mm thermal printer ≈ 42–48 karakter
+
+     function printInvoiceBrowser() {
+         let iframe = document.getElementById('sale_print_iframe');
+         if (!iframe) {
+             iframe = document.createElement('iframe');
+             iframe.id = 'sale_print_iframe';
+             iframe.style.position = 'fixed';
+             iframe.style.right = '0';
+             iframe.style.bottom = '0';
+             iframe.style.width = '0';
+             iframe.style.height = '0';
+             iframe.style.border = '0';
+             iframe.style.visibility = 'hidden';
+             document.body.appendChild(iframe);
+         }
+         iframe.onload = function() {
+             try {
+                 iframe.contentWindow.focus();
+                 iframe.contentWindow.print();
+             } catch (e) {
+                 window.open('/print/invoice-print?autoprint=1', '_blank');
+             }
+         };
+         iframe.src = '/print/invoice-print?autoprint=1';
+     }
 
      // Format kiri-kanan
      function formatLine(left, right, width = PAPER_WIDTH) {
@@ -22,7 +50,7 @@
              let space = Math.floor((width - line.length) / 2);
              if (space < 0) space = 0;
              return " ".repeat(space) + line;
-         }).join("\n");
+         }).join("\r\n");
      }
 
      async function printInvoiceFromPage(transactionId) {
@@ -144,11 +172,11 @@
 
          if (!writableChar) throw new Error("Tidak menemukan characteristic 'write' di printer!");
 
-         // ESC/POS: atur font kecil (~10px) + line spacing
+         // ESC/POS: atur font kecil (~10px) + line spacing standard
          let encoder = new TextEncoder();
          let escposInit = new Uint8Array([0x1B, 0x40]); // init printer (ESC @)
          let escposFontB = new Uint8Array([0x1B, 0x4D, 0x01]); // font B (kecil)
-         let escposLineSpacing = new Uint8Array([0x1B, 0x33, 0x18]); // line spacing 24 dots (aman, rapi, tidak numpuk)
+         let escposLineSpacing = new Uint8Array([0x1B, 0x32]); // default line spacing standard 1/6 inch (~30 dots) (ESC 2)
          let escposCut = new Uint8Array([0x1D, 0x56, 0x00]); // cut
 
          let body = encoder.encode(invoiceText);
@@ -168,8 +196,8 @@
          offset += body.length;
          fullData.set(escposCut, offset);
 
-         // Kirim per chunk kecil (64 byte) dengan pacing untuk mencegah buffer overflow printer BLE
-         const chunkSize = 64;
+         // Kirim per chunk kecil (48 byte) dengan pacing untuk mencegah buffer overflow printer BLE
+         const chunkSize = 48;
          for (let i = 0; i < fullData.length; i += chunkSize) {
              let chunk = fullData.slice(i, i + chunkSize);
              if (writableChar.properties.write && typeof writableChar.writeValueWithResponse === 'function') {
@@ -187,7 +215,7 @@
              } else {
                  await writableChar.writeValue(chunk);
              }
-             await new Promise(r => setTimeout(r, 35));
+             await new Promise(r => setTimeout(r, 40));
          }
 
          alert("✅ Invoice berhasil dikirim ke printer via Web Bluetooth!");

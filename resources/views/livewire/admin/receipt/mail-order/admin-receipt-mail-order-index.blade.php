@@ -1,6 +1,9 @@
 <div>
+    @php
+        $company = $purchase_order?->company ?? Auth::user()?->company;
+    @endphp
     <div class="surat-container">
-        <img src="{{ Auth::user()->company->logo ? asset('storage/' . Auth::user()->company->logo) : asset('asset/img/logo.png') }}"
+        <img src="{{ $company?->logo ? asset('storage/' . $company->logo) : asset('asset/img/logo.png') }}"
             class="watermark">
 
         <div class="content">
@@ -8,19 +11,19 @@
             <div class="header">
                 <div class="logo-section">
                     <div class="logo-placeholder">
-                        <img src="{{ Auth::user()->company->logo ? asset('storage/' . Auth::user()->company->logo) : asset('asset/img/logo.png') }}"
-                            style="width: 40mm; height: 15mm;">
+                        <img src="{{ $company?->logo ? asset('storage/' . $company->logo) : asset('asset/img/logo.png') }}"
+                            style="width: 40mm; height: 15mm; object-fit: contain;">
                     </div>
                 </div>
 
                 <div class="title-section">
                     <div class="surat-title">SURAT PESANAN</div>
-                    <div class="document-type">{{config('app.name')}}</div>
+                    <div class="document-type">{{ $company?->name ?? config('app.name') }}</div>
                 </div>
 
                 <div class="order-info">
                     <div class="order-number">No. {{ $purchase_order->number }}</div>
-                    <div>Tanggal: 16/07/2025</div>
+                    <div>Tanggal: {{ $purchase_order->created_at ? $purchase_order->created_at->format('d/m/Y') : date('d/m/Y') }}</div>
                 </div>
             </div>
 
@@ -43,8 +46,8 @@
                         <div class="detail-colon">:</div>
                         <div class="detail-value">
                             <div class="delivery-address">
-                                <div><strong>{{config('app.name')}}</strong></div>
-                                <div>{{ Auth::user()->company->companyDetail->address }}</div>
+                                <div><strong>{{ $company?->name ?? config('app.name') }}</strong></div>
+                                <div>{{ $company?->companyDetail?->address ?? '-' }}</div>
                             </div>
                         </div>
                     </div>

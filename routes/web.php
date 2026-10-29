@@ -396,6 +396,8 @@ Route::prefix('/antrian')->group(function () {
 
 Route::get('/print/invoice/{id}', [PrintController::class, 'invoice'])->name('print.invoice');
 Route::get('/print/invoice-total/{id}', [PrintController::class, 'invoiceTotal'])->name('print.invoice-total');
+Route::get('/print/invoice-a5/{id}', [PrintController::class, 'invoiceA5'])->name('print.invoice.a5');
+Route::get('/print/invoice-total-a5/{id}', [PrintController::class, 'invoiceTotalA5'])->name('print.invoice-total.a5');
 
 Route::get('/print/invoice-sale', [PrintControllerNew::class, 'invoiceSale'])->name('print.invoice.sale');
 
