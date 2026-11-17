@@ -8768,6 +8768,7 @@ namespace App\Models\Product{
  * @property int $order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property numeric $hpp_average_without_discount
  * @property-read \App\Models\Branch\Branch|null $branch
  * @property-read \App\Models\Company\Company|null $company
  * @property-read \App\Models\Product\Product|null $product
@@ -8785,6 +8786,7 @@ namespace App\Models\Product{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice whereHppAverage($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice whereHppAverageGenerate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice whereHppAverageWithoutDiscount($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice whereIsUpdated($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice whereOrder($value)
@@ -8826,6 +8828,7 @@ namespace App\Models\Product{
  * @property-read \App\Models\Company\Company|null $company
  * @property-read \App\Models\Product\Product|null $product
  * @property-read \App\Models\Product\ProductPrice|null $productPrice
+ * @property-read \App\Models\PurchaseOrder\PurchaseOrderItem|null $purchaseOrderItem
  * @property-read \App\Models\User|null $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPriceHistory newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPriceHistory newQuery()
@@ -8884,6 +8887,61 @@ namespace App\Models\Product{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductRack withoutTrashed()
  */
 	class ProductRack extends \Eloquent {}
+}
+
+namespace App\Models\Product{
+/**
+ * @property string $id
+ * @property string $product_id
+ * @property string|null $product_price_id
+ * @property string|null $user_id
+ * @property string|null $branch_id
+ * @property string $company_id
+ * @property numeric $old_price
+ * @property numeric $new_price
+ * @property numeric $old_recipe
+ * @property numeric $new_recipe
+ * @property numeric $old_hpp_average
+ * @property numeric $new_hpp_average
+ * @property string|null $source
+ * @property string|null $notes
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property numeric $margin
+ * @property-read \App\Models\Branch\Branch|null $branch
+ * @property-read \App\Models\Company\Company|null $company
+ * @property-read \App\Models\Product\Product|null $product
+ * @property-read \App\Models\Product\ProductPrice|null $productPrice
+ * @property-read \App\Models\User|null $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereBranchId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereCompanyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereMargin($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereNewHppAverage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereNewPrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereNewRecipe($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereOldHppAverage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereOldPrice($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereOldRecipe($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereProductPriceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereSource($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductSellingPriceHistory withoutTrashed()
+ */
+	class ProductSellingPriceHistory extends \Eloquent {}
 }
 
 namespace App\Models\Product{
@@ -9887,6 +9945,7 @@ namespace App\Models\PurchaseOrder{
  * @property-read \App\Models\Product\Product|null $product
  * @property-read \App\Models\Product\ProductUnit|null $productUnit
  * @property-read \App\Models\PurchaseOrder\PurchaseOrder|null $purchaseOrder
+ * @property-read \App\Models\PurchaseRequisition\PurchaseRequisitionItem|null $purchaseRequisitionItem
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PurchaseOrderItem newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PurchaseOrderItem newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PurchaseOrderItem onlyTrashed()
