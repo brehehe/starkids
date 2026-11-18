@@ -8,3 +8,13 @@
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @fluxAppearance
+<script>
+    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.add('light');
+    try {
+        localStorage.setItem('flux.appearance', 'light');
+        if (window.Flux) {
+            window.Flux.applyAppearance('light');
+        }
+    } catch (e) {}
+</script>

@@ -1,6 +1,6 @@
 <!-- Sidebar Container with Flex Structure -->
 <aside id="sidebar"
-    class="fixed inset-y-0 left-0 flex flex-col bg-white/80 backdrop-blur-sm w-64 border-r border-gray-100 shadow-lg z-40 transition-transform duration-300 ease-in-out transform translate-x-0">
+    class="fixed inset-y-0 left-0 flex flex-col bg-white w-64 border-r border-gray-100 shadow-lg z-40 transition-transform duration-300 ease-in-out transform translate-x-0">
     <!-- Sidebar content -->
 
     <!-- Logo Section -->

@@ -1,4 +1,4 @@
-<nav class="bg-white/80 backdrop-blur-sm border-b border-gray-100 fixed !top-0 !left-0 !right-0 w-full z-50 shadow-sm">
+<nav class="bg-white border-b border-gray-100 fixed !top-0 !left-0 !right-0 w-full z-50 shadow-sm">
     <div class="max-w-full mx-auto px-2 sm:px-4 lg:px-6">
         <div class="flex justify-between h-16">
             <!-- Left Section: Sidebar Toggle & Logo -->

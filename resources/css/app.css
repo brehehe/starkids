@@ -34,6 +34,7 @@
 /* app.css or your main CSS file */
 
 :root {
+    color-scheme: light;
     --white: #ffffff;
 
     /* Yellow Palette */
@@ -766,17 +767,10 @@ select:focus[data-flux-control] {
 html, body {
     margin: 0 !important;
     padding: 0 !important;
-    font-family: "Inter", sans-serif;
-    background: #1452fb80;
-    background-image: #1452fb80;
-    background-position-x: initial;
-    background-position-y: initial;
-    background-size: initial;
-    background-repeat: initial;
-    background-attachment: initial;
-    background-origin: initial;
-    background-clip: initial;
-    background-color: initial;
+    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+    background-color: #f8fafc !important;
+    color: #1e293b;
+    color-scheme: light !important;
 }
 
 .mr-64 {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="light" style="color-scheme: light;">
 
     <head>
         <meta charset="utf-8">
@@ -29,6 +29,9 @@
         @endif
 
         <style>
+            :root {
+                color-scheme: light !important;
+            }
             .shadow-top {
                 box-shadow: 0 -1px 3px 0 rgba(0, 0, 0, 0.1);
             }
@@ -37,23 +40,33 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
         @fluxAppearance
+        <script>
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+            try {
+                localStorage.setItem('flux.appearance', 'light');
+                if (window.Flux) {
+                    window.Flux.applyAppearance('light');
+                }
+            } catch (e) {}
+        </script>
     </head>
 
-    <body class="bg-white">
+    <body class="bg-[#f8fafc] text-gray-800 antialiased min-h-screen">
         @include('layout.navbar')
         @include('layout.sidebar')
 
-        <main id="main-content" class="ml-64 h-screen flex flex-col">
+        <main id="main-content" class="ml-64 min-h-screen flex flex-col bg-[#f8fafc]">
             <!-- Wrapper konten utama dan footer -->
-            <div class="flex flex-col flex-grow mt-16 ">
+            <div class="flex flex-col flex-grow mt-16 bg-[#f8fafc]">
 
                 <!-- Konten Utama -->
-                <div class="h-full flex-grow p-5">
+                <div class="flex-grow p-5">
                     @yield('content')
                 </div>
 
                 <!-- Footer -->
-                <footer class="p-4 bg-white border-t text-sm text-gray-500 text-center">
+                <footer class="p-4 bg-white border-t border-gray-200 text-sm text-gray-500 text-center">
                     © 2025 Your {{config('app.name')}}. All rights reserved.
                 </footer>
 

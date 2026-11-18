@@ -1,7 +1,4 @@
 @section('title', 'Dashboard')
-@push('styles')
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-@endpush
 <div>
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-[#1E3A8A] mb-2">Welcome back, {{ Auth::user()->name ?? 'Belum Login' }}!</h1>
