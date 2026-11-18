@@ -118,9 +118,14 @@ class apiservice
         }
     }
 
-    public function getPratition($request): mixed
+    public function getPratition($request)
     {
-        return null;
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])
+            ->get($this->url.'/testing/practitiont/get-by-nik', $request);
+
+        return $response->json();
     }
 
     /**

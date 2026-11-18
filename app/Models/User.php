@@ -267,6 +267,13 @@ class User extends Authenticatable
 
     public function scopeSearch($query, $search)
     {
+        if (blank($search)) {
+            return $query;
+        }
+
+        $isSqlite = $query->getConnection()->getDriverName() === 'sqlite';
+        $like = $isSqlite ? 'like' : 'ilike';
+
         // Coba parsing input sebagai tanggal
         $parsedDate = null;
         $parsedMonth = null;
@@ -282,22 +289,26 @@ class User extends Authenticatable
             // kalau bukan format tanggal → biarin null
         }
 
-        return $query->where(function ($q) use ($search, $parsedDate, $parsedMonth, $parsedYear) {
-            $q->where('name', 'ilike', "%{$search}%")
-                ->orWhere('email', 'ilike', "%{$search}%")
-                ->orWhere('phone', 'ilike', "%{$search}%")
-                ->orWhere('username', 'ilike', "%{$search}%")
-                ->orWhereRaw('similarity(name, ?) > 0.3', [$search])
-                ->orWhereHas('companyRoles', function ($r) use ($search) {
-                    $r->where('medical_record_number', 'ilike', "%{$search}%")
-                        ->orWhereHas('role', function ($qr) use ($search) {
-                            $qr->where('name', 'ilike', "%{$search}%");
-                        });
-                })
-                ->orWhereHas('userDetail', function ($qd) use ($search, $parsedDate, $parsedMonth, $parsedYear) {
-                    $qd->where('identity_card', 'ilike', "%{$search}%")
-                        ->orWhere('address', 'ilike', "%{$search}%")
-                        ->orWhere('ihs_number', 'ilike', "%{$search}%");
+        return $query->where(function ($q) use ($search, $parsedDate, $parsedMonth, $parsedYear, $like, $isSqlite) {
+            $q->where('name', $like, "%{$search}%")
+                ->orWhere('email', $like, "%{$search}%")
+                ->orWhere('phone', $like, "%{$search}%")
+                ->orWhere('username', $like, "%{$search}%");
+
+            if (! $isSqlite) {
+                $q->orWhereRaw('similarity(name, ?) > 0.3', [$search]);
+            }
+
+            $q->orWhereHas('companyRoles', function ($r) use ($search, $like) {
+                $r->where('medical_record_number', $like, "%{$search}%")
+                    ->orWhereHas('role', function ($qr) use ($search, $like) {
+                        $qr->where('name', $like, "%{$search}%");
+                    });
+            })
+                ->orWhereHas('userDetail', function ($qd) use ($search, $parsedDate, $parsedMonth, $parsedYear, $like, $isSqlite) {
+                    $qd->where('identity_card', $like, "%{$search}%")
+                        ->orWhere('address', $like, "%{$search}%")
+                        ->orWhere('ihs_number', $like, "%{$search}%");
 
                     // 🔹 Jika input valid tanggal lengkap
                     if ($parsedDate) {
@@ -318,9 +329,11 @@ class User extends Authenticatable
                     }
 
                     // 🔹 Fallback: coba cocokkan dengan format string tanggal di DB (butuh lc_time=id_ID biar bulan Indo)
-                    $qd->orWhereRaw("to_char(birth_date, 'DD FMMonth YYYY') ILIKE ?", ["%{$search}%"])
-                        ->orWhereRaw("to_char(birth_date, 'FMMonth YYYY') ILIKE ?", ["%{$search}%"])
-                        ->orWhereRaw("to_char(birth_date, 'YYYY') ILIKE ?", ["%{$search}%"]);
+                    if (! $isSqlite) {
+                        $qd->orWhereRaw("to_char(birth_date, 'DD FMMonth YYYY') ILIKE ?", ["%{$search}%"])
+                            ->orWhereRaw("to_char(birth_date, 'FMMonth YYYY') ILIKE ?", ["%{$search}%"])
+                            ->orWhereRaw("to_char(birth_date, 'YYYY') ILIKE ?", ["%{$search}%"]);
+                    }
                 });
         });
     }

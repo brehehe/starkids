@@ -28,7 +28,7 @@ class GetPractitiont extends FormRequest
             //
             'company_id' => 'required|uuid',
             'nik' => 'required|numeric',
-            'name' => 'required',
+            'name' => 'nullable|string',
         ];
     }
 
@@ -45,7 +45,6 @@ class GetPractitiont extends FormRequest
             'company_id.uuid' => 'Id perusahaan harus berupa UUID.',
             'nik.required' => 'Nomor NIK wajib diisi.',
             'nik.numeric' => 'Nomor NIK harus berupa angka.',
-            'name.required' => 'Nama praktisi wajib diisi.',
         ];
     }
 

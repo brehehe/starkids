@@ -22,20 +22,42 @@
         <div class="px-6 py-4 text-gray-600" style="max-height: 500px; overflow-y: auto;">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
                 <div class="mb-4">
+                    <label for="name" class="block text-sm font-medium text-gray-700">Nama Dokter <span
+                            class="text-red-600">*</span></label>
                     <div class="mt-1 flex rounded-md shadow-sm">
-                        <input type="text" wire:model.lazy='name' class="form-control"
+                        <input type="text" id="name" wire:model.lazy='name' class="form-control"
                             placeholder="Masukan Nama Dokter" />
                     </div>
+                    @error('name')
+                        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div class="mb-4">
+                    <label for="nik" class="block text-sm font-medium text-gray-700">NIK Dokter <span
+                            class="text-red-600">*</span></label>
                     <div class="mt-1 flex rounded-md shadow-sm">
-                        <input type="text" wire:model.lazy='nik' class="form-control rounded-r-none"
+                        <input type="text" id="nik" wire:model.lazy='nik' class="form-control rounded-r-none"
                             placeholder="Masukan NIK Dokter" />
-                        <button wire:click='searchNik'
-                            class="inline-flex items-center rounded-r-md border border-r-0 border-blue-300 bg-blue-100 px-3 text-gray-500 text-sm">
-                            <i class="fas fa-search"></i>
+                        <button type="button" wire:click='searchNik' wire:loading.attr="disabled"
+                            class="inline-flex items-center rounded-r-md border border-r-0 border-blue-300 bg-blue-100 hover:bg-blue-200 px-3 text-blue-600 text-sm cursor-pointer transition-colors"
+                            title="Cari NIK di SatuSehat">
+                            <span wire:loading.remove wire:target="searchNik">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <span wire:loading wire:target="searchNik">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
                         </button>
                     </div>
+                    @if ($doctor_id)
+                        <div class="mt-1.5 flex items-center gap-1.5 text-xs text-green-700 bg-green-50 px-2.5 py-1 rounded border border-green-200">
+                            <i class="fas fa-check-circle text-green-600"></i>
+                            <span>Terhubung SatuSehat (IHS ID: <strong>{{ $doctor_id }}</strong>)</span>
+                        </div>
+                    @endif
+                    @error('nik')
+                        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div class="mb-4">
                     <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
@@ -100,7 +122,7 @@
                     <label for="province_code" class="block text-sm font-medium text-gray-700">Provinsi <span
                             class="text-red-600">*</span></label>
                     <div wire:key="select-{{ rand() }}">
-                        <select class="mt-1 form-control" disabled x-data x-ref="input" x-init="$($refs.input).selectize({
+                        <select class="mt-1 form-control" x-data x-ref="input" x-init="$($refs.input).selectize({
                             dropdownParent: 'body',
                             allowClear: true,
                             onChange: function(e) {
@@ -122,7 +144,7 @@
                     <label for="city_code" class="block text-sm font-medium text-gray-700">Kota <span
                             class="text-red-600">*</span></label>
                     <div wire:key="select-{{ rand() }}">
-                        <select class="mt-1 form-control" disabled x-data x-ref="input" x-init="$($refs.input).selectize({
+                        <select class="mt-1 form-control" x-data x-ref="input" x-init="$($refs.input).selectize({
                             dropdownParent: 'body',
                             allowClear: true,
                             onChange: function(e) {
@@ -144,7 +166,7 @@
                     <label for="district_code" class="block text-sm font-medium text-gray-700">Kecamatan <span
                             class="text-red-600">*</span></label>
                     <div wire:key="select-{{ rand() }}">
-                        <select class="mt-1 form-control" disabled x-data x-ref="input" x-init="$($refs.input).selectize({
+                        <select class="mt-1 form-control" x-data x-ref="input" x-init="$($refs.input).selectize({
                             dropdownParent: 'body',
                             allowClear: true,
                             onChange: function(e) {
@@ -166,7 +188,7 @@
                     <label for="sub_district_code" class="block text-sm font-medium text-gray-700">Kelurahan <span
                             class="text-red-600">*</span></label>
                     <div wire:key="select-{{ rand() }}">
-                        <select class="mt-1 form-control" disabled x-data x-ref="input" x-init="$($refs.input).selectize({
+                        <select class="mt-1 form-control" x-data x-ref="input" x-init="$($refs.input).selectize({
                             dropdownParent: 'body',
                             allowClear: true,
                             onChange: function(e) {
@@ -195,12 +217,12 @@
                 </div>
                 <div class="mb-4">
                     <label for="rt_code" class="block text-sm font-medium text-gray-700">RT</label>
-                    <input disabled autocomplete="false" id="rt_code" type="text" wire:model.defer="rt_code"
+                    <input autocomplete="false" id="rt_code" type="text" wire:model.defer="rt_code"
                         placeholder="Contoh : 001" class="mt-1 form-control">
                 </div>
                 <div class="mb-4">
                     <label for="rw_code" class="block text-sm font-medium text-gray-700">RW</label>
-                    <input disabled autocomplete="false" id="rw_code" type="text" wire:model.defer="rw_code"
+                    <input autocomplete="false" id="rw_code" type="text" wire:model.defer="rw_code"
                         placeholder="Contoh : 001" class="mt-1 form-control">
                 </div>
                 <div class="{{ $profile || $profile_old ? null : 'md:col-span-2' }} mb-4">
@@ -307,7 +329,7 @@
                 <div class="mb-4">
                     <label for="administrative_gender" class="block text-sm font-medium text-gray-700">Gender <span
                             class="text-red-600">*</span></label>
-                    <select id="administrative_gender" disabled wire:model.defer="administrative_gender"
+                    <select id="administrative_gender" wire:model.defer="administrative_gender"
                         class="mt-1 form-control">
                         <option value="">Pilih Gender</option>
                         @foreach ($administrativeGenderDetails as $administrativeGenderDetail)
@@ -333,8 +355,8 @@
                 <div class="mb-4">
                     <label for="birth_date" class="block text-sm font-medium text-gray-700">Tanggal Lahir <span
                             class="text-red-600">*</span></label>
-                    <input autocomplete="false" id="birth_date" disabled type="date"
-                        wire:model.defer="birth_date" placeholder="Contoh : Jakarta" class="mt-1 form-control">
+                    <input autocomplete="false" id="birth_date" type="date"
+                        wire:model.defer="birth_date" class="mt-1 form-control">
                     @error('birth_date')
                         <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                     @enderror

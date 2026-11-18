@@ -248,8 +248,8 @@ class AdminMasterDoctorIndex extends Component
 
     public function searchNik()
     {
-        if ($this->name == '' && $this->nik == '') {
-            AlertHelper::error('Gagal', 'Nama dan NIK tidak boleh kosong');
+        if (empty($this->nik)) {
+            AlertHelper::error('Gagal', 'NIK tidak boleh kosong');
 
             return;
         }
@@ -267,6 +267,10 @@ class AdminMasterDoctorIndex extends Component
         }
 
         $this->reset(['address', 'province_code', 'city_code', 'district_code', 'sub_district_code', 'birth_date', 'administrative_gender', 'doctor_id', 'marital_status', 'identity_card', 'blood_group', 'deceased_date', 'sip_number', 'specialization', 'doctor_type', 'type', 'role_name', 'referral_percentage', 'incentive_doctor', 'incentive_pharmacy', 'incentive_nurse', 'incentive_cashier', 'price_doctor', 'type_incentive_doctor', 'type_incentive_nurse', 'type_incentive_pharmacy', 'type_incentive_cashier', 'is_active', 'is_head', 'role_id', 'username', 'email', 'password', 'profile', 'profile_old', 'phone', 'doctor_id', 'rt_code', 'rw_code', 'longitude', 'latitude', 'altitude', 'country', 'license_number']);
+        $this->country = 'ID';
+        $this->longitude = '0';
+        $this->latitude = '0';
+        $this->altitude = '0';
 
         try {
             DB::beginTransaction();
@@ -344,43 +348,71 @@ class AdminMasterDoctorIndex extends Component
         $data = $response['data'] ?? null;
 
         // Check if data exists before accessing any properties
-        if (! $data || ! is_array($data)) {
-            AlertHelper::warning('Peringatan', 'Data praktisi tidak ditemukan atau tidak valid');
+        if (! $data || ! is_array($data) || empty($response['success'])) {
+            AlertHelper::warning('Peringatan', $response['message'] ?? 'Data praktisi tidak ditemukan atau tidak valid');
 
             return;
         }
 
         $this->practitioner_id = $data['practitioner_id'] ?? '';
+        $this->doctor_id = $data['id_practitioner'] ?? '';
+
+        if (empty($this->name) && ! empty($data['name'])) {
+            $this->name = $data['name'];
+        }
 
         // Address fields with safe access
         $address = $data['address'] ?? [];
-        $this->address = is_array($address) ? ($address['address'] ?? '') : '';
-        $this->doctor_id = $data['id_practitioner'] ?? '';
-        $this->province_code = is_array($address) ? ($address['province_code'] ?? '') : '';
-        $this->updatedProvinceCode();
-        $this->city_code = is_array($address) ? ($address['city_code'] ?? '') : '';
-        $this->updatedCityCode();
-        $this->district_code = is_array($address) ? ($address['district_code'] ?? '') : '';
-        $this->updatedDistrictCode();
-        $this->sub_district_code = is_array($address) ? ($address['village_code'] ?? '') : '';
+        if (! empty($address['address'])) {
+            $this->address = $address['address'];
+        }
+        if (! empty($address['province_code'])) {
+            $this->province_code = $address['province_code'];
+            $this->updatedProvinceCode();
+        }
+        if (! empty($address['city_code'])) {
+            $this->city_code = $address['city_code'];
+            $this->updatedCityCode();
+        }
+        if (! empty($address['district_code'])) {
+            $this->district_code = $address['district_code'];
+            $this->updatedDistrictCode();
+        }
+        if (! empty($address['village_code'])) {
+            $this->sub_district_code = $address['village_code'];
+        }
 
         // Basic fields with safe access
-        $this->birth_date = $data['birth_date'] ?? '';
+        if (! empty($data['birth_date'])) {
+            $this->birth_date = $data['birth_date'];
+        }
 
         // Gender field with comprehensive checking
-        $this->administrative_gender = (isset($data['gender']) && ! empty($data['gender']))
-            ? optional(MasterPatientAdministrativeGender::whereIn('code', ['male', 'female'])->where('code', $data['gender'])->first())->code
-            : null;
+        if (! empty($data['gender'])) {
+            $this->administrative_gender = optional(MasterPatientAdministrativeGender::whereIn('code', ['male', 'female'])->where('code', $data['gender'])->first())->code;
+        }
 
         // More address fields with safe access
-        $this->country = is_array($address) ? ($address['country'] ?? 'ID') : 'ID';
-        $this->rt_code = is_array($address) ? ($address['rt_code'] ?? '') : '';
-        $this->rw_code = is_array($address) ? ($address['rw_code'] ?? '') : '';
-        $this->longitude = is_array($address) ? ($address['longitude'] ?? '0') : '0';
-        $this->latitude = is_array($address) ? ($address['latitude'] ?? '0') : '0';
-        $this->altitude = is_array($address) ? ($address['altitude'] ?? '0') : '0';
+        if (! empty($address['country'])) {
+            $this->country = $address['country'];
+        }
+        if (! empty($address['rt_code'])) {
+            $this->rt_code = $address['rt_code'];
+        }
+        if (! empty($address['rw_code'])) {
+            $this->rw_code = $address['rw_code'];
+        }
+        if (isset($address['longitude'])) {
+            $this->longitude = $address['longitude'];
+        }
+        if (isset($address['latitude'])) {
+            $this->latitude = $address['latitude'];
+        }
+        if (isset($address['altitude'])) {
+            $this->altitude = $address['altitude'];
+        }
 
-        AlertHelper::success('Berhasil', 'ID Praktisi berhasil ditemukan.');
+        AlertHelper::success('Berhasil', 'ID Praktisi SatuSehat berhasil ditemukan: '.($this->doctor_id ? "({$this->doctor_id})" : ''));
     }
 
     public function updatedProvinceCode()
@@ -849,12 +881,12 @@ class AdminMasterDoctorIndex extends Component
                 'district_code' => $this->district_code,
                 'sub_district_code' => $this->sub_district_code,
                 'doctor_id' => $this->doctor_id,
-                'country' => $this->country,
+                'country' => $this->country ?: 'ID',
                 'rt' => $this->rt_code,
                 'rw' => $this->rw_code,
-                'longitude' => $this->longitude,
-                'latitude' => $this->latitude,
-                'altitude' => $this->altitude,
+                'longitude' => $this->longitude ?: '0',
+                'latitude' => $this->latitude ?: '0',
+                'altitude' => $this->altitude ?: '0',
                 'license_number' => $this->license_number,
             ],
         );

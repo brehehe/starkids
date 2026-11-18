@@ -243,6 +243,14 @@ class TestingController extends BaseController
                 throw new Exception($response['message'], 500);
             }
 
+            if (empty($response['data']['entry'])) {
+                DB::rollBack();
+
+                return $this->sendError('Data praktisi tidak ditemukan di SatuSehat', [
+                    'nik' => $request?->nik,
+                ], 404);
+            }
+
             $data = $response['data']['entry'][0] ?? [];
 
             $OHPractitioner = app(System_PractitiontService::class)->updateOrCreateOHPractitiont($data, $request);

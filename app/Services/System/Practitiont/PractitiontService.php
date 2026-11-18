@@ -23,8 +23,8 @@ class PractitiontService
                 'id_practitiont' => $data['resource']['id'] ?? null,
             ],
             [
-                'name_text' => $request?->name ?? $data['resource']['name'][0]['text'],
-                'name_use' => $data['resource']['name'][0]['use'] ?? null,
+                'name_text' => $request?->name ?? $data['resource']['name'][0]['text'] ?? 'Dokter',
+                'name_use' => $data['resource']['name'][0]['use'] ?? 'official',
                 'birth_date' => $data['resource']['birthDate'] ?? null,
                 'gender' => $data['resource']['gender'] ?? null,
                 'full_url' => $data['fullUrl'] ?? null,
@@ -36,6 +36,7 @@ class PractitiontService
         $OHPractitiont->update([
             'practitioner_id' => $practitioner?->id,
         ]);
+        $OHPractitiont->setRelation('practitioner', $practitioner);
 
         foreach ($data['resource']['identifier'] ?? [] as $key => $identifier) {
             $OHPractitiont->OHPractitiontIdentifiers()->updateOrCreate(
@@ -49,29 +50,31 @@ class PractitiontService
             );
         }
 
-        $OHPractitiontAddress = $OHPractitiont->OHPractitiontAddress()->updateOrCreate(
-            [
-                'one_health_practitiont_id' => $OHPractitiont?->id,
-            ],
-            [
-                'use' => $data['resource']['address'][0]['use'] ?? 'home',
-                'line' => $data['resource']['address'][0]['line'][0] ?? null,
-                'city' => $data['resource']['address'][0]['city'] ?? null,
-                'country' => $data['resource']['address'][0]['country'] ?? 'ID',
-                'postal_code' => $data['resource']['address'][0]['postalCode'] ?? null,
-                'extention_url' => $data['resource']['address'][0]['extension'][0]['url'] ?? 'https://fhir.kemkes.go.id/r4/StructureDefinition/administrativeCode',
-            ]
-        );
-
-        foreach ($data['resource']['address'][0]['extension'][0]['extension'] ?? [] as $key => $extension) {
-            $OHPractitiontAddress->extensions()->updateOrCreate(
+        if (! empty($data['resource']['address'][0])) {
+            $OHPractitiontAddress = $OHPractitiont->OHPractitiontAddress()->updateOrCreate(
                 [
-                    'url' => $extension['url'],
+                    'one_health_practitiont_id' => $OHPractitiont?->id,
                 ],
                 [
-                    'value_code' => $extension['valueCode'],
+                    'use' => $data['resource']['address'][0]['use'] ?? 'home',
+                    'line' => $data['resource']['address'][0]['line'][0] ?? null,
+                    'city' => $data['resource']['address'][0]['city'] ?? null,
+                    'country' => $data['resource']['address'][0]['country'] ?? 'ID',
+                    'postal_code' => $data['resource']['address'][0]['postalCode'] ?? null,
+                    'extention_url' => $data['resource']['address'][0]['extension'][0]['url'] ?? 'https://fhir.kemkes.go.id/r4/StructureDefinition/administrativeCode',
                 ]
             );
+
+            foreach ($data['resource']['address'][0]['extension'][0]['extension'] ?? [] as $key => $extension) {
+                $OHPractitiontAddress->extensions()->updateOrCreate(
+                    [
+                        'url' => $extension['url'],
+                    ],
+                    [
+                        'value_code' => $extension['valueCode'],
+                    ]
+                );
+            }
         }
 
         foreach ($data['resource']['qualification'][0]['code']['coding'] ?? [] as $key => $qualification_code_coding) {
@@ -107,7 +110,7 @@ class PractitiontService
             'gender' => $OHPractitiont?->gender,
             'birth_date' => $OHPractitiont?->birth_date?->format('Y-m-d'),
             'name' => $OHPractitiont?->name_text,
-            'practitioner_id' => $OHPractitiont?->practitioner?->id,
+            'practitioner_id' => $OHPractitiont?->practitioner_id ?? $OHPractitiont?->practitioner?->id,
             'address' => [
                 'city_name' => $OHPractitiont?->OHPractitiontAddress?->city,
                 'address' => $OHPractitiont?->OHPractitiontAddress?->line,
