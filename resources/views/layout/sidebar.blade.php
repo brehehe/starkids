@@ -28,6 +28,7 @@
                 </div>
 
                 <!-- Notifications -->
+                @if (!auth()->user()->hasRole('Dokter'))
                 <div>
                     <a href="{{ route('user.notifications.list') }}"
                         class="group flex items-center px-4 py-3 text-sm font-medium rounded-lg {{ Request::is('user/notifications/list*') ? 'bg-[#C3D4EC]/50 text-[#1E3A8A] active-menu' : 'text-gray-600 hover:bg-[#C3D4EC]/20 hover:text-[#1E3A8A]' }} transition-colors duration-200">
@@ -38,6 +39,7 @@
                         </div>
                     </a>
                 </div>
+                @endif
 
                 <!-- Divider: MENU PEMBELIAN -->
                 @if (auth()->user()->hasRole(['Super Admin', 'Resepsionis', 'Kasir', 'Perawat']))

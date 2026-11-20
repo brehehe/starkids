@@ -12,6 +12,12 @@ class NotificationController extends Controller
      */
     public function index(Request $request)
     {
+        if (auth()->user()?->hasRole('Dokter') && ! auth()->user()?->hasRole('Super Admin')) {
+            return response()->json([
+                'notifications' => [],
+                'unreadCount' => 0,
+            ]);
+        }
 
         $notifications = Notification::unread()
             ->whereNotNull('title')

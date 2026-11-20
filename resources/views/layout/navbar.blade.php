@@ -76,6 +76,7 @@
                 </div>
 
                 <!-- Notifications -->
+                @if (!Auth::user()?->hasRole('Dokter'))
                 <div x-data="{
                     open: false,
                     notifications: [],
@@ -206,6 +207,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
 
 
                 <!-- Profile Dropdown -->

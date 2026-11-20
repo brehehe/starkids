@@ -18,7 +18,9 @@ class AdminNotificationIndex extends Component
 
     public function mount()
     {
-        // Check if status is passed in query string? Not needed strictly.
+        if (Auth::user()?->hasRole('Dokter') && ! Auth::user()?->hasRole('Super Admin')) {
+            return redirect()->route('user.dashboard');
+        }
     }
 
     public function setStatus($status)

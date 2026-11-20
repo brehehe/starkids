@@ -2,7 +2,13 @@
 <div>
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-[#1E3A8A] mb-2">Welcome back, {{ Auth::user()->name ?? 'Belum Login' }}!</h1>
-        <p class="text-gray-600">Here's what's happening with your pharmacy today.</p>
+        <p class="text-gray-600">
+            @if ($isDoctor ?? Auth::user()?->hasRole('Dokter'))
+                Here's what's happening with your consultations today.
+            @else
+                Here's what's happening with your pharmacy today.
+            @endif
+        </p>
     </div>
 
     <!-- Stats Cards -->
