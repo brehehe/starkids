@@ -138,7 +138,8 @@
                                             class="text-sm bg-gray-100 text-gray-500 focus:outline-none w-full cursor-not-allowed" />
                                     </div>
                                     <input type="text" wire:model.lazy='recipes.{{ $key_recipe }}.numero_recipe'
-                                        placeholder="Numero Resep"
+                                        onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('recipes.{{ $key_recipe }}.numero_recipe', 0); }"
+                                        placeholder="0"
                                         {{ in_array($status, ['pharmacy', 'call_pharmacy']) ? null : 'disabled' }}
                                         class="{{ in_array($status, ['pharmacy', 'call_pharmacy']) ? null : 'bg-gray-100 cursor-not-allowed' }} text-sm border rounded px-2 py-1"
                                         style="width: 50%;">
@@ -273,7 +274,8 @@
                                         <td class="py-2">
                                             <input
                                                 wire:model.lazy="recipes.{{ $key_recipe }}.details.{{ $index_detail }}.quantity_real"
-                                                type="text" placeholder="Dosis Obat"
+                                                onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('recipes.{{ $key_recipe }}.details.{{ $index_detail }}.quantity_real', 0); }"
+                                                type="text" placeholder="0"
                                                 {{ in_array($status, ['pharmacy', 'call_pharmacy']) ? null : 'disabled' }}
                                                 class="{{ in_array($status, ['pharmacy', 'call_pharmacy']) ? null : 'bg-gray-100 cursor-not-allowed' }} text-sm border rounded px-2 py-1"
                                                 style="width: 100%;">
@@ -355,6 +357,8 @@
                                         <div class="flex justify-center items-center gap-2">
                                             <input type="number"
                                                 wire:model.lazy='medicines.{{ $key_medicine }}.quantity'
+                                                onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('medicines.{{ $key_medicine }}.quantity', 0); }"
+                                                placeholder="0"
                                                 class="w-20 h-6 text-center border rounded" />
                                         </div>
                                     @endif

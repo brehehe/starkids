@@ -36,20 +36,20 @@
             {{-- HPP & Harga --}}
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label for="hpp_average" class="block text-sm font-medium text-gray-700">HPP Average <span class="text-red-600">*</span></label>
+                    <label for="hpp_average" class="block text-sm font-medium text-gray-700">HPP Average</label>
                     <div class="mt-1 flex rounded-md shadow-sm">
                         <span class="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">Rp</span>
-                        <input type="text" onkeyup="convertToRupiah(this)" wire:model.live='hpp_average' class="form-control rounded-l-none" placeholder="0" />
+                        <input type="text" onkeyup="convertToRupiah(this)" onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('hpp_average', '0'); }" wire:model.live='hpp_average' class="form-control rounded-l-none" placeholder="0" />
                     </div>
                     @error('hpp_average')
                         <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
                 <div>
-                    <label for="price" class="block text-sm font-medium text-gray-700">Harga <span class="text-red-600">*</span></label>
+                    <label for="price" class="block text-sm font-medium text-gray-700">Harga</label>
                     <div class="mt-1 flex rounded-md shadow-sm">
                         <span class="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">Rp</span>
-                        <input type="text" onkeyup="convertToRupiah(this)" wire:model.live='price' class="form-control rounded-l-none" placeholder="0" />
+                        <input type="text" onkeyup="convertToRupiah(this)" onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('price', '0'); }" wire:model.live='price' class="form-control rounded-l-none" placeholder="0" />
                     </div>
                     @error('price')
                         <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -72,9 +72,9 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Insentif Perawat / Terapis</label>
                     @if ($type_incentive_nurse == 'rupiah')
-                        <input onkeyup="convertToRupiah(this);" type="text" wire:model.lazy="incentive_nurse" placeholder="Contoh : 100000" class="mt-1 form-control">
+                        <input onkeyup="convertToRupiah(this);" onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('incentive_nurse', '0'); }" type="text" wire:model.lazy="incentive_nurse" placeholder="Contoh : 100000" class="mt-1 form-control">
                     @else
-                        <input type="number" wire:model.lazy="incentive_nurse" placeholder="Contoh : 10" class="mt-1 form-control">
+                        <input type="number" onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('incentive_nurse', '0'); }" wire:model.lazy="incentive_nurse" placeholder="Contoh : 10" class="mt-1 form-control">
                     @endif
                     @error('incentive_nurse')
                         <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -93,9 +93,9 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Insentif Dokter <span class="text-xs text-gray-400">(default)</span></label>
                     @if ($type_incentive_doctor == 'rupiah')
-                        <input onkeyup="convertToRupiah(this);" type="text" wire:model.lazy="incentive_doctor" placeholder="Contoh : 100000" class="mt-1 form-control">
+                        <input onkeyup="convertToRupiah(this);" onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('incentive_doctor', '0'); }" type="text" wire:model.lazy="incentive_doctor" placeholder="Contoh : 100000" class="mt-1 form-control">
                     @else
-                        <input type="number" wire:model.lazy="incentive_doctor" placeholder="Contoh : 10" class="mt-1 form-control">
+                        <input type="number" onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('incentive_doctor', '0'); }" wire:model.lazy="incentive_doctor" placeholder="Contoh : 10" class="mt-1 form-control">
                     @endif
                     @error('incentive_doctor')
                         <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -167,9 +167,11 @@
                                 </label>
                                 @if ($di_type === 'rupiah')
                                     <input type="text" wire:model.blur="di_value" onkeyup="convertToRupiah(this)"
+                                        onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('di_value', '0'); }"
                                         class="form-control text-sm" placeholder="0">
                                 @else
                                     <input type="number" wire:model="di_value" min="0" max="100"
+                                        onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('di_value', '0'); }"
                                         class="form-control text-sm" placeholder="0">
                                 @endif
                                 @error('di_value')

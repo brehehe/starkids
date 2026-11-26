@@ -630,14 +630,14 @@ class AdminConsultationConsultationDetailIndex extends Component
                 $this->detailAction();
             } elseif ($tab == 'observasi') {
                 $transactionPhysicalExam = TransactionPhysicalExamination::where('transaction_id', $this->transaction_id)->first();
-                $this->head_circumference = $transactionPhysicalExam ? $transactionPhysicalExam->head_circumference : null;
-                $this->heart_rate = $transactionPhysicalExam ? $transactionPhysicalExam->heart_rate : null;
-                $this->breathing = $transactionPhysicalExam ? $transactionPhysicalExam->breathing : null;
-                $this->blood_pressure_sistole = $transactionPhysicalExam ? $transactionPhysicalExam->blood_pressure_sistole : null;
-                $this->blood_pressure_diastole = $transactionPhysicalExam ? $transactionPhysicalExam->blood_pressure_diastole : null;
-                $this->body_temperature = $transactionPhysicalExam ? $transactionPhysicalExam->body_temperature : null;
-                $this->height = $transactionPhysicalExam ? $transactionPhysicalExam->height : null;
-                $this->weight = $transactionPhysicalExam ? $transactionPhysicalExam->weight : null;
+                $this->head_circumference = $transactionPhysicalExam ? ($transactionPhysicalExam->head_circumference ?? '0') : '0';
+                $this->heart_rate = $transactionPhysicalExam ? ($transactionPhysicalExam->heart_rate ?? '0') : '0';
+                $this->breathing = $transactionPhysicalExam ? ($transactionPhysicalExam->breathing ?? '0') : '0';
+                $this->blood_pressure_sistole = $transactionPhysicalExam ? ($transactionPhysicalExam->blood_pressure_sistole ?? '0') : '0';
+                $this->blood_pressure_diastole = $transactionPhysicalExam ? ($transactionPhysicalExam->blood_pressure_diastole ?? '0') : '0';
+                $this->body_temperature = $transactionPhysicalExam ? ($transactionPhysicalExam->body_temperature ?? '0') : '0';
+                $this->height = $transactionPhysicalExam ? ($transactionPhysicalExam->height ?? '0') : '0';
+                $this->weight = $transactionPhysicalExam ? ($transactionPhysicalExam->weight ?? '0') : '0';
             } elseif ($tab == 'diagnosa') {
                 $this->detail();
                 $this->detailPrimary();
@@ -1115,20 +1115,24 @@ class AdminConsultationConsultationDetailIndex extends Component
                 ]);
             }
         } elseif (in_array($propertyName, ['head_circumference', 'heart_rate', 'breathing', 'blood_pressure_sistole', 'blood_pressure_diastole', 'body_temperature', 'height', 'weight'])) {
+            if ($this->{$propertyName} === null || trim((string) $this->{$propertyName}) === '') {
+                $this->{$propertyName} = '0';
+            }
+
             TransactionPhysicalExamination::updateOrCreate(
                 [
                     'transaction_id' => $this->transaction_id,
                     'company_id' => Auth::user()->company_id,
                 ],
                 [
-                    'head_circumference' => empty($this->head_circumference) ? null : $this->head_circumference,
-                    'heart_rate' => empty($this->heart_rate) ? null : $this->heart_rate,
-                    'breathing' => empty($this->breathing) ? null : $this->breathing,
-                    'blood_pressure_sistole' => empty($this->blood_pressure_sistole) ? null : $this->blood_pressure_sistole,
-                    'blood_pressure_diastole' => empty($this->blood_pressure_diastole) ? null : $this->blood_pressure_diastole,
-                    'body_temperature' => empty($this->body_temperature) ? null : $this->body_temperature,
-                    'height' => empty($this->height) ? null : $this->height,
-                    'weight' => empty($this->weight) ? null : $this->weight,
+                    'head_circumference' => ($this->head_circumference === null || trim((string) $this->head_circumference) === '') ? '0' : $this->head_circumference,
+                    'heart_rate' => ($this->heart_rate === null || trim((string) $this->heart_rate) === '') ? '0' : $this->heart_rate,
+                    'breathing' => ($this->breathing === null || trim((string) $this->breathing) === '') ? '0' : $this->breathing,
+                    'blood_pressure_sistole' => ($this->blood_pressure_sistole === null || trim((string) $this->blood_pressure_sistole) === '') ? '0' : $this->blood_pressure_sistole,
+                    'blood_pressure_diastole' => ($this->blood_pressure_diastole === null || trim((string) $this->blood_pressure_diastole) === '') ? '0' : $this->blood_pressure_diastole,
+                    'body_temperature' => ($this->body_temperature === null || trim((string) $this->body_temperature) === '') ? '0' : $this->body_temperature,
+                    'height' => ($this->height === null || trim((string) $this->height) === '') ? '0' : $this->height,
+                    'weight' => ($this->weight === null || trim((string) $this->weight) === '') ? '0' : $this->weight,
                 ],
             );
 
@@ -1402,10 +1406,17 @@ class AdminConsultationConsultationDetailIndex extends Component
             return;
         }
 
+        if ($this->odontogram_price === null || $this->odontogram_price === '') {
+            $this->odontogram_price = '0';
+        }
+        if ($this->odontogram_discount === null || $this->odontogram_discount === '') {
+            $this->odontogram_discount = 0;
+        }
+
         // Validate common fields
         $this->validate([
             'odontogram_name' => 'required', // Name is required for both manual and product
-            'odontogram_price' => 'required',
+            'odontogram_price' => 'nullable',
         ]);
 
         $price = $this->parseIntValue($this->odontogram_price);
@@ -1524,7 +1535,7 @@ class AdminConsultationConsultationDetailIndex extends Component
         foreach ($this->transaction_actions as $key => $action) {
 
             $price = intval(str_replace('.', '', $action['price'] ?? '0'));
-            $quantity = max(intval(str_replace('.', '', $action['quantity'] ?? '1')), 1);
+            $quantity = max(intval(str_replace('.', '', $action['quantity'] ?? '0')), 0);
 
             $discountType = $action['discount_type'] ?? 'nominal';
             $discountStr = $action['discount'] ?? '0';
@@ -1593,6 +1604,7 @@ class AdminConsultationConsultationDetailIndex extends Component
 
             $this->transaction_actions[$key]['price'] = $price;
             $this->transaction_actions[$key]['quantity'] = $quantity;
+            $this->transaction_actions[$key]['discount'] = $discount;
             $this->transaction_actions[$key]['discount_value'] = $discountValue;
             $this->transaction_actions[$key]['sub_total_price'] = $subTotalPrice;
         }

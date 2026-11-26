@@ -38,14 +38,13 @@
                 @enderror
             </div>
             <div class="mb-4">
-                <label for="hpp_average" class="block text-sm font-medium text-gray-700">HPP Average <span
-                        class="text-red-600">*</span></label>
+                <label for="hpp_average" class="block text-sm font-medium text-gray-700">HPP Average</label>
                 <div class="mt-1 flex rounded-md shadow-sm">
                     <span
                         class="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
                         Rp
                     </span>
-                    <input type="text" onkeyup="convertToRupiah(this)" wire:model.live='hpp_average'
+                    <input type="text" onkeyup="convertToRupiah(this)" onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('hpp_average', '0'); }" wire:model.live='hpp_average'
                         class="form-control rounded-l-none" placeholder="0" />
                 </div>
                 @error('hpp_average')
@@ -53,14 +52,13 @@
                 @enderror
             </div>
             <div class="mb-4">
-                <label for="price" class="block text-sm font-medium text-gray-700">Harga <span
-                        class="text-red-600">*</span></label>
+                <label for="price" class="block text-sm font-medium text-gray-700">Harga</label>
                 <div class="mt-1 flex rounded-md shadow-sm">
                     <span
                         class="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
                         Rp
                     </span>
-                    <input type="text" onkeyup="convertToRupiah(this)" wire:model.live='price'
+                    <input type="text" onkeyup="convertToRupiah(this)" onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('price', '0'); }" wire:model.live='price'
                         class="form-control rounded-l-none" placeholder="0" />
                 </div>
                 @error('price')

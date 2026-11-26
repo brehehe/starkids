@@ -330,13 +330,11 @@ class AdminPharmacyConsultationDetailIndex extends Component
 
             $product = Product::find($value['product_id']);
 
-            // Validasi quantity minimal
-            if ($value['quantity'] <= 0) {
-                $this->medicines[$key]['quantity'] = 1;
-                AlertHelper::error('Gagal', 'Jumlah produk tidak boleh kurang dari 1.');
-
-                continue;
+            $qty = $this->parseIntValue($value['quantity'] ?? 0);
+            if ($qty < 0) {
+                $qty = 0;
             }
+            $this->medicines[$key]['quantity'] = $qty;
 
             if (! $product) {
                 AlertHelper::error('Gagal', 'Produk tidak ditemukan.');
@@ -362,9 +360,9 @@ class AdminPharmacyConsultationDetailIndex extends Component
             $transactionDetail = TransactionDetail::find($value['id']);
 
             if ($transactionDetail) {
-                $transactionDetail->quantity = $this->medicines[$key]['quantity'];
-                $transactionDetail->price = $value['price'];
-                $transactionDetail->price_discount = $value['price_discount'] ?? 0;
+                $transactionDetail->quantity = $qty;
+                $transactionDetail->price = $this->parseFloatValue($value['price'] ?? 0);
+                $transactionDetail->price_discount = $this->parseFloatValue($value['price_discount'] ?? 0);
                 $transactionDetail->save(); // Observer akan hitung ulang sub_total dan update stock
             }
         }
@@ -417,7 +415,7 @@ class AdminPharmacyConsultationDetailIndex extends Component
             $productIdChanged = $transactionRecipe->product_id != $newProductId;
 
             // If product changed, fetch new price
-            $price = intval(Str::replace('.', '', $value['price']));
+            $price = $this->parseIntValue($value['price'] ?? 0);
             if ($productIdChanged && $newProductId) {
                 $product = Product::find($newProductId);
                 if ($product) {
@@ -433,11 +431,11 @@ class AdminPharmacyConsultationDetailIndex extends Component
 
             // Validasi dan assign field
             $transactionRecipe->medicine_type_id = $value['medicine_type_id'] ?? null;
-            $transactionRecipe->price_service_one = $value['price_service_one'] ? Str::replace('.', '', $value['price_service_one']) : 0;
-            $transactionRecipe->price_service_other = $value['price_service_other'] ? Str::replace('.', '', $value['price_service_other']) : 0;
+            $transactionRecipe->price_service_one = ! empty($value['price_service_one']) ? Str::replace('.', '', $value['price_service_one']) : 0;
+            $transactionRecipe->price_service_other = ! empty($value['price_service_other']) ? Str::replace('.', '', $value['price_service_other']) : 0;
             $transactionRecipe->product_id = $newProductId;
-            $transactionRecipe->numero_recipe = intval(Str::replace('.', '', $value['numero_recipe']));
-            $transactionRecipe->quantity = intval(Str::replace('.', '', $value['quantity']));
+            $transactionRecipe->numero_recipe = $this->parseIntValue($value['numero_recipe'] ?? 0);
+            $transactionRecipe->quantity = $this->parseIntValue($value['quantity'] ?? 0);
             $transactionRecipe->price = $price;
             $transactionRecipe->sub_total_price = $transactionRecipe->quantity * $transactionRecipe->price;
             $transactionRecipe->description = $value['description'] ?? null;
@@ -457,7 +455,7 @@ class AdminPharmacyConsultationDetailIndex extends Component
                     $detailProductIdChanged = $transactionDetail->product_id != $newDetailProductId;
 
                     // If product changed, fetch new price
-                    $detailPrice = $this->parseFloatValue($detail['price']);
+                    $detailPrice = $this->parseFloatValue($detail['price'] ?? 0);
                     if ($detailProductIdChanged) {
                         $productRecipe = Product::find($newDetailProductId);
                         if ($productRecipe) {
@@ -473,9 +471,9 @@ class AdminPharmacyConsultationDetailIndex extends Component
 
                     $transactionDetail->product_id = $newDetailProductId;
                     $transactionDetail->quantity_real = $this->parseFloatValue($detail['quantity_real'] ?? 0);
-                    $transactionDetail->quantity = $this->parseIntValue($detail['quantity_real']);
+                    $transactionDetail->quantity = $this->parseIntValue($detail['quantity_real'] ?? 0);
                     $transactionDetail->price = $detailPrice;
-                    $transactionDetail->sub_total_price = $this->parseIntValue($detail['quantity_real']) * $detailPrice;
+                    $transactionDetail->sub_total_price = $this->parseIntValue($detail['quantity_real'] ?? 0) * $detailPrice;
                     $transactionDetail->save(); // Observer akan validasi stok
                 }
             }

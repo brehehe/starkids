@@ -96,10 +96,14 @@ class AdminMasterServiceMonthIndex extends Component
 
     public function submit()
     {
+        if ($this->price === null || $this->price === '') {
+            $this->price = '0';
+        }
+
         $this->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'price' => 'required',
+            'price' => 'nullable',
             'is_trial' => 'boolean',
             'is_active' => 'boolean',
             'is_lifetime' => 'boolean',

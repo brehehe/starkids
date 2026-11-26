@@ -887,8 +887,8 @@
 
                         <!-- Price -->
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Harga <span class="text-red-600">*</span></label>
-                            <input type="text" wire:model="odontogram_price" class="form-control">
+                            <label class="block text-sm font-medium text-gray-700">Harga</label>
+                            <input type="text" wire:model="odontogram_price" onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('odontogram_price', '0'); }" class="form-control" placeholder="0">
                             @error('odontogram_price') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                         </div>
 
@@ -905,6 +905,7 @@
                                 <input type="number" 
                                     class="bg-white border border-gray-300 text-gray-900 text-xs rounded-r-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 outline-none" 
                                     wire:model.lazy="odontogram_discount"
+                                    onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('odontogram_discount', 0); }"
                                     placeholder="0">
                             </div>
                         </div>
@@ -1318,7 +1319,9 @@
                                 <td>
                                     @if (!in_array($status, ['completed', 'cancelled']))
                                         <input type="number" class="form-control" style="width: 150px"
-                                            wire:model.lazy="transaction_actions.{{ $key_transaction_action }}.price">
+                                            onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('transaction_actions.{{ $key_transaction_action }}.price', 0); }"
+                                            wire:model.lazy="transaction_actions.{{ $key_transaction_action }}.price"
+                                            placeholder="0">
                                     @else
                                         {{ $transaction_action['price'] ?? '-' }}
                                     @endif
@@ -1335,6 +1338,7 @@
                                             <input type="number" 
                                                 class="bg-white border border-gray-300 text-gray-900 text-xs rounded-r-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 outline-none" 
                                                 wire:model.lazy="transaction_actions.{{ $key_transaction_action }}.discount"
+                                                onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('transaction_actions.{{ $key_transaction_action }}.discount', 0); }"
                                                 placeholder="0">
                                         </div>
                                     @else
@@ -1350,7 +1354,9 @@
                                 <td>
                                     @if (!in_array($status, ['completed', 'cancelled']))
                                         <input type="number" class="form-control" style="width: 150px"
-                                            wire:model.lazy="transaction_actions.{{ $key_transaction_action }}.quantity">
+                                            onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('transaction_actions.{{ $key_transaction_action }}.quantity', 0); }"
+                                            wire:model.lazy="transaction_actions.{{ $key_transaction_action }}.quantity"
+                                            placeholder="0">
                                     @else
                                         {{ $transaction_action['quantity'] ?? '-' }}
                                     @endif
@@ -1785,7 +1791,8 @@
                                             <td class="py-2">
                                                 <input
                                                     wire:model.lazy="recipes.{{ $key_recipe }}.details.{{ $index_detail }}.quantity_real"
-                                                    type="text" placeholder="Dosis Obat"
+                                                    onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('recipes.{{ $key_recipe }}.details.{{ $index_detail }}.quantity_real', 0); }"
+                                                    type="text" placeholder="0"
                                                     {{ in_array($status, ['completed', 'cancelled']) ? 'disabled' : null }}
                                                     class="{{ in_array($status, ['completed', 'cancelled']) ? 'bg-gray-100 cursor-not-allowed' : null }} text-sm border rounded px-2 py-1"
                                                     style="width: 100%;">
@@ -1806,6 +1813,7 @@
                                                     <input type="number" 
                                                         class="bg-white border border-gray-300 text-gray-900 text-xs rounded-r-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 outline-none" 
                                                         wire:model.lazy="recipes.{{ $key_recipe }}.details.{{ $index_detail }}.discount"
+                                                        onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('recipes.{{ $key_recipe }}.details.{{ $index_detail }}.discount', 0); }"
                                                         placeholder="0">
                                                 </div>
                                             @else
@@ -1990,8 +1998,8 @@
                         <input {{ in_array($status, ['completed', 'cancelled']) ? 'disabled' : null }} type="text"
                             id="weight"
                             wire:model.lazy="weight"
-                            onblur="setTimeout(() => { if(typeof window.refreshGrowthCharts === 'function') window.refreshGrowthCharts(); }, 100);"
-                            placeholder="Masukkan Berat Badan"
+                            onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('weight', '0'); } setTimeout(() => { if(typeof window.refreshGrowthCharts === 'function') window.refreshGrowthCharts(); }, 100);"
+                            placeholder="0"
                             class="form-control rounded-r-none">
                         <span
                             class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
@@ -2008,8 +2016,8 @@
                         <input {{ in_array($status, ['completed', 'cancelled']) ? 'disabled' : null }} type="text"
                             id="height"
                             wire:model.lazy="height"
-                            onblur="setTimeout(() => { if(typeof window.refreshGrowthCharts === 'function') window.refreshGrowthCharts(); }, 100);"
-                            placeholder="Masukkan Tinggi Badan"
+                            onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('height', '0'); } setTimeout(() => { if(typeof window.refreshGrowthCharts === 'function') window.refreshGrowthCharts(); }, 100);"
+                            placeholder="0"
                             class="form-control rounded-r-none">
                         <span
                             class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
@@ -2026,7 +2034,8 @@
                     <div class="mt-1 flex rounded-md shadow-sm">
                         <input {{ in_array($status, ['completed', 'cancelled']) ? 'disabled' : null }} type="text"
                             id="head_circumference" wire:model.lazy="head_circumference"
-                            placeholder="Masukkan Lingkar Kepala" class="form-control rounded-r-none">
+                            onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('head_circumference', '0'); }"
+                            placeholder="0" class="form-control rounded-r-none">
                         <span
                             class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
                             cm
@@ -2041,7 +2050,8 @@
                     <div class="mt-1 flex rounded-md shadow-sm">
                         <input {{ in_array($status, ['completed', 'cancelled']) ? 'disabled' : null }} type="text"
                             id="body_temperature" wire:model.lazy="body_temperature"
-                            placeholder="Masukkan Suhu Tubuh" class="form-control rounded-r-none">
+                            onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('body_temperature', '0'); }"
+                            placeholder="0" class="form-control rounded-r-none">
                         <span
                             class="inline-flex items-center rounded-r-md border bgiorder-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
                             °C
@@ -2055,7 +2065,9 @@
                     <label for="heart_rate" class="block text-sm font-medium text-gray-700">Detak Jantung</label>
                     <div class="mt-1 flex rounded-md shadow-sm">
                         <input {{ in_array($status, ['completed', 'cancelled']) ? 'disabled' : null }} type="text"
-                            id="heart_rate" wire:model.lazy="heart_rate" placeholder="Masukkan Detak Jantung"
+                            id="heart_rate" wire:model.lazy="heart_rate"
+                            onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('heart_rate', '0'); }"
+                            placeholder="0"
                             class="form-control rounded-r-none">
                         <span
                             class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
@@ -2070,7 +2082,9 @@
                     <label for="breathing" class="block text-sm font-medium text-gray-700">Pernafasan</label>
                     <div class="mt-1 flex rounded-md shadow-sm">
                         <input {{ in_array($status, ['completed', 'cancelled']) ? 'disabled' : null }} type="text"
-                            id="breathing" wire:model.lazy="breathing" placeholder="Masukkan Pernafasan"
+                            id="breathing" wire:model.lazy="breathing"
+                            onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('breathing', '0'); }"
+                            placeholder="0"
                             class="form-control rounded-r-none">
                         <span
                             class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
@@ -2087,7 +2101,8 @@
                     <div class="mt-1 flex rounded-md shadow-sm">
                         <input {{ in_array($status, ['completed', 'cancelled']) ? 'disabled' : null }} type="text"
                             id="blood_pressure_sistole" wire:model.lazy="blood_pressure_sistole"
-                            placeholder="Masukkan Tekanan Darah Sistolik" class="form-control rounded-r-none">
+                            onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('blood_pressure_sistole', '0'); }"
+                            placeholder="0" class="form-control rounded-r-none">
                         <span
                             class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
                             mmHg
@@ -2103,7 +2118,8 @@
                     <div class="mt-1 flex rounded-md shadow-sm">
                         <input {{ in_array($status, ['completed', 'cancelled']) ? 'disabled' : null }} type="text"
                             id="blood_pressure_diastole" wire:model.lazy="blood_pressure_diastole"
-                            placeholder="Masukkan Tekanan Darah Diastolik" class="form-control rounded-r-none">
+                            onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('blood_pressure_diastole', '0'); }"
+                            placeholder="0" class="form-control rounded-r-none">
                         <span
                             class="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-100 px-3 text-gray-500 text-sm">
                             mmHg

@@ -261,8 +261,7 @@
                     @endif
                 @endif
                 <div class="mb-4">
-                    <label for="sip_number" class="block text-sm font-medium text-gray-700">SIP number <span
-                            class="text-red-600">*</span></label>
+                    <label for="sip_number" class="block text-sm font-medium text-gray-700">SIP number</label>
                     <input wire:model='sip_number' type="text" id="sip_number" class="mt-1 form-control"
                         placeholder="Contoh : 1234567890">
                     @error('sip_number')
@@ -270,8 +269,7 @@
                     @enderror
                 </div>
                 <div class="mb-4">
-                    <label for="license_number" class="block text-sm font-medium text-gray-700">STR <span
-                            class="text-red-600">*</span></label>
+                    <label for="license_number" class="block text-sm font-medium text-gray-700">STR</label>
                     <input wire:model='license_number' type="text" id="license_number" class="mt-1 form-control"
                         placeholder="Contoh : 1234567890">
                     @error('license_number')
@@ -279,8 +277,7 @@
                     @enderror
                 </div>
                 <div class="mb-4 md:col-span-2">
-                    <label for="specialization" class="block text-sm font-medium text-gray-700">Spesialis <span
-                            class="text-red-600">*</span></label>
+                    <label for="specialization" class="block text-sm font-medium text-gray-700">Spesialis</label>
                     <input wire:model='specialization' type="text" id="specialization" class="mt-1 form-control"
                         placeholder="Contoh : Kardiologi, Bedah">
                     @error('specialization')
@@ -289,7 +286,7 @@
                 </div>
                 <div class="mb-4">
                     <label for="referral_percentage" class="block text-sm font-medium text-gray-700">Persentase Referral (%)</label>
-                    <input wire:model='referral_percentage' type="number" step="0.01" id="referral_percentage" class="mt-1 form-control"
+                    <input wire:model='referral_percentage' onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('referral_percentage', 0); }" type="number" step="0.01" id="referral_percentage" class="mt-1 form-control"
                         placeholder="Contoh : 10">
                     @error('referral_percentage')
                         <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -307,9 +304,8 @@
                     @enderror
                 </div>
                 <div class="mb-4">
-                    <label for="price_doctor" class="block text-sm font-medium text-gray-700">Biaya Konsultasi <span
-                            class="text-red-600">*</span></label>
-                    <input wire:model='price_doctor' onkeyup="convertToRupiah(this)" type="text"
+                    <label for="price_doctor" class="block text-sm font-medium text-gray-700">Biaya Konsultasi</label>
+                    <input wire:model='price_doctor' onkeyup="convertToRupiah(this)" onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('price_doctor', 0); }" type="text"
                         id="price_doctor" class="mt-1 form-control" placeholder="Contoh : 100000">
                     @error('price_doctor')
                         <p class="text-sm text-red-600 mt-1">{{ $message }}</p>

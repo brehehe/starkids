@@ -38,15 +38,14 @@
                 @enderror
             </div>
             <div class="mb-4">
-                <label for="price" class="block text-sm font-medium text-gray-700">Harga <span
-                        class="text-red-600">*</span></label>
+                <label for="price" class="block text-sm font-medium text-gray-700">Harga</label>
                 <div class="mt-1 flex rounded-md shadow-sm">
                     <span
                         class="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-100 px-3 text-gray-700 text-sm">
                         Rp
                     </span>
-                    <input type="text" onkeyup="convertToRupiah(this);" id="price" wire:model.defer="price"
-                        placeholder="XXXXXXXXX"
+                    <input type="text" onkeyup="convertToRupiah(this);" onblur="if(this.value.trim() === '') { this.value = '0'; $wire.set('price', '0'); }" id="price" wire:model.defer="price"
+                        placeholder="0"
                         class="block w-full min-w-0 flex-1 rounded-none rounded-r-md border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500">
                 </div>
                 @error('price')

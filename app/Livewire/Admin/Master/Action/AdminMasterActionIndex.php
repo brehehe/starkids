@@ -64,8 +64,8 @@ class AdminMasterActionIndex extends Component
     #[Computed]
     public function doctorIncentiveCalculated(): int
     {
-        $priceClean = intval(Str::replace('.', '', $this->price ?? '0'));
-        $incentiveClean = intval(Str::replace('.', '', $this->incentive_doctor ?? '0'));
+        $priceClean = intval(Str::replace('.', '', $this->price ?: '0'));
+        $incentiveClean = intval(Str::replace('.', '', $this->incentive_doctor ?: '0'));
 
         if ($this->type_incentive_doctor === 'percentage') {
             return (int) round($priceClean * $incentiveClean / 100);
@@ -77,6 +77,10 @@ class AdminMasterActionIndex extends Component
     public function mount()
     {
         $this->product_type_id = ProductType::where('name', 'Tindakan')->first()->id;
+        $this->hpp_average = '0';
+        $this->price = '0';
+        $this->incentive_nurse = '0';
+        $this->incentive_doctor = '0';
     }
 
     public function openModal()
@@ -101,6 +105,11 @@ class AdminMasterActionIndex extends Component
             'di_type',
             'di_value',
         ]);
+        $this->hpp_average = '0';
+        $this->price = '0';
+        $this->incentive_nurse = '0';
+        $this->incentive_doctor = '0';
+        $this->di_value = '0';
 
         return $this->dispatch('close-modal', ['id' => $modal]);
     }
@@ -159,17 +168,20 @@ class AdminMasterActionIndex extends Component
 
     public function addDoctorIncentive(): void
     {
+        if ($this->di_value === null || $this->di_value === '') {
+            $this->di_value = '0';
+        }
+
         $this->validate([
             'di_doctor_id' => 'required|exists:users,id',
             'di_type' => 'required|in:percentage,rupiah',
-            'di_value' => 'required|numeric|min:0',
+            'di_value' => 'nullable|numeric|min:0',
         ], [
             'di_doctor_id.required' => 'Pilih dokter terlebih dahulu.',
             'di_doctor_id.exists' => 'Dokter tidak ditemukan.',
-            'di_value.required' => 'Nilai insentif wajib diisi.',
         ]);
 
-        $valueClean = floatval(Str::replace('.', '', $this->di_value));
+        $valueClean = floatval(Str::replace('.', '', $this->di_value ?: '0'));
 
         if ($this->di_type === 'percentage' && $valueClean > 100) {
             $this->addError('di_value', 'Persentase tidak boleh melebihi 100%.');
@@ -204,11 +216,24 @@ class AdminMasterActionIndex extends Component
 
     public function save()
     {
+        if ($this->hpp_average === null || $this->hpp_average === '') {
+            $this->hpp_average = '0';
+        }
+        if ($this->price === null || $this->price === '') {
+            $this->price = '0';
+        }
+        if ($this->incentive_nurse === null || $this->incentive_nurse === '') {
+            $this->incentive_nurse = '0';
+        }
+        if ($this->incentive_doctor === null || $this->incentive_doctor === '') {
+            $this->incentive_doctor = '0';
+        }
+
         $this->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'hpp_average' => 'required',
-            'price' => 'required',
+            'hpp_average' => 'nullable',
+            'price' => 'nullable',
             'type_incentive_nurse' => 'required|in:percentage,rupiah',
             'type_incentive_doctor' => 'required|in:percentage,rupiah',
             'incentive_nurse' => 'nullable',

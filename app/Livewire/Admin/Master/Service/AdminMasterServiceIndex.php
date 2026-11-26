@@ -41,6 +41,8 @@ class AdminMasterServiceIndex extends Component
     public function mount()
     {
         $this->product_type_id = ProductType::where('name', 'Jasa')->first()->id;
+        $this->hpp_average = '0';
+        $this->price = '0';
     }
 
     public function openModal()
@@ -57,6 +59,8 @@ class AdminMasterServiceIndex extends Component
             'hpp_average',
             'price',
         ]);
+        $this->hpp_average = '0';
+        $this->price = '0';
 
         return $this->dispatch('close-modal', ['id' => $modal]);
     }
@@ -72,8 +76,11 @@ class AdminMasterServiceIndex extends Component
 
             $productPrice = ProductPrice::where('product_id', $id)->where('company_id', auth()->user()->company_id)->where('is_updated', true)->first();
             if ($productPrice) {
-                $this->hpp_average = number_format($productPrice->hpp_average, 0, ',', '.');
-                $this->price = number_format($productPrice->price, 0, ',', '.');
+                $this->hpp_average = number_format($productPrice->hpp_average ?? 0, 0, ',', '.');
+                $this->price = number_format($productPrice->price ?? 0, 0, ',', '.');
+            } else {
+                $this->hpp_average = '0';
+                $this->price = '0';
             }
         }
         $this->openModal();
@@ -81,11 +88,18 @@ class AdminMasterServiceIndex extends Component
 
     public function save()
     {
+        if ($this->hpp_average === null || $this->hpp_average === '') {
+            $this->hpp_average = '0';
+        }
+        if ($this->price === null || $this->price === '') {
+            $this->price = '0';
+        }
+
         $this->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'hpp_average' => 'required',
-            'price' => 'required',
+            'hpp_average' => 'nullable',
+            'price' => 'nullable',
         ]);
 
         $product = Product::updateOrCreate(

@@ -496,6 +496,13 @@ class AdminHrDoctorIndex extends Component
             );
         }
 
+        if ($this->price_doctor === null || $this->price_doctor === '') {
+            $this->price_doctor = 0;
+        }
+        if ($this->referral_percentage === null || $this->referral_percentage === '') {
+            $this->referral_percentage = 0;
+        }
+
         $this->validate([
             'name' => 'required|string|max:255',
             'username' => [
@@ -526,15 +533,15 @@ class AdminHrDoctorIndex extends Component
                 },
             ],
             'address' => 'required|string|max:500',
-            'license_number' => 'required|string|max:30',
+            'license_number' => 'nullable|string|max:30',
             'identity_card' => 'nullable|string|max:20',
             'blood_group' => 'nullable|string|max:10',
             'administrative_gender' => 'required',
             'birth_date' => 'nullable|date',
             'deceased_date' => 'nullable|date',
             'marital_status' => 'nullable',
-            'sip_number' => $this->role_name == 'Dokter' ? 'required' : 'nullable',
-            'specialization' => $this->role_name == 'Dokter' ? 'required|string|max:100' : 'nullable',
+            'sip_number' => 'nullable|string|max:50',
+            'specialization' => 'nullable|string|max:100',
             'doctor_type' => $this->role_name == 'Dokter' ? 'required' : 'nullable',
             // 'company_id' => 'required|exists:companies,id'
         ]);
@@ -801,7 +808,7 @@ class AdminHrDoctorIndex extends Component
             ['user_id' => $user->id],
             [
                 'name' => $user->name,
-                'specialization' => $this->specialization,
+                'specialization' => $this->specialization ?: null,
                 'type' => 'internal',
                 'company_id' => Auth::user()->company_id,
             ]
@@ -871,8 +878,8 @@ class AdminHrDoctorIndex extends Component
                 'birth_date' => $this->birth_date,
                 'deceased_date' => $this->deceased_date,
                 'marital_status' => $this->marital_status,
-                'sip_number' => $this->sip_number,
-                'specialization' => $this->specialization,
+                'sip_number' => $this->sip_number ?: null,
+                'specialization' => $this->specialization ?: null,
                 'referral_percentage' => $this->referral_percentage ?: 0,
                 'doctor_type' => $this->doctor_type,
                 'type' => $this->type ?? 'in',
@@ -887,7 +894,7 @@ class AdminHrDoctorIndex extends Component
                 'longitude' => $this->longitude ?: '0',
                 'latitude' => $this->latitude ?: '0',
                 'altitude' => $this->altitude ?: '0',
-                'license_number' => $this->license_number,
+                'license_number' => $this->license_number ?: null,
             ],
         );
     }
